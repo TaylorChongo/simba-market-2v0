@@ -148,8 +148,10 @@ const forgotPassword = async (req, res) => {
       }
     });
 
-    // In a real app, send an email. For now, we return the token (simulating email delivery)
-    console.log(`Password reset link: http://localhost:5173/reset-password/${resetToken}`);
+    const frontendBaseUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+
+    // In a real app, send an email. For now, we log the URL for manual use.
+    console.log(`Password reset link: ${frontendBaseUrl}/reset-password/${resetToken}`);
 
     res.json({ message: 'Reset link sent to email (check server logs in development)' });
   } catch (error) {

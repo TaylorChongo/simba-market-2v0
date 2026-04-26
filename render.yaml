@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: simba-market-api
+    runtime: node
+    plan: free
+    rootDir: simba-backend
+    autoDeployTrigger: commit
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    buildFilter:
+      paths:
+        - simba-backend/**
+        - render.yaml
+    envVars:
+      - key: RENDER_DB_URL
+        fromDatabase:
+          name: simba-market-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MOMO_MOCK_MODE
+        value: "true"
+
+  - type: web
+    name: simba-market-web
+    runtime: static
+    rootDir: simba-frontend
+    autoDeployTrigger: commit
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    buildFilter:
+      paths:
+        - simba-frontend/**
+        - render.yaml
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+databases:
+  - name: simba-market-db
+    plan: free
