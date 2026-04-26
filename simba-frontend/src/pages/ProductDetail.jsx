@@ -9,7 +9,7 @@ import Footer from '../components/Footer';
 import Button from '../components/Button';
 import ProductCard from '../components/ProductCard';
 import { ShoppingCart, Star, ArrowLeft, ShieldCheck, Truck, RotateCcw, Loader2, AlertCircle, CheckCircle2, MapPin, X } from 'lucide-react';
-import { optimizeCloudinaryUrl, API_URL } from '../lib/utils';
+import { optimizeCloudinaryUrl, API_URL, fallbackToOriginalImage } from '../lib/utils';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -127,7 +127,7 @@ const ProductDetail = () => {
               src={optimizedImage} 
               alt={name} 
               className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${isOutOfStock ? 'grayscale' : ''}`}
-              onError={(e) => { e.target.src = "https://via.placeholder.com/600?text=Product+Image" }}
+              onError={(e) => fallbackToOriginalImage(e, image)}
             />
             <div className="absolute top-4 left-4 bg-surface/90 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-2 shadow-lg">
               <Star className="w-3 h-3 text-primary fill-primary" />

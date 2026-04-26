@@ -5,7 +5,7 @@ import { useBranch } from '../context/BranchContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl } from '../lib/utils';
+import { fallbackToOriginalImage, optimizeCloudinaryUrl } from '../lib/utils';
 
 const ProductCard = ({ product }) => {
   const { cart, addToCart } = useCart();
@@ -21,10 +21,6 @@ const ProductCard = ({ product }) => {
 
   const isInCart = cart.some(item => item.id === id);
 
-  const handleImageError = (e) => {
-    e.target.src = "https://via.placeholder.com/300?text=Product+Image";
-  };
-
   const isOutOfStock = user && selectedBranch && stock === 0;
   const isLowStock = user && selectedBranch && stock > 0 && stock < 5;
   const hasStock = user && selectedBranch && stock >= 5;
@@ -34,10 +30,10 @@ const ProductCard = ({ product }) => {
       <Link to={`/product/${id}`} className="flex flex-col flex-grow">
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-surface-container-low">
-          <img 
+            <img 
             src={optimizedImage} 
             alt={name}
-            onError={handleImageError}
+            onError={(e) => fallbackToOriginalImage(e, image)}
             loading="lazy"
             className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'grayscale' : ''}`}
           />

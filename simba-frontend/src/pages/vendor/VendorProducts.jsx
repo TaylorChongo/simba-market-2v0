@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { optimizeCloudinaryUrl, API_URL } from '../../lib/utils';
+import { optimizeCloudinaryUrl, API_URL, fallbackToOriginalImage } from '../../lib/utils';
 
 const VendorProducts = () => {
   const { user, token, loading: authLoading } = useAuth();
@@ -129,6 +129,7 @@ const VendorProducts = () => {
                             <img 
                               src={optimizeCloudinaryUrl(product.image, { width: 100, height: 100 })} 
                               alt={product.name} 
+                              onError={(e) => fallbackToOriginalImage(e, product.image)}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           </div>

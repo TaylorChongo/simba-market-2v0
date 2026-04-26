@@ -3,7 +3,7 @@ import { Sparkles, X, Send, Loader2, MessageSquare, ShoppingBag, Plus } from 'lu
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
-import { API_URL, optimizeCloudinaryUrl } from '../lib/utils';
+import { API_URL, fallbackToOriginalImage, optimizeCloudinaryUrl } from '../lib/utils';
 
 const FloatingAI = () => {
   const { t, language } = useLanguage();
@@ -122,6 +122,7 @@ const FloatingAI = () => {
                                 <img 
                                   src={optimizeCloudinaryUrl(product.image, { width: 100, height: 100 })} 
                                   alt={product.name}
+                                  onError={(e) => fallbackToOriginalImage(e, product.image)}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                 />
                              </div>

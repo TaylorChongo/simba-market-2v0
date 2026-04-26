@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Button from './Button';
 import ProductCard from './ProductCard';
-import { API_URL, optimizeCloudinaryUrl } from '../lib/utils';
+import { API_URL, fallbackToOriginalImage, optimizeCloudinaryUrl } from '../lib/utils';
 
 const AISearch = ({ placeholder }) => {
   const [query, setQuery] = useState('');
@@ -125,6 +125,7 @@ const AISearch = ({ placeholder }) => {
                               <img 
                                 src={optimizeCloudinaryUrl(product.image, { width: 120, height: 120 })} 
                                 alt={product.name}
+                                onError={(e) => fallbackToOriginalImage(e, product.image)}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                               />
                            </div>

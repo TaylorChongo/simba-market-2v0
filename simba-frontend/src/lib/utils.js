@@ -42,3 +42,15 @@ export function optimizeCloudinaryUrl(url, options = {}) {
 
   return `${preUpload}${transformations}/${postUpload}`;
 }
+
+export function fallbackToOriginalImage(event, originalUrl) {
+  const img = event.currentTarget;
+
+  if (originalUrl && img.dataset.fallbackApplied !== 'true' && img.src !== originalUrl) {
+    img.dataset.fallbackApplied = 'true';
+    img.src = originalUrl;
+    return;
+  }
+
+  img.src = 'https://via.placeholder.com/600?text=Product+Image';
+}
