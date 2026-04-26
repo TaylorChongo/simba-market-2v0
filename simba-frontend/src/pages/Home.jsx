@@ -49,7 +49,11 @@ const Home = () => {
         const res = await fetch(url);
         const data = await res.json();
         if (Array.isArray(data)) {
-          setProducts(data);
+          if (data.length > 0) {
+            setProducts(data);
+          } else {
+            console.warn('Products API returned an empty array. Keeping bundled fallback catalog.');
+          }
         } else {
           console.error('Expected array of products, but got:', data);
         }

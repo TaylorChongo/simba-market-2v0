@@ -9,6 +9,7 @@ import { API_URL } from '../lib/utils';
 import { useBranch } from '../context/BranchContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Filter, X, ChevronLeft, SlidersHorizontal, Loader2 } from 'lucide-react';
+import localProducts from '../data/simba_products.json';
 
 const CategoryPage = () => {
   const { categoryName } = useParams();
@@ -16,7 +17,7 @@ const CategoryPage = () => {
   const { selectedBranch } = useBranch();
   const { t } = useLanguage();
   
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(localProducts.products);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -32,7 +33,13 @@ const CategoryPage = () => {
           : `${API_URL}/api/products`;
         const res = await fetch(url);
         const data = await res.json();
-        setProducts(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setProducts(data);
+        } else if (!Array.isArray(data)) {
+          console.error('Expected array of products, but got:', data);
+        } else {
+          console.warn('Products API returned an empty array. Keeping bundled fallback catalog.');
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
