@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("RENDER_DB_URL")
+}
+
+enum Role {
+  CLIENT
+  VENDOR
+  BRANCH_MANAGER
+  BRANCH_STAFF
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  ASSIGNED
+  PREPARING
+  READY_FOR_PICKUP
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id               String         @id @default(uuid())
+  name             String
+  email            String         @unique
+  password         String?        // Made optional for Google Sign-In users
+  googleId         String?        @unique
+  role             Role           @default(CLIENT)
+  branch           String?        // For BRANCH_MANAGER and BRANCH_STAFF
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime       @default(now())
+  
+  // Relations
+  orders           Order[]        @relation("ClientOrders")
+  assignedOrders   Order[]        @relation("AssignedTo")
+  managedOrders    Order[]        @relation("AssignedBy")
+  products         Product[]      @relation("VendorProducts")
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  price       Float
+  category    String
+  image       String
+  description String?
+  vendorId    String
+  createdAt   DateTime    @default(now())
+  
+  // Relations
+  vendor      User        @relation("VendorProducts", fields: [vendorId], references: [id])
+  orderItems  OrderItem[]
+  stocks      BranchStock[]
+}
+
+model BranchStock {
+  id         String   @id @default(uuid())
+  productId  String
+  branchName String
+  stock      Int      @default(0)
+
+  // Relations
+  product    Product  @relation(fields: [productId], references: [id])
+
+  @@unique([productId, branchName])
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  userId         String
+  totalPrice     Float
+  status         OrderStatus @default(PENDING)
+  momoReference  String?     // External reference from MTN MoMo
+  branchName     String?     // e.g. Simba Supermarket Remera (fulfillment branch)
+  pickupTime     String?     // e.g. 14:30
+  depositPaid    Boolean     @default(false)
+  depositAmount  Float       @default(0)
+  
+  assignedTo     String?     // User ID of BRANCH_STAFF
+  assignedBy     String?     // User ID of BRANCH_MANAGER
+  
+  createdAt      DateTime    @default(now())
+  
+  // Relations
+  user           User        @relation("ClientOrders", fields: [userId], references: [id])
+  staff          User?       @relation("AssignedTo", fields: [assignedTo], references: [id])
+  manager        User?       @relation("AssignedBy", fields: [assignedBy], references: [id])
+  items          OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  
+  // Relations
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
