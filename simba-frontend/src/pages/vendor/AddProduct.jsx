@@ -36,12 +36,6 @@ const AddProduct = () => {
 
   const isApproved = user?.vendorProfile?.status === 'APPROVED';
 
-  useEffect(() => {
-    if (isEditMode) {
-      fetchProduct();
-    }
-  }, [id]);
-
   const fetchProduct = async () => {
     try {
       const res = await fetch(`${API_URL}/api/products/${id}`);
@@ -65,6 +59,12 @@ const AddProduct = () => {
       setFetching(false);
     }
   };
+
+  useEffect(() => {
+    if (isEditMode) {
+      fetchProduct();
+    }
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

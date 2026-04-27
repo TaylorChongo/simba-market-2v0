@@ -23,12 +23,6 @@ const VendorProducts = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    if (!authLoading && user?.id) {
-      fetchProducts();
-    }
-  }, [user?.id, authLoading]);
-
   const fetchProducts = async () => {
     try {
       const res = await fetch(`${API_URL}/api/products`);
@@ -42,6 +36,12 @@ const VendorProducts = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && user?.id) {
+      fetchProducts();
+    }
+  }, [user?.id, authLoading]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;

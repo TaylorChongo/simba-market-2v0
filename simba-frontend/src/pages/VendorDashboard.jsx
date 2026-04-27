@@ -25,10 +25,6 @@ const VendorDashboard = () => {
     description: ''
   });
 
-  useEffect(() => {
-    fetchVendorData();
-  }, [activeTab]);
-
   const fetchVendorData = async () => {
     setLoading(true);
     try {
@@ -52,6 +48,10 @@ const VendorDashboard = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchVendorData();
+  }, [activeTab]);
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
@@ -116,7 +116,7 @@ const VendorDashboard = () => {
               onClick={() => setActiveTab('inventory')}
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'inventory' ? 'bg-surface shadow-sm text-primary' : 'text-outline hover:text-on-surface'}`}
             >
-              <開Package className="w-4 h-4" /> Inventory
+              <Package className="w-4 h-4" /> Inventory
             </button>
             <button 
               onClick={() => setActiveTab('orders')}
