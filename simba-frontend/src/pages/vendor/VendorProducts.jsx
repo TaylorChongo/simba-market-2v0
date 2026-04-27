@@ -21,7 +21,6 @@ const VendorProducts = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -38,7 +37,7 @@ const VendorProducts = () => {
         setProducts(data.filter(p => p.vendorId === user.id));
       }
     } catch (err) {
-      setError('Failed to load products');
+      console.error('Failed to load products');
     } finally {
       setLoading(false);
     }
@@ -110,75 +109,131 @@ const VendorProducts = () => {
               <p className="font-bold">Syncing inventory...</p>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline">Product</th>
-                    <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline">Category</th>
-                    <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline">Price</th>
-                    <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/30">
-                  {filteredProducts.map((product) => (
-                    <tr key={product.id} className="hover:bg-surface-container-lowest transition-colors group">
-                      <td className="py-5 px-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-2xl overflow-hidden bg-surface-container border border-outline-variant/50">
-                            <img 
-                              src={optimizeCloudinaryUrl(product.image, { width: 100, height: 100 })} 
-                              alt={product.name} 
-                              onError={(e) => fallbackToOriginalImage(e, product.image)}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-on-surface line-clamp-1">{product.name}</span>
-                            <span className="text-[10px] font-mono text-outline uppercase tracking-tighter">ID: {product.id.slice(0, 8)}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-5 px-6">
-                        <span className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/10">
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="py-5 px-6">
-                        <span className="font-black text-on-surface">
-                          {product.price.toLocaleString()} <small className="text-[10px] font-bold text-outline">RWF</small>
-                        </span>
-                      </td>
-                      <td className="py-5 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => navigate(`/dashboard/vendor/edit-product/${product.id}`)}
-                            className="p-2.5 rounded-xl hover:bg-primary/10 text-outline hover:text-primary transition-all"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(product.id)}
-                            className="p-2.5 rounded-xl hover:bg-error/10 text-outline hover:text-error transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                          <Link 
-                            to={`/product/${product.id}`}
-                            className="p-2.5 rounded-xl hover:bg-surface-container-high text-outline transition-all"
-                            title="View Public"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </Link>
-                        </div>
-                      </td>
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                  <thead>
+                    <tr className="bg-surface-container-low border-b border-outline-variant">
+                      <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline">Product</th>
+                      <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline">Category</th>
+                      <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline">Price</th>
+                      <th className="py-5 px-6 font-black text-xs uppercase tracking-widest text-outline text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/30">
+                    {filteredProducts.map((product) => (
+                      <tr key={product.id} className="hover:bg-surface-container-lowest transition-colors group">
+                        <td className="py-5 px-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl overflow-hidden bg-surface-container border border-outline-variant/50">
+                              <img 
+                                src={optimizeCloudinaryUrl(product.image, { width: 100, height: 100 })} 
+                                alt={product.name} 
+                                onError={(e) => fallbackToOriginalImage(e, product.image)}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-on-surface line-clamp-1">{product.name}</span>
+                              <span className="text-[10px] font-mono text-outline uppercase tracking-tighter">ID: {product.id.slice(0, 8)}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-5 px-6">
+                          <span className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest rounded-full border border-primary/10">
+                            {product.category}
+                          </span>
+                        </td>
+                        <td className="py-5 px-6">
+                          <span className="font-black text-on-surface">
+                            {product.price.toLocaleString()} <small className="text-[10px] font-bold text-outline">RWF</small>
+                          </span>
+                        </td>
+                        <td className="py-5 px-6 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => navigate(`/dashboard/vendor/edit-product/${product.id}`)}
+                              className="p-2.5 rounded-xl hover:bg-primary/10 text-outline hover:text-primary transition-all"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(product.id)}
+                              className="p-2.5 rounded-xl hover:bg-error/10 text-outline hover:text-error transition-all"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                            <Link 
+                              to={`/product/${product.id}`}
+                              className="p-2.5 rounded-xl hover:bg-surface-container-high text-outline transition-all"
+                              title="View Public"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden flex flex-col divide-y divide-outline-variant/30">
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="p-5 flex flex-col gap-4">
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-surface-container border border-outline-variant/50 shrink-0">
+                        <img 
+                          src={optimizeCloudinaryUrl(product.image, { width: 120, height: 120 })} 
+                          alt={product.name} 
+                          onError={(e) => fallbackToOriginalImage(e, product.image)}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col justify-center min-w-0">
+                        <span className="font-bold text-on-surface truncate">{product.name}</span>
+                        <span className="text-[10px] font-mono text-outline uppercase mt-1">ID: {product.id.slice(0, 8)}</span>
+                        <div className="mt-2">
+                          <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest rounded-full border border-primary/10">
+                            {product.category}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-outline-variant/30">
+                      <span className="font-black text-primary text-lg">
+                        {product.price.toLocaleString()} <small className="text-[10px] font-bold text-outline">RWF</small>
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => navigate(`/dashboard/vendor/edit-product/${product.id}`)}
+                          className="p-2 rounded-lg bg-surface-container-low text-outline"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(product.id)}
+                          className="p-2 rounded-lg bg-error/5 text-error"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <Link 
+                          to={`/product/${product.id}`}
+                          className="p-2 rounded-lg bg-surface-container-low text-outline"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="text-center py-24 flex flex-col items-center">
               <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center text-outline-variant mb-6">

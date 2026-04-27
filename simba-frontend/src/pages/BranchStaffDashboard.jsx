@@ -27,7 +27,6 @@ const BranchStaffDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' or 'stock'
   const [updatingStock, setUpdatingStock] = useState(null); // Product ID being updated
   const [newStockValue, setNewStockValue] = useState('');
@@ -59,7 +58,7 @@ const BranchStaffDashboard = () => {
       const data = await res.json();
       setOrders(data);
     } catch (err) {
-      setError(err.message);
+      console.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -78,7 +77,7 @@ const BranchStaffDashboard = () => {
       const data = await res.json();
       setProducts(data);
     } catch (err) {
-      setError(err.message);
+      console.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -340,31 +339,111 @@ const BranchStaffDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-surface border border-outline-variant rounded-[40px] overflow-hidden shadow-sm">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Product</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Category</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Current Stock</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/50">
-                  {filteredProducts.map((product) => (
-                    <tr key={product.id} className="hover:bg-surface-container-highest transition-colors">
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container border border-outline-variant/50 flex-shrink-0">
-                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+            <div className="bg-surface border border-outline-variant rounded-[32px] md:rounded-[40px] overflow-hidden shadow-sm">
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-surface-container-low border-b border-outline-variant">
+                      <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Product</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Category</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Current Stock</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-outline uppercase tracking-widest">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/50">
+                    {filteredProducts.map((product) => (
+                      <tr key={product.id} className="hover:bg-surface-container-highest transition-colors">
+                        <td className="px-8 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container border border-outline-variant/50 flex-shrink-0">
+                              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                            </div>
+                            <span className="font-bold text-on-surface">{product.name}</span>
                           </div>
-                          <span className="font-bold text-on-surface">{product.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="text-xs font-bold text-outline uppercase tracking-wider">{product.category}</span>
-                      </td>
-                      <td className="px-8 py-5">
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className="text-xs font-bold text-outline uppercase tracking-wider">{product.category}</span>
+                        </td>
+                        <td className="px-8 py-5">
+                          {updatingStock === product.id ? (
+                            <div className="flex items-center gap-2">
+                              <Input 
+                                type="number"
+                                className="w-20 h-9 px-3 text-sm font-bold"
+                                value={newStockValue}
+                                onChange={(e) => setNewStockValue(e.target.value)}
+                                autoFocus
+                              />
+                              <button 
+                                onClick={() => handleUpdateStock(product.id, newStockValue)}
+                                className="p-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-all"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => setUpdatingStock(null)}
+                                className="p-2 bg-surface-container text-outline rounded-lg hover:bg-outline-variant transition-all"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <span className={`px-4 py-1.5 rounded-full text-sm font-black ${
+                                product.stock === 0 ? 'bg-error/10 text-error' : 
+                                product.stock < 5 ? 'bg-amber-500/10 text-amber-600' : 
+                                'bg-success/10 text-success'
+                              }`}>
+                                {product.stock}
+                              </span>
+                              <button 
+                                onClick={() => {
+                                  setUpdatingStock(product.id);
+                                  setNewStockValue(product.stock.toString());
+                                }}
+                                className="p-1.5 hover:bg-surface-container rounded-lg text-outline transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-8 py-5">
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => handleMarkOutOfStock(product.id)}
+                              className="flex items-center gap-2 px-4 py-2 bg-error/5 text-error rounded-xl text-xs font-bold hover:bg-error hover:text-white transition-all border border-error/10"
+                              disabled={product.stock === 0}
+                            >
+                              <MinusCircle className="w-4 h-4" />
+                              Mark Out
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Inventory Cards */}
+              <div className="md:hidden flex flex-col divide-y divide-outline-variant/30">
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="p-6 space-y-4">
+                    <div className="flex gap-4">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-surface-container border border-outline-variant/50 shrink-0">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex flex-col justify-center min-w-0">
+                        <span className="font-bold text-on-surface truncate">{product.name}</span>
+                        <span className="text-[10px] font-bold text-outline uppercase mt-1">{product.category}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-outline">Stock Level</span>
                         {updatingStock === product.id ? (
                           <div className="flex items-center gap-2">
                             <Input 
@@ -376,20 +455,20 @@ const BranchStaffDashboard = () => {
                             />
                             <button 
                               onClick={() => handleUpdateStock(product.id, newStockValue)}
-                              className="p-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-all"
+                              className="p-2 bg-primary text-on-primary rounded-lg"
                             >
                               <CheckCircle2 className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setUpdatingStock(null)}
-                              className="p-2 bg-surface-container text-outline rounded-lg hover:bg-outline-variant transition-all"
+                              className="p-2 bg-surface-container text-outline rounded-lg"
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3">
-                            <span className={`px-4 py-1.5 rounded-full text-sm font-black ${
+                          <div className="flex items-center gap-2">
+                            <span className={`px-4 py-1 rounded-full text-sm font-black ${
                               product.stock === 0 ? 'bg-error/10 text-error' : 
                               product.stock < 5 ? 'bg-amber-500/10 text-amber-600' : 
                               'bg-success/10 text-success'
@@ -401,37 +480,37 @@ const BranchStaffDashboard = () => {
                                 setUpdatingStock(product.id);
                                 setNewStockValue(product.stock.toString());
                               }}
-                              className="p-1.5 hover:bg-surface-container rounded-lg text-outline transition-colors"
+                              className="p-2 hover:bg-surface-container rounded-lg text-outline"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                           </div>
                         )}
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => handleMarkOutOfStock(product.id)}
-                            className="flex items-center gap-2 px-4 py-2 bg-error/5 text-error rounded-xl text-xs font-bold hover:bg-error hover:text-white transition-all border border-error/10"
-                            disabled={product.stock === 0}
-                          >
-                            <MinusCircle className="w-4 h-4" />
-                            Mark Out
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredProducts.length === 0 && (
-                    <tr>
-                      <td colSpan="4" className="px-8 py-12 text-center text-outline font-medium italic">
-                        No products found matching your filters.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                      </div>
+
+                      <button 
+                        onClick={() => handleMarkOutOfStock(product.id)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                          product.stock === 0 
+                            ? 'bg-outline-variant/10 text-outline border-outline-variant/20 grayscale pointer-events-none' 
+                            : 'bg-error/5 text-error border-error/20 active:bg-error active:text-white'
+                        }`}
+                      >
+                        <MinusCircle className="w-3.5 h-3.5" />
+                        Mark Out
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {filteredProducts.length === 0 && (
+                <div className="px-8 py-12 text-center text-outline font-medium italic">
+                  No products found matching your filters.
+                </div>
+              )}
             </div>
+
           </div>
         )}
       </main>

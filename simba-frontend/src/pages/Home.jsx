@@ -162,16 +162,32 @@ const Home = () => {
       <main className="flex-grow max-w-7xl mx-auto px-4 py-6 md:px-8 w-full">
         <div className="flex flex-col md:flex-row gap-8 relative">
           
-          {/* Sidebar Filters */}
+          {/* Sidebar Filters - Desktop Drawer/Sidebar */}
           <aside className={`
-            ${showFilters ? 'w-full md:w-48 opacity-100' : 'w-0 opacity-0 overflow-hidden'}
-            flex-shrink-0 transition-all duration-300 ease-in-out
+            ${showFilters ? 'w-full md:w-56 opacity-100' : 'w-0 opacity-0 overflow-hidden'}
+            fixed inset-0 z-[60] md:relative md:inset-auto md:z-0 transition-all duration-300 ease-in-out
           `}>
-            <div className="sticky top-24 w-full md:w-48 h-[calc(100vh-140px)] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-8 pb-10">
+            {/* Backdrop for mobile */}
+            <div 
+              className={`fixed inset-0 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ${showFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              onClick={() => setShowFilters(false)}
+            />
+
+            <div className={`
+              fixed top-0 left-0 h-full w-[80%] max-w-xs bg-surface shadow-2xl p-6 flex flex-col gap-8 z-50 overflow-y-auto
+              md:sticky md:top-24 md:h-[calc(100vh-140px)] md:w-56 md:bg-transparent md:shadow-none md:p-0 md:pr-2 md:z-0 custom-scrollbar
+              transition-transform duration-300 ${showFilters ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-black flex items-center gap-2">
                   <Filter className="w-4 h-4 text-primary" /> {t('filters_title')}
                 </h3>
+                <button 
+                  onClick={() => setShowFilters(false)}
+                  className="p-2 hover:bg-surface-container-high rounded-full md:hidden"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Price Range */}
@@ -205,7 +221,10 @@ const Home = () => {
                   {displayedCategories.map((category) => (
                     <button
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        if (window.innerWidth < 768) setShowFilters(false);
+                      }}
                       className={`text-left px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         selectedCategory === category
                           ? 'bg-primary/10 text-primary font-bold'
@@ -229,6 +248,14 @@ const Home = () => {
                   )}
                 </div>
               </div>
+
+              {/* Mobile apply button */}
+              <Button 
+                className="mt-auto md:hidden"
+                onClick={() => setShowFilters(false)}
+              >
+                Apply Filters
+              </Button>
             </div>
           </aside>
 
@@ -236,22 +263,22 @@ const Home = () => {
           <div className="flex-grow transition-all duration-300">
             {/* Hero Section */}
             {!isFiltering && !user && (
-              <section className="bg-primary-container rounded-[30px] md:rounded-[40px] p-6 md:p-12 mb-8 relative overflow-hidden flex flex-col items-start text-left min-h-[280px] md:min-h-[320px] justify-center">
+              <section className="bg-primary-container rounded-[30px] md:rounded-[40px] p-6 md:p-12 mb-8 relative overflow-hidden flex flex-col items-start text-left min-h-[220px] md:min-h-[320px] justify-center">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
                 
                 <span className="text-on-primary font-bold tracking-widest uppercase text-[9px] md:text-[10px] mb-2 md:mb-3 relative">
                   {t('hero_badge')}
                 </span>
-                <h1 className="text-3xl md:text-5xl lg:text-5xl font-black text-on-primary mb-3 relative leading-[0.95] tracking-tighter max-w-2xl">
-                  {t('hero_title_1')} <br />
+                <h1 className="text-2xl md:text-5xl lg:text-5xl font-black text-on-primary mb-3 relative leading-[0.95] tracking-tighter max-w-2xl">
+                  {t('hero_title_1')} <br className="hidden sm:block" />
                   <span className="text-white/90">{t('hero_title_2')}</span>
                 </h1>
-                <p className="text-on-primary/80 max-w-xl mb-6 relative text-xs md:text-base font-medium leading-relaxed">
+                <p className="text-on-primary/80 max-w-xl mb-6 relative text-[10px] md:text-base font-medium leading-relaxed">
                   {t('hero_description')}
                 </p>
                 <Button 
                   onClick={scrollToProducts}
-                  className="px-6 md:px-8 py-2.5 md:py-3 !bg-white !text-primary hover:!bg-white hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/30 border-none relative text-sm md:text-base font-bold shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95"
+                  className="px-6 md:px-8 py-2 md:py-3 !bg-white !text-primary hover:!bg-white hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/30 border-none relative text-xs md:text-base font-bold shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95"
                 >
                   {t('shop_now')}
                 </Button>
@@ -297,7 +324,7 @@ const Home = () => {
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 transition-all duration-300">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 transition-all duration-300">
                         {categoryProducts.slice(0, 4).map((product) => (
                           <ProductCard key={product.id} product={product} />
                         ))}
@@ -307,7 +334,7 @@ const Home = () => {
                 })
               ) : (
                 /* Search Results View */
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 transition-all duration-300">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 transition-all duration-300">
                   {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

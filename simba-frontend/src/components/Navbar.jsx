@@ -1,7 +1,6 @@
-import { Search, ShoppingCart, Menu, User, LogOut, Settings, Package, ChevronDown, Moon, Languages, MapPin, ShoppingBag, Map as MapIcon } from 'lucide-react';
+import { Search, ShoppingCart, Menu, User, LogOut, Settings, Package, ChevronDown, Moon, Languages, MapPin, ShoppingBag, Map as MapIcon, X, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import Button from './Button';
-import Input from './Input';
 import ThemeToggle from './ThemeToggle';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,14 +9,15 @@ import { useLanguage } from '../context/LanguageContext';
 import { useNavigate, Link } from 'react-router-dom';
 import AISearch from './AISearch';
 
-const Navbar = ({ searchQuery, setSearchQuery }) => {
+const Navbar = () => {
   const { getCartCount } = useCart();
   const { user, logout } = useAuth();
-  const { selectedBranch, toggleMap, branches } = useBranch();
+  const { selectedBranch, toggleMap } = useBranch();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const langDropdownRef = useRef(null);
 
@@ -34,9 +34,19 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Prevent scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [mobileMenuOpen]);
+
   const handleLogout = () => {
     logout();
     setShowDropdown(false);
+    setMobileMenuOpen(false);
     navigate('/login');
   };
 
@@ -47,210 +57,368 @@ const Navbar = ({ searchQuery, setSearchQuery }) => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 glass-header border-b border-outline-variant px-4 py-3 md:px-8">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 md:gap-8">
-        {/* Logo & Branch Selector */}
-        <div className="flex items-center gap-4 md:gap-6 shrink-0">
-          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center">
-              <span className="text-on-primary font-bold text-lg md:text-xl">S</span>
-            </div>
-            <span className="text-lg md:text-xl font-bold tracking-tight hidden sm:inline">
-              Simba <span className="text-primary">Supermarket</span>
-            </span>
-          </Link>
-
-          {/* Branch Selector */}
-          <div className="hidden lg:flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={toggleMap}
-              className={`h-10 rounded-2xl px-4 text-xs font-black uppercase tracking-widest flex items-center gap-2 border transition-all ${
-                selectedBranch 
-                  ? 'border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5' 
-                  : 'border-outline-variant text-outline hover:border-primary hover:text-primary hover:bg-primary/5'
-              }`}
-            >
-              <MapPin className="w-4 h-4" />
-              <span className="max-w-[120px] truncate">
-                {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : t('select_branch')}
+    <>
+      <nav className="sticky top-0 z-50 glass-header border-b border-outline-variant px-4 py-3 md:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 md:gap-8">
+          {/* Logo & Branch Selector */}
+          <div className="flex items-center gap-4 md:gap-6 shrink-0">
+            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center">
+                <span className="text-on-primary font-bold text-lg md:text-xl">S</span>
+              </div>
+              <span className="text-lg md:text-xl font-bold tracking-tight hidden sm:inline">
+                Simba <span className="text-primary">Supermarket</span>
               </span>
-              <MapIcon className="w-3.5 h-3.5 ml-1 opacity-50" />
+            </Link>
+
+            {/* Branch Selector - Desktop */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleMap}
+                className={`h-10 rounded-2xl px-4 text-xs font-black uppercase tracking-widest flex items-center gap-2 border transition-all ${
+                  selectedBranch 
+                    ? 'border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5' 
+                    : 'border-outline-variant text-outline hover:border-primary hover:text-primary hover:bg-primary/5'
+                }`}
+              >
+                <MapPin className="w-4 h-4" />
+                <span className="max-w-[120px] truncate">
+                  {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : t('select_branch')}
+                </span>
+                <MapIcon className="w-3.5 h-3.5 ml-1 opacity-50" />
+              </Button>
+            </div>
+          </div>
+
+          {/* AI Conversational Search - Desktop */}
+          <div className="hidden md:flex flex-grow max-w-xl justify-center">
+            <AISearch placeholder={t('search_placeholder')} />
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1 md:gap-2 text-on-surface">
+            {/* Mobile Branch Select */}
+            <div className="lg:hidden flex items-center mr-2">
+              <button 
+                onClick={toggleMap}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-all ${
+                  selectedBranch 
+                    ? 'border-primary/30 bg-primary/5 text-primary' 
+                    : 'border-outline-variant bg-surface-container-low text-outline'
+                }`}
+              >
+                <MapPin className="w-3 h-3" />
+                <span className="max-w-[80px] truncate">
+                  {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : 'Branch'}
+                </span>
+              </button>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-1">
+              {/* Language Switcher - Desktop */}
+              <div className="relative" ref={langDropdownRef}>
+                <Button 
+                  variant="ghost" 
+                  className="px-2 text-xs font-bold text-on-surface flex items-center gap-1.5 uppercase"
+                  onClick={() => setShowLangDropdown(!showLangDropdown)}
+                >
+                  <Languages className="w-4 h-4 text-outline" />
+                  {language}
+                  <ChevronDown className={`w-3 h-3 text-outline transition-transform ${showLangDropdown ? 'rotate-180' : ''}`} />
+                </Button>
+
+                {showLangDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-surface border border-outline-variant rounded-2xl shadow-xl py-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
+                          language === lang.code ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high'
+                        }`}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setShowLangDropdown(false);
+                        }}
+                      >
+                        <span className="flex items-center gap-3">
+                          <span className="text-base">{lang.flag}</span>
+                          {lang.label}
+                        </span>
+                        {language === lang.code && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <ThemeToggle />
+            </div>
+
+            {(!user || user.role === 'CLIENT') && (
+              <Button 
+                variant="ghost" 
+                className="p-1.5 md:p-2 relative text-on-surface"
+                onClick={() => navigate('/cart')}
+              >
+                <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+                <span className="absolute top-0 right-0 md:-top-1 md:-right-1 bg-primary text-on-primary text-[9px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center">
+                  {getCartCount()}
+                </span>
+              </Button>
+            )}
+
+            {!user ? (
+              <div className="hidden md:flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  className="h-10 text-sm px-4"
+                  onClick={() => navigate('/login')}
+                >
+                  {t('login')}
+                </Button>
+                <Button 
+                  className="h-10 text-sm px-4 bg-primary text-white hover:bg-primary-container"
+                  onClick={() => navigate('/register')}
+                >
+                  {t('sign_up')}
+                </Button>
+              </div>
+            ) : (
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  className="flex items-center gap-2 p-1.5 md:p-2 hover:bg-surface-container-high rounded-full transition-colors"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
+                  <div className="w-8 h-8 md:w-9 md:h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                    <User className="w-5 h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="hidden md:flex flex-col items-start leading-tight mr-1">
+                    <span className="text-sm font-bold text-on-surface">{user.name}</span>
+                    <span className="text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-outline transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-56 bg-surface border border-outline-variant rounded-2xl shadow-xl py-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-2 border-b border-outline-variant/50 mb-1 md:hidden">
+                      <p className="text-sm font-bold text-on-surface">{user.name}</p>
+                      <p className="text-[10px] text-outline uppercase">{user.role}</p>
+                    </div>
+                    
+                    <button 
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                      onClick={() => {
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}`);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <User className="w-4 h-4 text-outline" />
+                      {t('my_profile')}
+                    </button>
+                    
+                    <button 
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                      onClick={() => {
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}?tab=orders`);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <Package className="w-4 h-4 text-outline" />
+                      {t('my_orders')}
+                    </button>
+                    
+                    <button 
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                      onClick={() => {
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}?tab=settings`);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <Settings className="w-4 h-4 text-outline" />
+                      {t('settings')}
+                    </button>
+                    
+                    <div className="h-px bg-outline-variant/50 my-1" />
+                    
+                    <button 
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 transition-colors"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {t('logout')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Button 
+              variant="ghost" 
+              className="p-1.5 md:p-2 md:hidden text-on-surface"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <Menu className="w-5 h-5 md:w-6 md:h-6" />
             </Button>
           </div>
         </div>
+      </nav>
 
-        {/* AI Conversational Search - Desktop */}
-        <div className="hidden md:flex flex-grow max-w-xl justify-center">
-          <AISearch placeholder={t('search_placeholder')} />
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1 md:gap-2 text-on-surface">
-          {/* Mobile Branch Select */}
-          <div className="lg:hidden flex items-center mr-2">
+      {/* Mobile Menu Drawer */}
+      <div 
+        className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${
+          mobileMenuOpen ? 'visible' : 'invisible'
+        }`}
+      >
+        {/* Backdrop */}
+        <div 
+          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+        
+        {/* Drawer Content */}
+        <div 
+          className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-surface shadow-2xl transition-transform duration-300 flex flex-col ${
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="p-4 border-b border-outline-variant flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-on-primary font-bold text-base">S</span>
+              </div>
+              <span className="font-black text-lg">Simba</span>
+            </div>
             <button 
-              onClick={toggleMap}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-all ${
-                selectedBranch 
-                  ? 'border-primary/30 bg-primary/5 text-primary' 
-                  : 'border-outline-variant bg-surface-container-low text-outline'
-              }`}
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 hover:bg-surface-container-high rounded-full transition-colors"
             >
-              <MapPin className="w-3 h-3" />
-              <span className="max-w-[80px] truncate">
-                {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : 'Branch'}
-              </span>
+              <X className="w-6 h-6" />
             </button>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1">
-            {/* Language Switcher */}
-            <div className="relative" ref={langDropdownRef}>
-              <Button 
-                variant="ghost" 
-                className="px-2 text-xs font-bold text-on-surface flex items-center gap-1.5 uppercase"
-                onClick={() => setShowLangDropdown(!showLangDropdown)}
-              >
-                <Languages className="w-4 h-4 text-outline" />
-                {language}
-                <ChevronDown className={`w-3 h-3 text-outline transition-transform ${showLangDropdown ? 'rotate-180' : ''}`} />
-              </Button>
+          <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-8">
+            {/* Mobile AI Search */}
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4 flex items-center gap-2">
+                <span className="w-3 h-3 text-primary"><Sparkles /></span> Conversational Search
+              </h3>
+              <AISearch placeholder={t('search_placeholder')} />
+            </div>
 
-              {showLangDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-surface border border-outline-variant rounded-2xl shadow-xl py-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
-                        language === lang.code ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high'
-                      }`}
+            {/* Quick Links */}
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4">Account</h3>
+              <div className="flex flex-col gap-2">
+                {!user ? (
+                  <>
+                    <button 
+                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20"
+                      onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
+                    >
+                      <User className="w-5 h-5" /> {t('login')}
+                    </button>
+                    <button 
+                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-outline-variant font-bold text-sm"
+                      onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
+                    >
+                      <ShoppingBag className="w-5 h-5" /> {t('sign_up')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-2xl mb-2">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
+                        {user.name.charAt(0)}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold">{user.name}</span>
+                        <span className="text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
+                      </div>
+                    </div>
+                    <button 
+                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
                       onClick={() => {
-                        setLanguage(lang.code);
-                        setShowLangDropdown(false);
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}`);
+                        setMobileMenuOpen(false);
                       }}
                     >
-                      <span className="flex items-center gap-3">
-                        <span className="text-base">{lang.flag}</span>
-                        {lang.label}
-                      </span>
-                      {language === lang.code && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                      <User className="w-5 h-5 text-outline" /> {t('my_profile')}
                     </button>
-                  ))}
-                </div>
-              )}
+                    <button 
+                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
+                      onClick={() => {
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}?tab=orders`);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <Package className="w-5 h-5 text-outline" /> {t('my_orders')}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
-            <ThemeToggle />
+            {/* Preferences */}
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4">Preferences</h3>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <Moon className="w-5 h-5 text-outline" />
+                    <span className="text-sm font-bold">Dark Mode</span>
+                  </div>
+                  <ThemeToggle />
+                </div>
+
+                <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Languages className="w-5 h-5 text-outline" />
+                    <span className="text-sm font-bold">Language</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => setLanguage(lang.code)}
+                        className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all ${
+                          language === lang.code 
+                            ? 'bg-primary/10 border-primary text-primary font-bold' 
+                            : 'border-outline-variant text-outline'
+                        }`}
+                      >
+                        <span className="text-lg">{lang.flag}</span>
+                        <span className="text-[10px] uppercase font-black tracking-tighter">{lang.code}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {(!user || user.role === 'CLIENT') && (
-            <Button 
-              variant="ghost" 
-              className="p-1.5 md:p-2 relative text-on-surface"
-              onClick={() => navigate('/cart')}
-            >
-              <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="absolute top-0 right-0 md:-top-1 md:-right-1 bg-primary text-on-primary text-[9px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center">
-                {getCartCount()}
-              </span>
-            </Button>
-          )}
-
-          {!user ? (
-            <div className="hidden md:flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                className="h-10 text-sm px-4"
-                onClick={() => navigate('/login')}
-              >
-                {t('login')}
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="h-10 text-sm px-4"
-                onClick={() => navigate('/register')}
-              >
-                {t('sign_up')}
-              </Button>
-            </div>
-          ) : (
-            <div className="relative" ref={dropdownRef}>
+          {user && (
+            <div className="p-6 border-t border-outline-variant">
               <button 
-                className="flex items-center gap-2 p-1.5 md:p-2 hover:bg-surface-container-high rounded-full transition-colors"
-                onClick={() => setShowDropdown(!showDropdown)}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-error/10 text-error font-bold text-sm hover:bg-error/20 transition-colors"
+                onClick={handleLogout}
               >
-                <div className="w-8 h-8 md:w-9 md:h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                  <User className="w-5 h-5 md:w-6 md:h-6" />
-                </div>
-                <div className="hidden md:flex flex-col items-start leading-tight mr-1">
-                  <span className="text-sm font-bold text-on-surface">{user.name}</span>
-                  <span className="text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
-                </div>
-                <ChevronDown className={`w-4 h-4 text-outline transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+                <LogOut className="w-5 h-5" /> {t('logout')}
               </button>
-
-              {showDropdown && (
-                <div className="absolute right-0 mt-2 w-56 bg-surface border border-outline-variant rounded-2xl shadow-xl py-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-2 border-b border-outline-variant/50 mb-1 md:hidden">
-                    <p className="text-sm font-bold text-on-surface">{user.name}</p>
-                    <p className="text-[10px] text-outline uppercase">{user.role}</p>
-                  </div>
-                  
-                  <button 
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
-                    onClick={() => {
-                      // navigate('/dashboard/client?tab=profile');
-                      setShowDropdown(false);
-                    }}
-                  >
-                    <User className="w-4 h-4 text-outline" />
-                    {t('my_profile')}
-                  </button>
-                  
-                  <button 
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
-                    onClick={() => {
-                      // navigate('/dashboard/client?tab=orders');
-                      setShowDropdown(false);
-                    }}
-                  >
-                    <Package className="w-4 h-4 text-outline" />
-                    {t('my_orders')}
-                  </button>
-                  
-                  <button 
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
-                    onClick={() => {
-                      // navigate('/dashboard/client?tab=settings');
-                      setShowDropdown(false);
-                    }}
-                  >
-                    <Settings className="w-4 h-4 text-outline" />
-                    {t('settings')}
-                  </button>
-                  
-                  <div className="h-px bg-outline-variant/50 my-1" />
-                  
-                  <button 
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 transition-colors"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-4 h-4" />
-                    {t('logout')}
-                  </button>
-                </div>
-              )}
             </div>
           )}
-
-          <Button variant="ghost" className="p-1.5 md:p-2 md:hidden text-on-surface">
-            <Menu className="w-5 h-5 md:w-6 md:h-6" />
-          </Button>
         </div>
       </div>
-    </nav>
+    </>
   );
 };
 

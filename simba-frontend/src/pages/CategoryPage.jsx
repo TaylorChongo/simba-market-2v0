@@ -123,16 +123,32 @@ const CategoryPage = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-8 relative">
-          {/* Sidebar Filters */}
+          {/* Sidebar Filters - Desktop Drawer/Sidebar */}
           <aside className={`
-            ${showFilters ? 'w-full md:w-48 opacity-100' : 'w-0 opacity-0 overflow-hidden'}
-            flex-shrink-0 transition-all duration-300 ease-in-out
+            ${showFilters ? 'w-full md:w-56 opacity-100' : 'w-0 opacity-0 overflow-hidden'}
+            fixed inset-0 z-[60] md:relative md:inset-auto md:z-0 transition-all duration-300 ease-in-out
           `}>
-            <div className="sticky top-24 w-full md:w-48 h-[calc(100vh-140px)] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-8">
+            {/* Backdrop for mobile */}
+            <div 
+              className={`fixed inset-0 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ${showFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              onClick={() => setShowFilters(false)}
+            />
+
+            <div className={`
+              fixed top-0 left-0 h-full w-[80%] max-w-xs bg-surface shadow-2xl p-6 flex flex-col gap-8 z-50 overflow-y-auto
+              md:sticky md:top-24 md:h-[calc(100vh-140px)] md:w-56 md:bg-transparent md:shadow-none md:p-0 md:pr-2 md:z-0 custom-scrollbar
+              transition-transform duration-300 ${showFilters ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-black flex items-center gap-2">
                   <Filter className="w-5 h-5 text-primary" /> {t('filters_title')}
                 </h3>
+                <button 
+                  onClick={() => setShowFilters(false)}
+                  className="p-2 hover:bg-surface-container-high rounded-full md:hidden"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Price Range */}
@@ -172,13 +188,21 @@ const CategoryPage = () => {
                   <X className="w-3 h-3" /> {t('clear_active_filters')}
                 </button>
               )}
+
+              {/* Mobile apply button */}
+              <Button 
+                className="mt-auto md:hidden"
+                onClick={() => setShowFilters(false)}
+              >
+                Apply Filters
+              </Button>
             </div>
           </aside>
 
           {/* Products Grid */}
           <div className="flex-grow">
             {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-all duration-300">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 transition-all duration-300">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

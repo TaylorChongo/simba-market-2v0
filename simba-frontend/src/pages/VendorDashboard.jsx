@@ -311,53 +311,94 @@ const VendorDashboard = () => {
                   <p className="font-bold">Loading orders...</p>
                 </div>
               ) : orders.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-outline-variant">
-                        <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Order ID</th>
-                        <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Customer</th>
-                        <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Items</th>
-                        <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Total</th>
-                        <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map(order => (
-                        <tr key={order.id} className="border-b border-outline-variant/30 hover:bg-surface-container-lowest transition-colors">
-                          <td className="py-4 px-4 text-sm font-bold font-mono">#{order.id.slice(0, 8)}</td>
-                          <td className="py-4 px-4">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold">{order.user.name}</span>
-                              <span className="text-[10px] text-outline">{order.user.email}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex flex-col gap-1">
-                              {order.items.map(item => (
-                                <span key={item.id} className="text-xs font-medium">
-                                  {item.quantity}x {item.product.name}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="py-4 px-4 font-black text-primary text-sm">
-                            {order.totalPrice.toLocaleString()} RWF
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                              order.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                              order.status === 'COMPLETED' ? 'bg-success/10 text-success' :
-                              'bg-error/10 text-error'
-                            }`}>
-                              {order.status}
-                            </span>
-                          </td>
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-outline-variant">
+                          <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Order ID</th>
+                          <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Customer</th>
+                          <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Items</th>
+                          <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Total</th>
+                          <th className="py-4 px-4 font-black text-xs uppercase tracking-widest text-outline">Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {orders.map(order => (
+                          <tr key={order.id} className="border-b border-outline-variant/30 hover:bg-surface-container-lowest transition-colors">
+                            <td className="py-4 px-4 text-sm font-bold font-mono">#{order.id.slice(0, 8)}</td>
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold">{order.user.name}</span>
+                                <span className="text-[10px] text-outline">{order.user.email}</span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col gap-1">
+                                {order.items.map(item => (
+                                  <span key={item.id} className="text-xs font-medium">
+                                    {item.quantity}x {item.product.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 font-black text-primary text-sm">
+                              {order.totalPrice.toLocaleString()} RWF
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                order.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                                order.status === 'COMPLETED' ? 'bg-success/10 text-success' :
+                                'bg-error/10 text-error'
+                              }`}>
+                                {order.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="md:hidden flex flex-col gap-4">
+                    {orders.map(order => (
+                      <div key={order.id} className="bg-surface-container-low border border-outline-variant rounded-2xl p-4 flex flex-col gap-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-mono font-bold text-outline">#{order.id.slice(0, 8)}</span>
+                            <span className="text-sm font-bold mt-1">{order.user.name}</span>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                            order.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                            order.status === 'COMPLETED' ? 'bg-success/10 text-success' :
+                            'bg-error/10 text-error'
+                          }`}>
+                            {order.status}
+                          </span>
+                        </div>
+                        
+                        <div className="bg-surface/50 rounded-xl p-3">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-outline mb-2">Items</h4>
+                          <div className="flex flex-col gap-1.5">
+                            {order.items.map(item => (
+                              <div key={item.id} className="flex justify-between text-xs font-medium">
+                                <span>{item.product.name}</span>
+                                <span className="text-outline">x{item.quantity}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-2 border-t border-outline-variant/30">
+                          <span className="text-xs font-bold text-outline uppercase tracking-wider">Total Amount</span>
+                          <span className="text-base font-black text-primary">{order.totalPrice.toLocaleString()} RWF</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-20 bg-surface-container-lowest rounded-3xl border border-dashed border-outline-variant">
                   <ShoppingBag className="w-12 h-12 text-outline-variant mx-auto mb-4" />

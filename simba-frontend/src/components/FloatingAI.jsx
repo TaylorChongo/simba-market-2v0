@@ -52,7 +52,7 @@ const FloatingAI = () => {
         text: data.message,
         products: data.products 
       }]);
-    } catch (error) {
+    } catch {
       setMessages(prev => [...prev, { 
         role: 'ai', 
         text: language === 'fr' ? "Désolé, j'ai des difficultés à me connecter." : language === 'kin' ? "Ntabwo nshoboye guhura na seriveri ubu." : "Sorry, I'm having trouble connecting right now."
@@ -73,10 +73,10 @@ const FloatingAI = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] flex flex-col items-end max-w-[calc(100vw-2rem)]">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[350px] sm:w-[400px] h-[500px] bg-surface border border-outline-variant rounded-[32px] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+        <div className="mb-4 w-full sm:w-[400px] h-[500px] max-h-[calc(100vh-120px)] bg-surface border border-outline-variant rounded-[32px] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="p-4 bg-primary text-on-primary flex items-center justify-between shadow-lg">
             <div className="flex items-center gap-3">
