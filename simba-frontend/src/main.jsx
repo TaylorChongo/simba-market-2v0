@@ -8,11 +8,12 @@ const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const RootApp = () => {
   if (!clientId) {
-    console.warn("Google Client ID is missing. Google Login will not work. Please set VITE_GOOGLE_CLIENT_ID in your .env file.");
+    console.warn("Google Client ID is missing. Google Login will be disabled.");
+    return <App />;
   }
 
   return (
-    <GoogleOAuthProvider clientId={clientId || "758410228302-placeholder.apps.googleusercontent.com"}>
+    <GoogleOAuthProvider clientId={clientId}>
       <App />
     </GoogleOAuthProvider>
   );
