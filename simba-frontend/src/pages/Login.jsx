@@ -59,64 +59,59 @@ const Login = () => {
     }
   };
 
-  // Only call hook if clientId is available to prevent runtime crash if provider is missing
-  let handleGoogleLogin = null;
-  try {
-    if (clientId) {
-      handleGoogleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-          setLoading(true);
-          setError('');
-          try {
-            const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-            });
-            
-            if (!userInfoRes.ok) throw new Error('Failed to fetch user info from Google');
-            
-            const userInfo = await userInfoRes.json();
-            
-            const googleData = {
-              googleId: userInfo.sub,
-              email: userInfo.email,
-              name: userInfo.name,
-              avatar: userInfo.picture
-            };
+  // Standard hook call at the top level
+  const handleGoogleLogin = useGoogleLogin({
+    flow: 'implicit',
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      setError('');
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        
+        if (!userInfoRes.ok) throw new Error('Failed to fetch user info from Google');
+        
+        const userInfo = await userInfoRes.json();
+        
+        const googleData = {
+          googleId: userInfo.sub,
+          email: userInfo.email,
+          name: userInfo.name,
+          avatar: userInfo.picture
+        };
 
-            const res = await fetch(`${API_URL}/api/auth/google-login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(googleData),
-            });
+        const res = await fetch(`${API_URL}/api/auth/google-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(googleData),
+        });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
 
-            login(data.user, data.token);
-            navigate('/');
-          } catch (err) {
-            setError("Google Login failed: " + err.message);
-          } finally {
-            setLoading(false);
-          }
-        },
-        onError: () => {
-          setError("Google Login failed: Authentication failed");
-        }
-      });
+        login(data.user, data.token);
+        navigate('/');
+      } catch (err) {
+        setError("Google Login failed: " + err.message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => {
+      setError("Google Login failed: Authentication failed");
     }
-  } catch (err) {
-    console.error("Google Login Hook error:", err);
-  }
+  });
 
   const triggerGoogleLogin = () => {
     if (!clientId) {
       setError("Google Client ID is not configured. Please set VITE_GOOGLE_CLIENT_ID in your .env file.");
       return;
     }
-    if (handleGoogleLogin) {
-      handleGoogleLogin();
-    }
+    // Note: If you get redirect_uri_mismatch, ensure http://localhost:5173 
+    // is added to "Authorized redirect URIs" and "Authorized JavaScript origins" 
+    // in your Google Cloud Console.
+    handleGoogleLogin();
   };
 
   return (
