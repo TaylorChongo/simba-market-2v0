@@ -12,7 +12,7 @@ const RootApp = () => {
   }
 
   return (
-    <GoogleOAuthProvider clientId={clientId || ""}>
+    <GoogleOAuthProvider clientId={clientId || "758410228302-placeholder.apps.googleusercontent.com"}>
       <App />
     </GoogleOAuthProvider>
   );

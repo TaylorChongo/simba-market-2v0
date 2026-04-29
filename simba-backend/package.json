@@ -1,7 +1,7 @@
 {
   "name": "simba-backend",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "Backend for Simba Market 2.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

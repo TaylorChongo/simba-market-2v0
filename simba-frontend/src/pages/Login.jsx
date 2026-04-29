@@ -20,6 +20,7 @@ const Login = () => {
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+  // Handles traditional email/password login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
