@@ -13,14 +13,12 @@ services:
         - simba-backend/**
         - render.yaml
     envVars:
-      - key: RENDER_DB_URL
-        fromDatabase:
-          name: simba-market-db
-          property: connectionString
+      - key: DATABASE_URL
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        sync: false
+        value: https://simba-market-web.onrender.com
       - key: GROQ_API_KEY
         sync: false
       - key: MOMO_MOCK_MODE
@@ -43,8 +41,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        sync: false
-
-databases:
-  - name: simba-market-db
-    plan: free
+        value: https://simba-market-api.onrender.com

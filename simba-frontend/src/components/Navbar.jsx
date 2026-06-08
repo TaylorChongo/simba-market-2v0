@@ -8,6 +8,7 @@ import { useBranch } from '../context/BranchContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate, Link } from 'react-router-dom';
 import AISearch from './AISearch';
+import GoogleLoginButton from './GoogleLoginButton';
 
 const Navbar = () => {
   const { getCartCount } = useCart();
@@ -18,8 +19,11 @@ const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileAuthLoading, setMobileAuthLoading] = useState(false);
+  const [mobileAuthError, setMobileAuthError] = useState('');
   const dropdownRef = useRef(null);
   const langDropdownRef = useRef(null);
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -319,14 +323,29 @@ const Navbar = () => {
               <div className="flex flex-col gap-2">
                 {!user ? (
                   <>
+                    {clientId && (
+                      <>
+                        <GoogleLoginButton setLoading={setMobileAuthLoading} setError={setMobileAuthError} />
+                        {mobileAuthError && (
+                          <p className="text-xs font-bold text-error px-1">{mobileAuthError}</p>
+                        )}
+                        <div className="flex items-center gap-3 py-1">
+                          <div className="h-px bg-outline-variant flex-grow" />
+                          <span className="text-[10px] font-black text-outline uppercase tracking-widest">OR</span>
+                          <div className="h-px bg-outline-variant flex-grow" />
+                        </div>
+                      </>
+                    )}
                     <button 
-                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20"
+                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 disabled:opacity-60"
+                      disabled={mobileAuthLoading}
                       onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
                     >
                       <User className="w-5 h-5" /> {t('login')}
                     </button>
                     <button 
-                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-outline-variant font-bold text-sm"
+                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-outline-variant font-bold text-sm disabled:opacity-60"
+                      disabled={mobileAuthLoading}
                       onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
                     >
                       <ShoppingBag className="w-5 h-5" /> {t('sign_up')}
