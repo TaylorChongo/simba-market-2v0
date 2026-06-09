@@ -260,22 +260,29 @@ const Home = () => {
           <div className="flex-grow transition-all duration-300">
             {/* Hero Section */}
             {!isFiltering && !user && (
-              <section className="bg-primary-container rounded-[30px] md:rounded-[40px] p-6 md:p-12 mb-8 relative overflow-hidden flex flex-col items-start text-left min-h-[220px] md:min-h-[320px] justify-center">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+              <section 
+                className="w-full rounded-[30px] md:rounded-[40px] p-6 md:p-16 mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[350px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10"
+                style={{
+                  backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%), url('https://www.simbaonlineshopping.com/Images/EdableOils.jpg')`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
                 
-                <span className="text-on-primary font-bold tracking-widest uppercase text-[9px] md:text-[10px] mb-2 md:mb-3 relative">
+                <span className="bg-primary text-on-primary font-black tracking-widest uppercase text-[9px] md:text-[10px] px-3 py-1 rounded-full mb-4 relative shadow-lg">
                   {t('hero_badge')}
                 </span>
-                <h1 className="text-2xl md:text-5xl lg:text-5xl font-black text-on-primary mb-3 relative leading-[0.95] tracking-tighter max-w-2xl">
+                <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-white mb-4 relative leading-[0.95] tracking-tighter max-w-2xl drop-shadow-2xl">
                   {t('hero_title_1')} <br className="hidden sm:block" />
-                  <span className="text-white/90">{t('hero_title_2')}</span>
+                  <span className="text-primary-container">{t('hero_title_2')}</span>
                 </h1>
-                <p className="text-on-primary/80 max-w-xl mb-6 relative text-[10px] md:text-base font-medium leading-relaxed">
+                <p className="text-white/90 max-w-lg mb-8 relative text-xs md:text-lg font-bold leading-relaxed drop-shadow-lg">
                   {t('hero_description')}
                 </p>
                 <Button 
                   onClick={scrollToProducts}
-                  className="px-6 md:px-8 py-2 md:py-3 !bg-white !text-primary hover:!bg-white hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/30 border-none relative text-xs md:text-base font-bold shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95"
+                  className="px-8 md:px-12 py-3 md:py-4 !bg-primary !text-on-primary hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/40 border-none relative text-sm md:text-lg font-black shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95 rounded-2xl"
                 >
                   {t('shop_now')}
                 </Button>
