@@ -1,28 +1,48 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useBranch } from '../context/BranchContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Button from '../components/Button';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, MapPin, Map as MapIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Cart = () => {
   const { cart, removeFromCart, increaseQuantity, decreaseQuantity, getTotalPrice } = useCart();
   const { t } = useLanguage();
+  const { selectedBranch, toggleMap } = useBranch();
 
   return (
     <div className="min-h-screen bg-surface-container-lowest flex flex-col">
       <Navbar />
       
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 py-8 md:px-8">
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/">
-            <Button variant="ghost" className="p-2 rounded-full">
-              <ArrowLeft className="w-6 h-6" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link to="/">
+              <Button variant="ghost" className="p-2 rounded-full">
+                <ArrowLeft className="w-6 h-6" />
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-black">{t('your_cart')}</h1>
+          </div>
+          
+          <div className="hidden sm:block">
+            <Button 
+              variant="outline" 
+              onClick={toggleMap}
+              className={`h-11 rounded-2xl px-5 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border transition-all ${
+                selectedBranch 
+                  ? 'border-primary/20 bg-primary/5 text-primary' 
+                  : 'border-outline-variant text-outline hover:border-primary hover:text-primary'
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              <span>{selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : t('select_branch')}</span>
+              <MapIcon className="w-3.5 h-3.5 opacity-50" />
             </Button>
-          </Link>
-          <h1 className="text-3xl font-black">{t('your_cart')}</h1>
+          </div>
         </div>
 
         {cart.length === 0 ? (
@@ -97,6 +117,48 @@ const Cart = () => {
                 <h2 className="text-xl font-bold mb-6">{t('summary')}</h2>
                 
                 <div className="space-y-4 mb-6">
+                  {/* Branch Warning */}
+                  {!selectedBranch && (
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-4">
+                      <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <MapPin className="w-3 h-3" /> Pickup Branch Required
+                      </p>
+                      <p className="text-[11px] font-bold text-on-surface mb-3 leading-tight">
+                        Please select a Simba Supermarket branch for your pickup order.
+                      </p>
+                      <Button 
+                        variant="primary" 
+                        size="sm" 
+                        onClick={toggleMap}
+                        className="w-full h-9 text-[10px] font-black uppercase tracking-widest rounded-xl"
+                      >
+                        {t('select_branch')}
+                      </Button>
+                    </div>
+                  )}
+
+                  {selectedBranch && (
+                    <div className="flex items-center justify-between p-3 bg-surface border border-outline-variant rounded-2xl mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                          <MapPin className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-outline uppercase tracking-widest">Pickup at</p>
+                          <p className="text-xs font-bold truncate max-w-[120px]">
+                            {selectedBranch.replace('Simba Supermarket ', '')}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={toggleMap}
+                        className="text-[10px] font-black text-primary uppercase hover:underline"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex justify-between text-outline">
                     <span>{t('subtotal')}</span>
                     <span>RWF {getTotalPrice().toLocaleString()}</span>
@@ -112,8 +174,11 @@ const Cart = () => {
                   </div>
                 </div>
 
-                <Link to="/checkout">
-                  <Button className="w-full py-4 h-auto text-lg font-bold rounded-2xl">
+                <Link to="/checkout" className={!selectedBranch ? "pointer-events-none" : ""}>
+                  <Button 
+                    className={`w-full py-4 h-auto text-lg font-bold rounded-2xl ${!selectedBranch ? 'opacity-50 grayscale' : ''}`}
+                    disabled={!selectedBranch}
+                  >
                     {t('proceed_to_checkout')}
                   </Button>
                 </Link>

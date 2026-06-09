@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
-import InlineBranchMap from '../components/InlineBranchMap';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { useAuth } from '../context/AuthContext';
@@ -121,8 +120,6 @@ const Home = () => {
     <div className="min-h-screen flex flex-col bg-surface">
       <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       
-      <InlineBranchMap />
-
       {/* Branch Selection Reminder */}
       {!selectedBranch && (
         <div className="bg-primary/10 border-b border-primary/20 px-4 py-3">

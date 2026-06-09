@@ -45,11 +45,6 @@ const Register = () => {
     e.preventDefault();
     setError('');
     
-    if ((formData.role === 'BRANCH_MANAGER' || formData.role === 'BRANCH_STAFF') && !formData.branch) {
-      setError('Please select a branch');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -130,43 +125,6 @@ const Register = () => {
               className="h-12 rounded-xl"
             />
           </div>
-          <div>
-            <label className="block text-xs font-black text-outline uppercase tracking-widest mb-2 ml-1">{t('account_type_label')}</label>
-            <div className="relative">
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full h-12 px-4 rounded-xl border border-outline bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold appearance-none"
-              >
-                <option value="CLIENT">{t('client_role')}</option>
-                <option value="BRANCH_MANAGER">{t('manager_role')}</option>
-                <option value="BRANCH_STAFF">{t('staff_role')}</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none" />
-            </div>
-          </div>
-
-          {(formData.role === 'BRANCH_MANAGER' || formData.role === 'BRANCH_STAFF') && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <label className="block text-xs font-black text-outline uppercase tracking-widest mb-2 ml-1">{t('assigned_branch_label')}</label>
-              <div className="relative">
-                <select
-                  name="branch"
-                  value={formData.branch}
-                  onChange={handleChange}
-                  className="w-full h-12 px-4 rounded-xl border border-outline bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold appearance-none"
-                  required
-                >
-                  <option value="">{t('select_branch_placeholder')}</option>
-                  {locations.map(loc => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none" />
-              </div>
-            </div>
-          )}
 
           <Button type="submit" className="w-full h-12 rounded-xl mt-4 font-black" disabled={loading}>
             {loading ? t('creating_account') : t('sign_up')}

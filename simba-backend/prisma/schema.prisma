@@ -41,6 +41,41 @@ model User {
   assignedOrders   Order[]        @relation("AssignedTo")
   managedOrders    Order[]        @relation("AssignedBy")
   products         Product[]      @relation("VendorProducts")
+  securityLogs     SecurityLog[]
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model SecurityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  role         Role
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([role, permissionId])
 }
 
 model Product {

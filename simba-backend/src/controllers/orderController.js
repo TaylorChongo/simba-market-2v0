@@ -1,5 +1,70 @@
 const { prisma } = require('../config/db');
 
+/**
+ * Automatically assigns PENDING orders to available staff in a branch
+ */
+const autoAssignOrders = async (branchName) => {
+  if (!branchName) return;
+
+  try {
+    // 1. Get all PENDING orders for this branch, oldest first
+    const pendingOrders = await prisma.order.findMany({
+      where: { 
+        branchName,
+        status: 'PENDING'
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    if (pendingOrders.length === 0) return;
+
+    // 2. Get all staff for this branch
+    const staffMembers = await prisma.user.findMany({
+      where: {
+        branch: branchName,
+        role: 'BRANCH_STAFF'
+      }
+    });
+
+    if (staffMembers.length === 0) return;
+
+    // 3. For each pending order, try to find a free staff member
+    for (const order of pendingOrders) {
+      // Find staff who don't have active (ASSIGNED or PREPARING) orders
+      const busyStaffIds = await prisma.order.findMany({
+        where: {
+          branchName,
+          status: { in: ['ASSIGNED', 'PREPARING'] },
+          assignedTo: { not: null }
+        },
+        select: { assignedTo: true }
+      }).then(orders => orders.map(o => o.assignedTo));
+
+      const freeStaff = staffMembers.find(s => !busyStaffIds.includes(s.id));
+
+      if (freeStaff) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            assignedTo: freeStaff.id,
+            status: 'ASSIGNED'
+          }
+        });
+        console.log(`Auto-assigned order ${order.id} to staff ${freeStaff.name} at branch ${branchName}`);
+        
+        // After assigning one, we need to refresh busyStaffIds for the next order in the loop
+        // but since we are assigning one at a time and a staff member is only free if they have 0 active,
+        // once assigned they are no longer free for the next order in this same loop.
+      } else {
+        // No more free staff, stop trying to assign for now
+        break;
+      }
+    }
+  } catch (error) {
+    console.error(`Auto-assignment error for branch ${branchName}:`, error.message);
+  }
+};
+
 // @desc    Create a new order
 // @route   POST /api/orders
 // @access  Private/Client
@@ -83,6 +148,9 @@ const createOrder = async (req, res) => {
       return order;
     });
 
+    // Auto-assign orders for this branch after successful creation
+    autoAssignOrders(pickupLocation);
+
     res.status(201).json(result);
   } catch (error) {
     const status = error.message.includes('out of stock') ? 400 : 500;
@@ -142,9 +210,7 @@ const getBranchOrders = async (req, res) => {
   }
 };
 
-// @desc    Assign order to staff (MANAGER)
-// @route   PUT /api/branch/orders/:id/assign
-// @access  Private/BRANCH_MANAGER
+// @desc    Assign order to staff (MANAGER) - DEPRECATED for auto-assign
 const assignOrder = async (req, res) => {
   try {
     const { id } = req.params;
@@ -203,6 +269,11 @@ const updateOrderStatus = async (req, res) => {
       where: { id, assignedTo: req.user.id },
       data: { status },
     });
+
+    // If order is now READY_FOR_PICKUP or COMPLETED, the staff member is free for next task
+    if (['READY_FOR_PICKUP', 'COMPLETED'].includes(status)) {
+      autoAssignOrders(order.branchName);
+    }
 
     res.status(200).json(order);
   } catch (error) {

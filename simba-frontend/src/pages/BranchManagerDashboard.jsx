@@ -172,31 +172,35 @@ const BranchManagerDashboard = () => {
                 <div className="lg:w-1/3 flex flex-col gap-4 border-t lg:border-t-0 lg:border-l border-outline-variant/50 pt-6 lg:pt-0 lg:pl-8">
                   {order.status === 'PENDING' ? (
                     <div className="space-y-4">
-                      <p className="text-[10px] font-black text-outline uppercase tracking-widest">Assign to Staff</p>
-                      <div className="relative group">
-                        <select 
-                          onChange={(e) => handleAssign(order.id, e.target.value)}
-                          className="w-full h-12 pl-4 pr-10 rounded-xl border border-outline bg-surface text-sm font-bold appearance-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
-                          defaultValue=""
-                        >
-                          <option value="" disabled>Choose staff member...</option>
-                          {staff.map(s => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline pointer-events-none group-hover:text-primary transition-colors" />
+                      <p className="text-[10px] font-black text-outline uppercase tracking-widest">Assignment Status</p>
+                      <div className="flex items-center gap-3 p-3 bg-surface-container-high rounded-2xl border border-outline-variant/50">
+                        <div className="w-10 h-10 bg-surface rounded-xl flex items-center justify-center text-outline shadow-sm">
+                          <Clock className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-on-surface">In Queue</p>
+                          <p className="text-[10px] font-bold text-outline uppercase tracking-tight">Waiting for free staff</p>
+                        </div>
                       </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-[10px] font-black text-outline uppercase tracking-widest">Assigned Staff</p>
+                      <p className="text-[10px] font-black text-outline uppercase tracking-widest">Assigned Staff (Auto)</p>
                       <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-2xl border border-primary/10">
                         <div className="w-10 h-10 bg-surface rounded-xl flex items-center justify-center text-primary shadow-sm border border-primary/10">
                           <User className="w-5 h-5" />
                         </div>
                         <div>
                           <p className="text-sm font-black text-on-surface">{order.staff?.name || 'Assigned'}</p>
-                          <p className="text-[10px] font-bold text-primary uppercase">Preparation in progress</p>
+                          <p className={`text-[10px] font-bold uppercase ${
+                            order.status === 'READY_FOR_PICKUP' ? 'text-success' : 
+                            order.status === 'COMPLETED' ? 'text-success' : 'text-primary'
+                          }`}>
+                            {order.status === 'ASSIGNED' ? 'Waiting to start' : 
+                             order.status === 'PREPARING' ? 'Preparation in progress' : 
+                             order.status === 'READY_FOR_PICKUP' ? 'Ready for pickup' : 
+                             order.status === 'COMPLETED' ? 'Order completed' : ''}
+                          </p>
                         </div>
                       </div>
                     </div>

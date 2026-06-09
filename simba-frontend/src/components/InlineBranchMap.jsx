@@ -62,6 +62,7 @@ const InlineBranchMap = () => {
 
   const handleSelectBranch = (branchName) => {
     setSelectedBranch(branchName);
+    toggleMap(); // Auto-close map after selection
   };
 
   if (!isMapVisible) return null;

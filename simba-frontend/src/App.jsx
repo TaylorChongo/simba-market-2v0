@@ -25,6 +25,7 @@ import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorProducts from './pages/vendor/VendorProducts';
 import VendorOrders from './pages/vendor/VendorOrders';
 import AddProduct from './pages/vendor/AddProduct';
+import InlineBranchMap from './components/InlineBranchMap';
 import FloatingAI from './components/FloatingAI';
 
 function App() {
@@ -120,6 +121,7 @@ function App() {
                     } 
                   />
                 </Routes>
+                <InlineBranchMap />
                 <FloatingAI />
               </Router>
             </CartProvider>

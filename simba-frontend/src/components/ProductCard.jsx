@@ -73,7 +73,9 @@ const ProductCard = ({ product }) => {
           
           <div className="mt-auto flex items-center justify-between gap-2">
             <div className="flex flex-col min-w-0">
-              <span className="text-[8px] md:text-[10px] text-outline line-through truncate">RWF {(price * 1.2).toLocaleString()}</span>
+              {(id && (parseInt(String(id).substring(0, 2), 16) % 100 || 0) < 15) && (
+                <span className="text-[8px] md:text-[10px] text-outline line-through truncate">RWF {(price * 1.2).toLocaleString()}</span>
+              )}
               <span className="text-sm md:text-lg font-black text-primary truncate">RWF {price.toLocaleString()}</span>
             </div>
             

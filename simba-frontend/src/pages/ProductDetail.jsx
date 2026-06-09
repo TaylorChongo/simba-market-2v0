@@ -180,8 +180,12 @@ const ProductDetail = () => {
             
             <div className="flex items-baseline gap-3 mb-5">
               <span className="text-xl font-black text-primary">RWF {price.toLocaleString()}</span>
-              <span className="text-base text-outline line-through">RWF {(price * 1.2).toLocaleString()}</span>
-              <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-black">{t('save_percent')}</span>
+              {(id && (parseInt(String(id).substring(0, 2), 16) % 100 || 0) < 15) && (
+                <>
+                  <span className="text-base text-outline line-through">RWF {(price * 1.2).toLocaleString()}</span>
+                  <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[10px] font-black">{t('save_percent')}</span>
+                </>
+              )}
             </div>
 
             <p className="text-on-surface/70 text-xs md:text-sm leading-relaxed mb-6 max-w-md">

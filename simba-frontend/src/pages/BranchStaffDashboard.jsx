@@ -17,7 +17,8 @@ import {
   MinusCircle,
   PlusCircle,
   Boxes,
-  X
+  X,
+  History
 } from 'lucide-react';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -27,11 +28,19 @@ const BranchStaffDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' or 'stock'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'history', or 'stock'
   const [updatingStock, setUpdatingStock] = useState(null); // Product ID being updated
   const [newStockValue, setNewStockValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const activeOrders = useMemo(() => {
+    return orders.filter(o => ['ASSIGNED', 'PREPARING', 'READY_FOR_PICKUP'].includes(o.status));
+  }, [orders]);
+
+  const historyOrders = useMemo(() => {
+    return orders.filter(o => o.status === 'COMPLETED');
+  }, [orders]);
 
   const categories = useMemo(() => {
     const unique = new Set(products.map(p => p.category));
@@ -84,7 +93,7 @@ const BranchStaffDashboard = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'orders') {
+    if (activeTab === 'orders' || activeTab === 'history') {
       fetchStaffOrders();
     } else {
       fetchBranchStock();
@@ -175,16 +184,22 @@ const BranchStaffDashboard = () => {
             <h1 className="text-4xl font-black text-on-surface tracking-tight">Staff Dashboard</h1>
           </div>
           
-          <div className="flex bg-surface border border-outline-variant rounded-2xl p-1 shadow-sm">
+          <div className="flex bg-surface border border-outline-variant rounded-2xl p-1 shadow-sm overflow-x-auto">
             <button 
               onClick={() => setActiveTab('orders')}
-              className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${activeTab === 'orders' ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 'text-outline hover:bg-surface-container-high'}`}
+              className={`px-6 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${activeTab === 'orders' ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 'text-outline hover:bg-surface-container-high'}`}
             >
-              Orders
+              Active Tasks
+            </button>
+            <button 
+              onClick={() => setActiveTab('history')}
+              className={`px-6 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${activeTab === 'history' ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 'text-outline hover:bg-surface-container-high'}`}
+            >
+              History
             </button>
             <button 
               onClick={() => setActiveTab('stock')}
-              className={`px-6 py-2 rounded-xl text-xs font-black transition-all ${activeTab === 'stock' ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 'text-outline hover:bg-surface-container-high'}`}
+              className={`px-6 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${activeTab === 'stock' ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 'text-outline hover:bg-surface-container-high'}`}
             >
               Inventory
             </button>
@@ -196,13 +211,13 @@ const BranchStaffDashboard = () => {
             <Loader2 className="w-12 h-12 animate-spin text-primary" />
             <p className="font-black text-outline uppercase tracking-widest text-xs">Loading dashboard data...</p>
           </div>
-        ) : activeTab === 'orders' ? (
-          /* ORDERS TAB */
+        ) : (activeTab === 'orders' || activeTab === 'history') ? (
+          /* ORDERS & HISTORY TABS */
           <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-black flex items-center gap-2">
                 <Package className="w-5 h-5 text-primary" /> 
-                Assigned Orders ({orders.length})
+                {activeTab === 'orders' ? `Active Tasks (${activeOrders.length})` : `Handover History (${historyOrders.length})`}
               </h2>
               <button 
                 onClick={fetchStaffOrders}
@@ -213,15 +228,19 @@ const BranchStaffDashboard = () => {
               </button>
             </div>
 
-            {orders.length === 0 ? (
+            {(activeTab === 'orders' ? activeOrders : historyOrders).length === 0 ? (
               <div className="bg-surface border border-outline-variant p-12 rounded-[40px] text-center">
                 <ShoppingBag className="w-16 h-16 text-outline-variant mx-auto mb-6" />
-                <h3 className="text-xl font-black text-on-surface mb-2">No Active Tasks</h3>
-                <p className="text-outline font-medium text-sm">You don't have any assigned orders to prepare at the moment.</p>
+                <h3 className="text-xl font-black text-on-surface mb-2">No {activeTab === 'orders' ? 'Active Tasks' : 'History Found'}</h3>
+                <p className="text-outline font-medium text-sm">
+                  {activeTab === 'orders' 
+                    ? "You don't have any assigned orders to prepare at the moment."
+                    : "You haven't completed any handovers yet."}
+                </p>
               </div>
             ) : (
               <div className="space-y-6">
-                {orders.map((order) => (
+                {(activeTab === 'orders' ? activeOrders : historyOrders).map((order) => (
                   <div key={order.id} className="bg-surface border border-outline-variant rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                     <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between gap-8">
                       {/* Left: Info */}
@@ -287,9 +306,27 @@ const BranchStaffDashboard = () => {
                         )}
 
                         {order.status === 'READY_FOR_PICKUP' && (
-                          <div className="bg-success/5 border border-success/10 rounded-2xl p-4 text-center">
-                              <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
-                              <p className="text-xs font-black text-success uppercase tracking-widest">Ready for Customer</p>
+                          <div className="space-y-3">
+                            <div className="bg-success/5 border border-success/10 rounded-2xl p-4 text-center mb-2">
+                                <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
+                                <p className="text-xs font-black text-success uppercase tracking-widest">Ready for Customer</p>
+                            </div>
+                            <Button 
+                              onClick={() => updateStatus(order.id, 'COMPLETED')}
+                              className="w-full h-14 rounded-2xl font-black bg-primary text-on-primary border-none flex items-center justify-center gap-2 shadow-lg shadow-primary/10"
+                            >
+                              <ShoppingBag className="w-5 h-5" />
+                              Handover & Complete
+                            </Button>
+                          </div>
+                        )}
+
+                        {order.status === 'COMPLETED' && (
+                          <div className="text-center p-4">
+                            <div className="w-12 h-12 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <CheckCircle2 className="w-6 h-6 text-success" />
+                            </div>
+                            <p className="text-xs font-black text-outline uppercase tracking-widest">Order Handed Over</p>
                           </div>
                         )}
                       </div>

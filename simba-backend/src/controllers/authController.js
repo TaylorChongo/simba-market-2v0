@@ -193,4 +193,69 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, googleLogin, forgotPassword, resetPassword };
+const updateProfile = async (req, res) => {
+  const { name, email } = req.body;
+  const userId = req.user.id;
+
+  try {
+    // Check if email is already taken by another user
+    if (email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: name || undefined,
+        email: email || undefined
+      }
+    });
+
+    const { password: _, ...userInfo } = updatedUser;
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: userInfo
+    });
+  } catch (error) {
+    console.error('Update Profile Error:', error);
+    res.status(500).json({ message: 'Server error during profile update' });
+  }
+};
+
+const changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user || !user.password) {
+      return res.status(401).json({ message: 'User not found or using Google Sign-In' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect current password' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change Password Error:', error);
+    res.status(500).json({ message: 'Server error during password change' });
+  }
+};
+
+module.exports = { register, login, googleLogin, forgotPassword, resetPassword, updateProfile, changePassword };

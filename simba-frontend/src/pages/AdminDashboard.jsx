@@ -1,37 +1,66 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
+import UserManagement from '../components/admin/UserManagement';
+import RolesPermissions from '../components/admin/RolesPermissions';
+import SystemSettings from '../components/admin/SystemSettings';
+import SecurityLogs from '../components/admin/SecurityLogs';
+import SystemAnalytics from '../components/admin/SystemAnalytics';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('analytics');
+
+  const tabs = [
+    { id: 'analytics', label: 'Analytics', icon: '📊' },
+    { id: 'users', label: 'Users', icon: '👥' },
+    { id: 'roles', label: 'Roles', icon: '🔑' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'logs', label: 'Logs', icon: '🛡️' },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'users': return <UserManagement />;
+      case 'roles': return <RolesPermissions />;
+      case 'settings': return <SystemSettings />;
+      case 'logs': return <SecurityLogs />;
+      case 'analytics': return <SystemAnalytics />;
+      default: return <SystemAnalytics />;
+    }
+  };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-on-surface text-error">System Administration</h1>
-        <Button variant="outline" onClick={logout}>Logout</Button>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-on-surface">System Control Center</h1>
+          <p className="text-on-surface-variant">Welcome back, Administrator {user?.name}</p>
+        </div>
+        <Button variant="outline" onClick={logout} className="border-error text-error hover:bg-error/10">
+          Secure Logout
+        </Button>
       </div>
       
-      <div className="bg-surface p-6 rounded-2xl shadow-sm border border-error/20 bg-error/5">
-        <h2 className="text-xl font-semibold mb-4 text-on-surface">Hello, Admin {user?.name}!</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="p-4 bg-surface rounded-xl border border-outline-variant shadow-sm text-center">
-            <p className="text-xs text-on-surface-variant font-bold uppercase">Users</p>
-            <p className="text-2xl font-black">128</p>
-          </div>
-          <div className="p-4 bg-surface rounded-xl border border-outline-variant shadow-sm text-center">
-            <p className="text-xs text-on-surface-variant font-bold uppercase">Vendors</p>
-            <p className="text-2xl font-black">24</p>
-          </div>
-          <div className="p-4 bg-surface rounded-xl border border-outline-variant shadow-sm text-center">
-            <p className="text-xs text-on-surface-variant font-bold uppercase">Products</p>
-            <p className="text-2xl font-black">1,240</p>
-          </div>
-          <div className="p-4 bg-surface rounded-xl border border-outline-variant shadow-sm text-center">
-            <p className="text-xs text-on-surface-variant font-bold uppercase">Orders</p>
-            <p className="text-2xl font-black">89</p>
-          </div>
-        </div>
+      <div className="flex flex-wrap gap-2 mb-8 bg-surface-variant/10 p-2 rounded-2xl border border-outline-variant">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+              activeTab === tab.id 
+                ? 'bg-primary text-on-primary shadow-lg shadow-primary/20 scale-105' 
+                : 'text-on-surface-variant hover:bg-surface-variant/30'
+            }`}
+          >
+            <span>{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {renderContent()}
       </div>
     </div>
   );

@@ -4,15 +4,11 @@ const path = require('path');
 const { prisma } = require('../config/db');
 
 const branches = [
-  'Simba Supermarket Remera',
+  'Simba Supermarket Centenary (City Centre)',
+  'Simba Supermarket Kigali Heights',
+  'Simba Supermarket Gishushu',
   'Simba Supermarket Kimironko',
-  'Simba Supermarket Kacyiru',
-  'Simba Supermarket Nyamirambo',
-  'Simba Supermarket Gikondo',
-  'Simba Supermarket Kanombe',
-  'Simba Supermarket Kinyinya',
-  'Simba Supermarket Kibagabaga',
-  'Simba Supermarket Nyanza',
+  'Simba Supermarket Kicukiro'
 ];
 
 async function ensureCatalogSeeded() {
@@ -52,7 +48,7 @@ async function ensureCatalogSeeded() {
       data: branches.map((branchName) => ({
         productId: product.id,
         branchName,
-        stock: Math.floor(Math.random() * 41) + 10,
+        stock: 100,
       })),
     });
   }
@@ -60,7 +56,60 @@ async function ensureCatalogSeeded() {
   return { seeded: true, productCount: products.length };
 }
 
+async function seedAdminData() {
+  // Seed Permissions
+  const permissions = [
+    { name: 'MANAGE_USERS', description: 'Can create, update, and delete users' },
+    { name: 'MANAGE_ROLES', description: 'Can assign permissions to roles' },
+    { name: 'VIEW_LOGS', description: 'Can view system security logs' },
+    { name: 'MANAGE_SETTINGS', description: 'Can modify system-wide settings' },
+    { name: 'VIEW_ANALYTICS', description: 'Can view system performance analytics' },
+  ];
+
+  for (const perm of permissions) {
+    await prisma.permission.upsert({
+      where: { name: perm.name },
+      update: { description: perm.description },
+      create: perm,
+    });
+  }
+
+  // Seed default System Settings
+  const settings = [
+    { key: 'SITE_NAME', value: 'Simba Market' },
+    { key: 'MAINTENANCE_MODE', value: 'false' },
+    { key: 'SUPPORT_EMAIL', value: 'support@simba.com' },
+  ];
+
+  for (const setting of settings) {
+    await prisma.systemSetting.upsert({
+      where: { key: setting.key },
+      update: {},
+      create: setting,
+    });
+  }
+
+  // Assign all permissions to ADMIN role by default
+  const allPerms = await prisma.permission.findMany();
+  for (const perm of allPerms) {
+    await prisma.rolePermission.upsert({
+      where: {
+        role_permissionId: {
+          role: 'ADMIN',
+          permissionId: perm.id,
+        },
+      },
+      update: {},
+      create: {
+        role: 'ADMIN',
+        permissionId: perm.id,
+      },
+    });
+  }
+}
+
 module.exports = {
   ensureCatalogSeeded,
+  seedAdminData,
   branches,
 };
