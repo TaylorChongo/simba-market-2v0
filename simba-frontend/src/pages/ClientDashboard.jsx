@@ -5,8 +5,9 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { User, Package, Settings, LogOut, Save, Loader2, CheckCircle2, AlertCircle, Clock, History, Lock, Shield } from 'lucide-react';
+import { User, Package, Settings, LogOut, Save, Loader2, CheckCircle2, AlertCircle, Clock, History, Lock, Shield, Pencil, X as CloseIcon, SlidersHorizontal, Moon, Languages } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 
 const ClientDashboard = () => {
   const { user, logout, updateUser, token } = useAuth();
@@ -14,6 +15,7 @@ const ClientDashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'profile';
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -67,6 +69,7 @@ const ClientDashboard = () => {
 
   const handleTabChange = (tab) => {
     setSearchParams({ tab });
+    setIsEditing(false);
     // Reset statuses when changing tabs
     setStatus({ loading: false, success: '', error: '' });
     setPasswordStatus({ loading: false, success: '', error: '' });
@@ -99,6 +102,7 @@ const ClientDashboard = () => {
       if (response.ok) {
         updateUser(data.user);
         setStatus({ loading: false, success: 'Profile updated successfully!', error: '' });
+        setIsEditing(false);
         setTimeout(() => setStatus(prev => ({ ...prev, success: '' })), 3000);
       } else {
         setStatus({ loading: false, success: '', error: data.message || 'Failed to update profile' });
@@ -147,8 +151,22 @@ const ClientDashboard = () => {
   const tabs = [
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'orders', label: 'My Orders', icon: Package },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'preferences', label: 'Preferences', icon: SlidersHorizontal },
+    { id: 'settings', label: 'Security', icon: Lock },
   ];
+
+  const languages = [
+    { code: 'en', label: 'English', flag: '🇺🇸' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'kin', label: 'Kinyarwanda', flag: '🇷🇼' }
+  ];
+
+  const { language, setLanguage } = useLanguage();
+
+  const [notifications, setNotifications] = useState({
+    email: true,
+    marketing: false,
+  });
 
   const activeOrders = useMemo(() => {
     return orders.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
@@ -166,7 +184,7 @@ const ClientDashboard = () => {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
           <aside className="w-full md:w-64 shrink-0">
-            <div className="bg-surface border border-outline-variant rounded-3xl overflow-hidden sticky top-24">
+            <div className="bg-surface border border-outline-variant rounded-3xl overflow-hidden sticky top-24 shadow-sm">
               <div className="p-6 bg-primary/5 border-b border-outline-variant">
                 <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 shadow-inner">
                   <User className="w-8 h-8" />
@@ -209,76 +227,123 @@ const ClientDashboard = () => {
             <div className="bg-surface border border-outline-variant rounded-3xl p-6 md:p-8 min-h-[500px] shadow-sm">
               {activeTab === 'profile' && (
                 <div className="max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h1 className="text-3xl font-black mb-2 tracking-tight">Profile Information</h1>
-                  <p className="text-outline mb-8 font-medium">Update your account details and how we contact you.</p>
-
-                  <form onSubmit={handleUpdateProfile} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline ml-1">Full Name</label>
-                        <Input
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          placeholder="John Doe"
-                          required
-                          className="h-12 rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline ml-1">Email Address</label>
-                        <Input
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="john@example.com"
-                          required
-                          className="h-12 rounded-xl"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="p-5 bg-surface-container-low rounded-[24px] border border-outline-variant">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Shield className="w-4 h-4 text-primary" />
-                        <h3 className="text-sm font-black uppercase tracking-widest">Account Security</h3>
-                      </div>
-                      <p className="text-xs text-outline mb-4 font-medium">Your current access level in the Simba Market system.</p>
-                      <div className="inline-flex items-center px-4 py-1.5 bg-primary text-on-primary text-[10px] font-black uppercase tracking-widest rounded-full shadow-md shadow-primary/20">
-                        {user?.role}
-                      </div>
-                    </div>
-
-                    {status.error && (
-                      <div className="flex items-center gap-3 p-4 bg-error/10 text-error rounded-2xl border border-error/20 animate-in shake duration-300">
-                        <AlertCircle className="w-5 h-5 shrink-0" />
-                        <p className="text-sm font-bold">{status.error}</p>
-                      </div>
-                    )}
-
-                    {status.success && (
-                      <div className="flex items-center gap-3 p-4 bg-success/10 text-success rounded-2xl border border-success/20 animate-in zoom-in duration-300">
-                        <CheckCircle2 className="w-5 h-5 shrink-0" />
-                        <p className="text-sm font-bold">{status.success}</p>
-                      </div>
-                    )}
-
-                    <div className="flex justify-end pt-4 border-t border-outline-variant/30">
-                      <Button
-                        type="submit"
-                        disabled={status.loading}
-                        className="px-10 h-12 flex items-center gap-2 rounded-xl font-black"
+                  <div className="flex items-center justify-between mb-2">
+                    <h1 className="text-3xl font-black tracking-tight">Profile Information</h1>
+                    {!isEditing && (
+                      <button 
+                        onClick={() => setIsEditing(true)}
+                        className="p-2.5 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-all shadow-sm"
+                        title="Edit Profile"
                       >
-                        {status.loading ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <Save className="w-5 h-5" />
-                        )}
-                        <span>Save Changes</span>
-                      </Button>
+                        <Pencil className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-outline mb-8 font-medium">View and update your account details.</p>
+
+                  {!isEditing ? (
+                    <div className="space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-1.5 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/50">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">Full Name</label>
+                          <p className="text-lg font-bold text-on-surface">{user?.name}</p>
+                        </div>
+                        <div className="space-y-1.5 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/50">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">Email Address</label>
+                          <p className="text-lg font-bold text-on-surface">{user?.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <Shield className="w-4 h-4 text-primary" />
+                          </div>
+                          <h3 className="text-sm font-black uppercase tracking-widest">Account Security</h3>
+                        </div>
+                        <p className="text-xs text-outline mb-4 font-medium leading-relaxed">Your current access level in the Simba Market system. This determines your permissions and features.</p>
+                        <div className="inline-flex items-center px-4 py-2 bg-primary text-on-primary text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary/20">
+                          {user?.role} Access
+                        </div>
+                      </div>
                     </div>
-                  </form>
+                  ) : (
+                    <form onSubmit={handleUpdateProfile} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline ml-1">Full Name</label>
+                          <Input
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            placeholder="John Doe"
+                            required
+                            className="h-12 rounded-xl"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline ml-1">Email Address</label>
+                          <Input
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="john@example.com"
+                            required
+                            className="h-12 rounded-xl"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="p-5 bg-surface-container-low rounded-[24px] border border-outline-variant">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Shield className="w-4 h-4 text-primary" />
+                          <h3 className="text-sm font-black uppercase tracking-widest">Account Security</h3>
+                        </div>
+                        <p className="text-xs text-outline mb-4 font-medium">Your current access level in the Simba Market system.</p>
+                        <div className="inline-flex items-center px-4 py-1.5 bg-primary text-on-primary text-[10px] font-black uppercase tracking-widest rounded-full shadow-md shadow-primary/20">
+                          {user?.role}
+                        </div>
+                      </div>
+
+                      {status.error && (
+                        <div className="flex items-center gap-3 p-4 bg-error/10 text-error rounded-2xl border border-error/20 animate-in shake duration-300">
+                          <AlertCircle className="w-5 h-5 shrink-0" />
+                          <p className="text-sm font-bold">{status.error}</p>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/30">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditing(false)}
+                          className="px-6 h-12 rounded-xl font-black border-outline-variant hover:bg-surface-container-high"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={status.loading}
+                          className="px-10 h-12 flex items-center gap-2 rounded-xl font-black"
+                        >
+                          {status.loading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Save className="w-5 h-5" />
+                          )}
+                          <span>Save Changes</span>
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+
+                  {status.success && (
+                    <div className="mt-6 flex items-center gap-3 p-4 bg-success/10 text-success rounded-2xl border border-success/20 animate-in zoom-in duration-300">
+                      <CheckCircle2 className="w-5 h-5 shrink-0" />
+                      <p className="text-sm font-bold">{status.success}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -345,21 +410,114 @@ const ClientDashboard = () => {
                 </div>
               )}
 
+              {activeTab === 'preferences' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
+                  <h1 className="text-3xl font-black tracking-tight mb-2">App Preferences</h1>
+                  <p className="text-outline font-medium mb-10">Customize your shopping experience and notifications.</p>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Visual Preferences */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 mb-2 px-1">
+                        <Moon className="w-5 h-5 text-primary" />
+                        <h2 className="text-sm font-black uppercase tracking-widest">Appearance</h2>
+                      </div>
+                      
+                      <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant flex items-center justify-between shadow-sm">
+                        <div>
+                          <h3 className="font-black text-sm">Dark Mode</h3>
+                          <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Switch between light and dark themes</p>
+                        </div>
+                        <ThemeToggle />
+                      </div>
+
+                      <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant shadow-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                          <Languages className="w-5 h-5 text-primary" />
+                          <h3 className="font-black text-sm">Language Settings</h3>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {languages.map((lang) => (
+                            <button
+                              key={lang.code}
+                              onClick={() => setLanguage(lang.code)}
+                              className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
+                                language === lang.code 
+                                  ? 'bg-primary/10 border-primary text-primary font-bold' 
+                                  : 'border-outline-variant text-outline hover:bg-surface-container-high'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg">{lang.flag}</span>
+                                <span className="text-sm font-black uppercase tracking-widest">{lang.label}</span>
+                              </div>
+                              {language === lang.code && <CheckCircle2 className="w-4 h-4" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notification Preferences */}
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3 mb-2 px-1">
+                        <Settings className="w-5 h-5 text-primary" />
+                        <h2 className="text-sm font-black uppercase tracking-widest">Notifications</h2>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant flex items-center justify-between shadow-sm group">
+                          <div>
+                            <h3 className="font-black text-sm group-hover:text-primary transition-colors">Email Notifications</h3>
+                            <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Order Updates & Offers</p>
+                          </div>
+                          <button 
+                            onClick={() => setNotifications(prev => ({...prev, email: !prev.email}))}
+                            className={`w-12 h-6 rounded-full relative transition-all duration-300 ${notifications.email ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-outline-variant/50'}`}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300 ${notifications.email ? 'right-1' : 'left-1'}`} />
+                          </button>
+                        </div>
+                        
+                        <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant flex items-center justify-between shadow-sm group">
+                          <div>
+                            <h3 className="font-black text-sm group-hover:text-primary transition-colors">Marketing Emails</h3>
+                            <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Weekly deals & discounts</p>
+                          </div>
+                          <button 
+                            onClick={() => setNotifications(prev => ({...prev, marketing: !prev.marketing}))}
+                            className={`w-12 h-6 rounded-full relative transition-all duration-300 ${notifications.marketing ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-outline-variant/50'}`}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300 ${notifications.marketing ? 'right-1' : 'left-1'}`} />
+                          </button>
+                        </div>
+
+                        <div className="p-6 border-2 border-dashed border-primary/20 bg-primary/5 rounded-[32px] flex items-center justify-center text-center">
+                          <p className="text-[10px] text-primary font-black uppercase tracking-widest leading-relaxed">
+                            Preference changes are saved <br /> automatically to your account.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'settings' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h1 className="text-3xl font-black tracking-tight mb-2">Account Settings</h1>
-                  <p className="text-outline font-medium mb-10">Manage your notifications and account security.</p>
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl">
+                  <h1 className="text-3xl font-black tracking-tight mb-2">Account Security</h1>
+                  <p className="text-outline font-medium mb-10">Manage your password and account status.</p>
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                  <div className="space-y-8">
                     {/* Security Section */}
                     <div className="space-y-6">
-                      <div className="flex items-center gap-3 mb-4 px-1">
+                      <div className="flex items-center gap-3 mb-2 px-1">
                         <Lock className="w-5 h-5 text-primary" />
                         <h2 className="text-sm font-black uppercase tracking-widest">Security</h2>
                       </div>
                       
-                      <form onSubmit={handleChangePassword} className="bg-surface-container-low p-6 rounded-[32px] border border-outline-variant space-y-4 shadow-sm">
-                        <h3 className="font-black text-sm mb-4">Change Password</h3>
+                      <form onSubmit={handleChangePassword} className="bg-surface-container-low p-8 rounded-[40px] border border-outline-variant space-y-6 shadow-sm">
+                        <h3 className="font-black text-lg mb-2">Change Password</h3>
                         
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Current Password</label>
@@ -373,38 +531,42 @@ const ClientDashboard = () => {
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">New Password</label>
-                          <Input
-                            type="password"
-                            name="newPassword"
-                            value={passwordData.newPassword}
-                            onChange={handlePasswordChange}
-                            required
-                            className="h-12 rounded-xl"
-                          />
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">New Password</label>
+                            <Input
+                              type="password"
+                              name="newPassword"
+                              value={passwordData.newPassword}
+                              onChange={handlePasswordChange}
+                              required
+                              className="h-12 rounded-xl"
+                            />
+                          </div>
 
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Confirm New Password</label>
-                          <Input
-                            type="password"
-                            name="confirmPassword"
-                            value={passwordData.confirmPassword}
-                            onChange={handlePasswordChange}
-                            required
-                            className="h-12 rounded-xl"
-                          />
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Confirm New Password</label>
+                            <Input
+                              type="password"
+                              name="confirmPassword"
+                              value={passwordData.confirmPassword}
+                              onChange={handlePasswordChange}
+                              required
+                              className="h-12 rounded-xl"
+                            />
+                          </div>
                         </div>
 
                         {passwordStatus.error && (
-                          <div className="p-3 bg-error/10 text-error rounded-xl text-xs font-bold border border-error/20">
+                          <div className="p-4 bg-error/10 text-error rounded-2xl text-xs font-bold border border-error/20 flex items-center gap-3">
+                            <AlertCircle className="w-4 h-4" />
                             {passwordStatus.error}
                           </div>
                         )}
 
                         {passwordStatus.success && (
-                          <div className="p-3 bg-success/10 text-success rounded-xl text-xs font-bold border border-success/20">
+                          <div className="p-4 bg-success/10 text-success rounded-2xl text-xs font-bold border border-success/20 flex items-center gap-3">
+                            <CheckCircle2 className="w-4 h-4" />
                             {passwordStatus.success}
                           </div>
                         )}
@@ -412,49 +574,22 @@ const ClientDashboard = () => {
                         <Button
                           type="submit"
                           disabled={passwordStatus.loading}
-                          className="w-full h-12 rounded-xl font-black mt-2"
+                          className="w-full h-14 rounded-2xl font-black mt-4 shadow-lg shadow-primary/20"
                         >
                           {passwordStatus.loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
                         </Button>
                       </form>
                     </div>
 
-                    {/* Notifications & Other */}
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 mb-4 px-1">
-                        <Settings className="w-5 h-5 text-primary" />
-                        <h2 className="text-sm font-black uppercase tracking-widest">Preferences</h2>
+                    {/* Danger Zone */}
+                    <div className="p-8 border-2 border-dashed border-error/20 bg-error/5 rounded-[40px] flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div>
+                        <h3 className="font-black text-lg text-error mb-1">Delete Account</h3>
+                        <p className="text-xs text-error/60 font-bold uppercase tracking-widest">This action is permanent and cannot be undone.</p>
                       </div>
-
-                      <div className="space-y-4">
-                        <div className="p-5 bg-surface-container-low rounded-[24px] border border-outline-variant flex items-center justify-between shadow-sm">
-                          <div>
-                            <h3 className="font-black text-sm">Email Notifications</h3>
-                            <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Order Updates & Offers</p>
-                          </div>
-                          <div className="w-12 h-6 bg-primary rounded-full relative cursor-pointer shadow-inner">
-                            <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-md" />
-                          </div>
-                        </div>
-                        
-                        <div className="p-5 bg-surface-container-low rounded-[24px] border border-outline-variant flex items-center justify-between shadow-sm">
-                          <div>
-                            <h3 className="font-black text-sm">Marketing Emails</h3>
-                            <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Weekly deals & discounts</p>
-                          </div>
-                          <div className="w-12 h-6 bg-surface-container-highest rounded-full relative cursor-pointer shadow-inner">
-                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md" />
-                          </div>
-                        </div>
-
-                        <div className="p-5 border-2 border-dashed border-error/20 bg-error/5 rounded-[24px] flex items-center justify-between">
-                          <div>
-                            <h3 className="font-black text-sm text-error">Delete Account</h3>
-                            <p className="text-[10px] text-error/60 font-bold uppercase tracking-widest mt-1">Permanently remove your data</p>
-                          </div>
-                          <Button variant="outline" size="sm" className="text-[10px] font-black uppercase tracking-widest border-error/30 text-error hover:bg-error/10 h-10 px-4 rounded-xl">Deactivate</Button>
-                        </div>
-                      </div>
+                      <Button variant="outline" className="w-full md:w-auto text-[11px] font-black uppercase tracking-[0.2em] border-error/30 text-error hover:bg-error/10 h-12 px-8 rounded-2xl transition-all">
+                        Deactivate Account
+                      </Button>
                     </div>
                   </div>
                 </div>

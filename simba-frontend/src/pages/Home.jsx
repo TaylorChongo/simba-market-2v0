@@ -275,17 +275,25 @@ const Home = () => {
             {/* Hero Section */}
             {!isFiltering && !user && (
               <section 
-                className="w-full rounded-[30px] md:rounded-[40px] p-6 md:p-16 mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[350px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10 transition-all duration-1000 ease-in-out"
-                style={{
-                  backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%), url('${heroImages[currentHeroIndex]}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
+                className="w-full rounded-[30px] md:rounded-[40px] p-6 md:p-16 mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[350px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10"
               >
+                {/* Background Layers for smooth transition */}
+                {heroImages.map((img, i) => (
+                  <div
+                    key={i}
+                    className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${i === currentHeroIndex ? 'opacity-100' : 'opacity-0'}`}
+                    style={{
+                      backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%), url('${img}')`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
+                  />
+                ))}
+
                 <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
                 
                 {/* Dots for slideshow */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                   {heroImages.map((_, i) => (
                     <button
                       key={i}
@@ -295,19 +303,19 @@ const Home = () => {
                   ))}
                 </div>
                 
-                <span className="bg-primary text-on-primary font-black tracking-widest uppercase text-[9px] md:text-[10px] px-3 py-1 rounded-full mb-4 relative shadow-lg">
+                <span className="bg-primary text-on-primary font-black tracking-widest uppercase text-[9px] md:text-[10px] px-3 py-1 rounded-full mb-4 relative z-10 shadow-lg">
                   {t('hero_badge')}
                 </span>
-                <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-white mb-4 relative leading-[0.95] tracking-tighter max-w-2xl drop-shadow-2xl">
+                <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-white mb-4 relative z-10 leading-[0.95] tracking-tighter max-w-2xl drop-shadow-2xl">
                   {t('hero_title_1')} <br className="hidden sm:block" />
                   <span className="text-primary-container">{t('hero_title_2')}</span>
                 </h1>
-                <p className="text-white/90 max-w-lg mb-8 relative text-xs md:text-lg font-bold leading-relaxed drop-shadow-lg">
+                <p className="text-white/90 max-w-lg mb-8 relative z-10 text-xs md:text-lg font-bold leading-relaxed drop-shadow-lg">
                   {t('hero_description')}
                 </p>
                 <Button 
                   onClick={scrollToProducts}
-                  className="px-8 md:px-12 py-3 md:py-4 !bg-primary !text-on-primary hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/40 border-none relative text-sm md:text-lg font-black shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95 rounded-2xl"
+                  className="px-8 md:px-12 py-3 md:py-4 !bg-primary !text-on-primary hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/40 border-none relative z-10 text-sm md:text-lg font-black shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95 rounded-2xl"
                 >
                   {t('shop_now')}
                 </Button>

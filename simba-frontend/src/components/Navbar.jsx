@@ -1,4 +1,4 @@
-import { Search, ShoppingCart, Menu, User, LogOut, Settings, Package, ChevronDown, Moon, Languages, MapPin, ShoppingBag, Map as MapIcon, X, Sparkles } from 'lucide-react';
+import { Search, ShoppingCart, Menu, User, LogOut, Settings, Package, ChevronDown, Moon, Languages, MapPin, ShoppingBag, Map as MapIcon, X, Sparkles, SlidersHorizontal, Lock } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import Button from './Button';
 import ThemeToggle from './ThemeToggle';
@@ -240,12 +240,24 @@ const Navbar = () => {
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}?tab=preferences`);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <SlidersHorizontal className="w-4 h-4 text-outline" />
+                      {t('preferences')}
+                    </button>
+                    
+                    <button 
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                      onClick={() => {
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
                         navigate(`/dashboard/${rolePath}?tab=settings`);
                         setShowDropdown(false);
                       }}
                     >
-                      <Settings className="w-4 h-4 text-outline" />
-                      {t('settings')}
+                      <Lock className="w-4 h-4 text-outline" />
+                      {t('security')}
                     </button>
                     
                     <div className="h-px bg-outline-variant/50 my-1" />
@@ -381,6 +393,26 @@ const Navbar = () => {
                       }}
                     >
                       <Package className="w-5 h-5 text-outline" /> {t('my_orders')}
+                    </button>
+                    <button 
+                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
+                      onClick={() => {
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}?tab=preferences`);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <SlidersHorizontal className="w-5 h-5 text-outline" /> {t('preferences')}
+                    </button>
+                    <button 
+                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
+                      onClick={() => {
+                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                        navigate(`/dashboard/${rolePath}?tab=settings`);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <Lock className="w-5 h-5 text-outline" /> {t('security')}
                     </button>
                   </>
                 )}
