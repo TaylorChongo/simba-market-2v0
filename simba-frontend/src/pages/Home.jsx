@@ -31,6 +31,20 @@ const Home = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const navigate = useNavigate();
 
+  // Hero Slideshow Logic
+  const heroImages = [
+    'https://www.simbaonlineshopping.com/Images/EdableOils.jpg',
+    'https://www.simbaonlineshopping.com/Images/Supermarket_0X.jpg'
+  ];
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
   useEffect(() => {
     if (user && user.role !== 'CLIENT') {
       const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -261,14 +275,25 @@ const Home = () => {
             {/* Hero Section */}
             {!isFiltering && !user && (
               <section 
-                className="w-full rounded-[30px] md:rounded-[40px] p-6 md:p-16 mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[350px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10"
+                className="w-full rounded-[30px] md:rounded-[40px] p-6 md:p-16 mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[350px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10 transition-all duration-1000 ease-in-out"
                 style={{
-                  backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%), url('https://www.simbaonlineshopping.com/Images/EdableOils.jpg')`,
+                  backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%), url('${heroImages[currentHeroIndex]}')`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center'
                 }}
               >
                 <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
+                
+                {/* Dots for slideshow */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                  {heroImages.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentHeroIndex(i)}
+                      className={`w-2 h-2 rounded-full transition-all ${i === currentHeroIndex ? 'bg-primary w-6' : 'bg-white/50'}`}
+                    />
+                  ))}
+                </div>
                 
                 <span className="bg-primary text-on-primary font-black tracking-widest uppercase text-[9px] md:text-[10px] px-3 py-1 rounded-full mb-4 relative shadow-lg">
                   {t('hero_badge')}
