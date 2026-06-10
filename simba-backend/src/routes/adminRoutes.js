@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { 
   getUsers, 
+  addUser,
   updateUserRole, 
   deleteUser, 
   getPermissions, 
@@ -9,7 +10,8 @@ const {
   getSettings, 
   updateSetting, 
   getLogs, 
-  getAnalytics 
+  getAnalytics,
+  generateReport 
 } = require('../controllers/adminController');
 const { authenticateUser, authorizeRoles } = require('../middleware/authMiddleware');
 
@@ -19,6 +21,7 @@ router.use(authorizeRoles('ADMIN'));
 
 // User Management
 router.get('/users', getUsers);
+router.post('/users', addUser);
 router.put('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
 
@@ -35,5 +38,6 @@ router.get('/logs', getLogs);
 
 // System Analytics
 router.get('/analytics', getAnalytics);
+router.get('/report', generateReport);
 
 module.exports = router;

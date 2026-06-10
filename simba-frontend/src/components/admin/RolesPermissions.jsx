@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../../lib/utils';
+import { 
+  Key, 
+  ShieldCheck, 
+  Lock, 
+  Info, 
+  CheckCircle2, 
+  Circle,
+  ShieldAlert,
+  Users
+} from 'lucide-react';
 
 const RolesPermissions = () => {
   const [permissions, setPermissions] = useState([]);
+  const [activeRole, setActiveRole] = useState('ADMIN');
+
+  const roles = ['ADMIN', 'VENDOR', 'BRANCH_MANAGER', 'BRANCH_STAFF'];
 
   const fetchPermissions = async () => {
     try {
@@ -39,52 +52,98 @@ const RolesPermissions = () => {
   };
 
   return (
-    <div className="bg-surface p-6 rounded-2xl border border-outline-variant shadow-sm">
-      <h2 className="text-xl font-bold mb-4">Roles & Permissions</h2>
-      <p className="text-on-surface-variant mb-6 italic text-sm">
-        Manage granular access by mapping roles to specific system permissions.
-      </p>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <h3 className="font-bold mb-4 uppercase text-xs text-on-surface-variant">Available Permissions</h3>
-          <div className="space-y-2">
-            {permissions.map(perm => (
-              <div key={perm.id} className="p-3 bg-surface-variant/20 rounded-lg border border-outline-variant">
-                <p className="font-bold">{perm.name}</p>
-                <p className="text-xs text-on-surface-variant">{perm.description || 'No description provided'}</p>
-              </div>
-            ))}
-            {permissions.length === 0 && <p className="text-on-surface-variant text-sm">No permissions defined yet.</p>}
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Left Side: Role Selector */}
+        <div className="lg:w-1/3 space-y-4">
+          <div className="bg-surface p-6 rounded-3xl border border-outline-variant shadow-sm">
+            <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+              <ShieldCheck className="text-primary" />
+              Select Role
+            </h3>
+            <div className="space-y-2">
+              {roles.map(role => (
+                <button
+                  key={role}
+                  onClick={() => setActiveRole(role)}
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                    activeRole === role 
+                      ? 'bg-primary text-on-primary border-primary shadow-lg shadow-primary/20 scale-[1.02]' 
+                      : 'bg-surface border-outline-variant text-on-surface-variant hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Users size={18} />
+                    <span className="font-bold">{role.replace('_', ' ')}</span>
+                  </div>
+                  {activeRole === role && <CheckCircle2 size={18} />}
+                </button>
+              ))}
+            </div>
+            <div className="mt-6 p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant flex gap-3">
+              <Info size={20} className="text-primary shrink-0" />
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Roles define a set of permissions. Assigning a permission to a role grants that access to all users with that role.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div>
-          <h3 className="font-bold mb-4 uppercase text-xs text-on-surface-variant">Role Mapping</h3>
-          <div className="space-y-4">
-            {['ADMIN', 'VENDOR', 'BRANCH_MANAGER', 'BRANCH_STAFF'].map(role => (
-              <div key={role} className="p-4 border border-outline-variant rounded-xl">
-                <p className="font-black mb-2">{role}</p>
-                <div className="flex flex-wrap gap-2">
-                  {permissions.map(perm => {
-                    const isAssigned = perm.roles?.some(r => r.role === role);
-                    return (
-                      <button
-                        key={perm.id}
-                        onClick={() => handleAssignPermission(role, perm.id)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                          isAssigned 
-                            ? 'bg-primary text-on-primary border border-primary' 
-                            : 'bg-surface text-on-surface-variant border border-outline'
-                        }`}
-                      >
-                        {perm.name}
-                      </button>
-                    );
-                  })}
-                </div>
+        {/* Right Side: Permission Grid */}
+        <div className="lg:w-2/3">
+          <div className="bg-surface p-8 rounded-3xl border border-outline-variant shadow-sm h-full">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-black flex items-center gap-2 text-on-surface">
+                  <Lock className="text-primary" />
+                  Permissions for {activeRole}
+                </h2>
+                <p className="text-sm text-on-surface-variant">Configure granular access levels for this role.</p>
               </div>
-            ))}
+              <div className="px-4 py-2 bg-success/10 text-success rounded-full border border-success/20 text-xs font-black uppercase tracking-widest">
+                Active Config
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {permissions.map(perm => {
+                const isAssigned = perm.roles?.some(r => r.role === activeRole);
+                return (
+                  <button
+                    key={perm.id}
+                    onClick={() => handleAssignPermission(activeRole, perm.id)}
+                    className={`p-5 rounded-2xl border transition-all text-left group ${
+                      isAssigned 
+                        ? 'border-primary bg-primary/5 ring-1 ring-primary/20' 
+                        : 'border-outline-variant bg-surface hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className={`p-2 rounded-xl ${isAssigned ? 'bg-primary text-on-primary' : 'bg-surface-variant/20 text-on-surface-variant'}`}>
+                        <Key size={16} />
+                      </div>
+                      {isAssigned ? (
+                        <CheckCircle2 size={20} className="text-primary" />
+                      ) : (
+                        <Circle size={20} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                      )}
+                    </div>
+                    <p className={`font-black mb-1 ${isAssigned ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+                      {perm.name}
+                    </p>
+                    <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+                      {perm.description || 'Provides access to specific system functionality and resources.'}
+                    </p>
+                  </button>
+                );
+              })}
+              {permissions.length === 0 && (
+                <div className="col-span-full py-20 flex flex-col items-center justify-center gap-4 text-on-surface-variant opacity-50">
+                  <ShieldAlert size={48} />
+                  <p className="font-bold uppercase tracking-widest text-sm">No permissions found in database.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
