@@ -18,10 +18,18 @@ import {
   User as UserIcon
 } from 'lucide-react';
 
+import { useSearchParams } from 'react-router-dom';
+import ProfileSecurity from '../components/ProfileSecurity';
+
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'analytics';
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const setActiveTab = (tab) => {
+    setSearchParams({ tab });
+  };
 
   const tabs = [
     { id: 'analytics', label: 'Analytics', icon: LayoutDashboard },
@@ -38,6 +46,8 @@ const AdminDashboard = () => {
       case 'settings': return <SystemSettings />;
       case 'logs': return <SecurityLogs />;
       case 'analytics': return <SystemAnalytics />;
+      case 'profile': return <ProfileSecurity activeTab="profile" />;
+      case 'personal-settings': return <ProfileSecurity activeTab="settings" />;
       default: return <SystemAnalytics />;
     }
   };

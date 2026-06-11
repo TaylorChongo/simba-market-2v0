@@ -73,11 +73,10 @@ const getStatus = async (req, res) => {
     const status = await momoService.getPaymentStatus(order.momoReference);
 
     if (status === 'SUCCESSFUL') {
-      // Update order status to PAID and mark deposit as paid
+      // Update order to mark deposit as paid
       await prisma.order.update({
         where: { id: orderId },
         data: { 
-          status: 'PAID',
           depositPaid: true
         }
       });

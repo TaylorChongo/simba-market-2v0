@@ -26,15 +26,11 @@ const Register = () => {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   const locations = [
-    "Simba Supermarket Remera",
+    "Simba Supermarket Centenary (City Centre)",
+    "Simba Supermarket Kigali Heights",
+    "Simba Supermarket Gishushu",
     "Simba Supermarket Kimironko",
-    "Simba Supermarket Kacyiru",
-    "Simba Supermarket Nyamirambo",
-    "Simba Supermarket Gikondo",
-    "Simba Supermarket Kanombe",
-    "Simba Supermarket Kinyinya",
-    "Simba Supermarket Kibagabaga",
-    "Simba Supermarket Nyanza"
+    "Simba Supermarket Kicukiro"
   ];
 
   const handleChange = (e) => {

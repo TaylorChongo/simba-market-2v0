@@ -79,6 +79,13 @@ const UserManagement = () => {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
+
+    // Validation for branch-specific roles
+    if ((newUser.role === 'BRANCH_MANAGER' || newUser.role === 'BRANCH_STAFF') && !newUser.branch) {
+      alert(`Please select a branch for the ${newUser.role.replace(/_/g, ' ')} role`);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
@@ -454,16 +461,28 @@ const UserManagement = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">Branch (Optional)</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">
+                    Branch {(newUser.role === 'BRANCH_MANAGER' || newUser.role === 'BRANCH_STAFF') && <span className="text-error">*</span>}
+                  </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
-                    <input
-                      type="text"
-                      placeholder="e.g. Simba Gishushu"
-                      className="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold"
+                    <select
+                      required={newUser.role === 'BRANCH_MANAGER' || newUser.role === 'BRANCH_STAFF'}
+                      className={`w-full pl-10 pr-4 py-2.5 bg-surface border rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold appearance-none cursor-pointer ${
+                        (newUser.role === 'BRANCH_MANAGER' || newUser.role === 'BRANCH_STAFF') && !newUser.branch 
+                          ? 'border-error/50' 
+                          : 'border-outline-variant'
+                      }`}
                       value={newUser.branch}
                       onChange={(e) => setNewUser({...newUser, branch: e.target.value})}
-                    />
+                    >
+                      <option value="">No Branch</option>
+                      <option value="Simba Supermarket Centenary (City Centre)">Simba Centenary</option>
+                      <option value="Simba Supermarket Kigali Heights">Simba Kigali Heights</option>
+                      <option value="Simba Supermarket Gishushu">Simba Gishushu</option>
+                      <option value="Simba Supermarket Kimironko">Simba Kimironko</option>
+                      <option value="Simba Supermarket Kicukiro">Simba Kicukiro</option>
+                    </select>
                   </div>
                 </div>
               </div>

@@ -16,6 +16,10 @@ const register = async (req, res) => {
       return res.status(403).json({ message: 'ADMIN cannot self-register' });
     }
 
+    if ((role === 'BRANCH_MANAGER' || role === 'BRANCH_STAFF') && !branch) {
+      return res.status(400).json({ message: `Branch is required for role ${role}` });
+    }
+
     // 2. Check email existence
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) {

@@ -14,11 +14,24 @@ import {
   ChevronDown
 } from 'lucide-react';
 
-const SystemAnalytics = () => {
+const SystemAnalytics = ({ branchName: initialBranchName }) => {
   const [analytics, setAnalytics] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
+  const [selectedBranch, setSelectedBranch] = useState(initialBranchName || 'all');
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
   const [isCustomOpen, setIsCustomOpen] = useState(false);
+  const [isBranchDropdownOpen, setIsBranchDropdownOpen] = useState(false);
+  const branchDropdownRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target)) {
+        setIsBranchDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const periods = [
     { id: '7d', label: 'Week' },
@@ -33,18 +46,20 @@ const SystemAnalytics = () => {
     const fetchAnalytics = async () => {
       try {
         const token = localStorage.getItem('token');
-        console.log('[Frontend] Fetching analytics for period:', selectedPeriod);
         let url = `${API_URL}/api/admin/analytics?period=${selectedPeriod}`;
         
         if (selectedPeriod === 'custom' && customRange.start && customRange.end) {
           url += `&startDate=${customRange.start}&endDate=${customRange.end}`;
         }
 
+        if (selectedBranch && selectedBranch !== 'all') {
+          url += `&branchName=${encodeURIComponent(selectedBranch)}`;
+        }
+
         const response = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await response.json();
-        console.log('[Frontend] Analytics data received:', data);
         setAnalytics(data);
       } catch (error) {
         console.error('Error fetching analytics:', error);
@@ -54,7 +69,7 @@ const SystemAnalytics = () => {
     if (selectedPeriod !== 'custom' || (customRange.start && customRange.end)) {
       fetchAnalytics();
     }
-  }, [selectedPeriod, customRange]);
+  }, [selectedPeriod, customRange, selectedBranch]);
 
   const handleGenerateReport = async () => {
     try {
@@ -63,6 +78,10 @@ const SystemAnalytics = () => {
       
       if (selectedPeriod === 'custom' && customRange.start && customRange.end) {
         url += `&startDate=${customRange.start}&endDate=${customRange.end}`;
+      }
+
+      if (selectedBranch && selectedBranch !== 'all' && selectedBranch !== 'compare') {
+        url += `&branchName=${encodeURIComponent(selectedBranch)}`;
       }
 
       const response = await fetch(url, {
@@ -75,7 +94,8 @@ const SystemAnalytics = () => {
       const urlBlob = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = urlBlob;
-      const filename = `Simba_Report_${selectedPeriod}_${new Date().toISOString().split('T')[0]}.csv`;
+      const branchSuffix = selectedBranch && selectedBranch !== 'all' ? `_${selectedBranch.replace(/\s+/g, '_')}` : '';
+      const filename = `Simba_Report${branchSuffix}_${selectedPeriod}_${new Date().toISOString().split('T')[0]}.csv`;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
@@ -132,7 +152,7 @@ const SystemAnalytics = () => {
   ];
 
   // Helper for graph visual
-  const maxVal = Math.max(...analytics.graphData.map(d => d.count), 1);
+  const maxVal = Math.max(...analytics.graphData.map(d => analytics.isCompare ? d.totalCount : d.count), 1);
 
   // Helper to decide which labels to show
   const shouldShowLabel = (idx, total) => {
@@ -141,8 +161,70 @@ const SystemAnalytics = () => {
     return idx % (Math.floor(total / 6)) === 0 || idx === total - 1;
   };
 
+  const branchColors = [
+    'bg-primary',
+    'bg-blue-500',
+    'bg-purple-500',
+    'bg-amber-500',
+    'bg-success',
+    'bg-error'
+  ];
+
   return (
     <div className="space-y-8 pb-10">
+      {/* Branch Selector Dropdown (Admins only) */}
+      {!initialBranchName && analytics.availableBranches && (
+        <div className="flex flex-wrap items-center gap-4 mb-2">
+          <div className="relative" ref={branchDropdownRef}>
+            <button 
+              onClick={() => setIsBranchDropdownOpen(!isBranchDropdownOpen)}
+              className="h-11 px-6 rounded-2xl bg-surface border border-outline-variant shadow-sm flex items-center gap-3 hover:border-primary transition-all group"
+            >
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[10px] font-black text-outline uppercase tracking-widest">Selected View</span>
+                <span className="text-sm font-bold text-on-surface">
+                  {selectedBranch === 'all' ? 'All Branches' : 
+                   selectedBranch === 'compare' ? 'Branch Comparison' : 
+                   selectedBranch.replace('Simba Supermarket ', '')}
+                </span>
+              </div>
+              <ChevronDown className={`w-5 h-5 text-outline transition-transform duration-300 ${isBranchDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isBranchDropdownOpen && (
+              <div className="absolute left-0 mt-2 w-64 bg-surface border border-outline-variant rounded-2xl shadow-xl py-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                <button 
+                  onClick={() => { setSelectedBranch('all'); setIsBranchDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${selectedBranch === 'all' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high'}`}
+                >
+                  All Branches
+                  {selectedBranch === 'all' && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                </button>
+                <button 
+                  onClick={() => { setSelectedBranch('compare'); setIsBranchDropdownOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${selectedBranch === 'compare' ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high'}`}
+                >
+                  Compare Branches (Stacked)
+                  {selectedBranch === 'compare' && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                </button>
+                <div className="h-px bg-outline-variant/50 my-1" />
+                <div className="px-4 py-2 text-[10px] font-black text-outline uppercase tracking-widest">Individual Branches</div>
+                {analytics.availableBranches.map((branch) => (
+                  <button 
+                    key={branch}
+                    onClick={() => { setSelectedBranch(branch); setIsBranchDropdownOpen(false); }}
+                    className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${selectedBranch === branch ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high'}`}
+                  >
+                    {branch.replace('Simba Supermarket ', '')}
+                    {selectedBranch === branch && <div className="w-1.5 h-1.5 bg-primary rounded-full" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
           <div key={idx} className="p-6 bg-surface rounded-3xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow group">
@@ -246,12 +328,42 @@ const SystemAnalytics = () => {
               {analytics.graphData.map((d, i) => (
                 <div 
                   key={i} 
-                  style={{ height: `${(d.count / maxVal) * 90 + 5}%` }} 
-                  className="flex-1 bg-primary/20 rounded-t-md sm:rounded-t-lg group-hover:bg-primary/30 transition-all duration-500 relative group/bar"
+                  style={{ height: `${((analytics.isCompare ? d.totalCount : d.count) / maxVal) * 90 + 5}%` }} 
+                  className={`flex-1 flex flex-col justify-end rounded-t-md sm:rounded-t-lg transition-all duration-500 relative group/bar ${analytics.isCompare ? 'overflow-hidden' : 'bg-primary/20 group-hover:bg-primary/30'}`}
                 >
+                  {analytics.isCompare ? (
+                    Object.entries(d.branches).map(([branch, data], idx) => (
+                      <div 
+                        key={branch}
+                        style={{ height: `${(data.count / (d.totalCount || 1)) * 100}%` }}
+                        className={`${branchColors[idx % branchColors.length]} w-full opacity-70 hover:opacity-100 transition-opacity`}
+                        title={`${branch}: ${data.count} orders`}
+                      />
+                    ))
+                  ) : null}
+
                   <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] font-bold px-3 py-2 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-all pointer-events-none shadow-xl z-10 whitespace-nowrap scale-90 group-hover/bar:scale-100 origin-bottom">
-                    <div className="text-primary-container font-black mb-0.5">{d.count} orders</div>
-                    <div className="text-[8px] opacity-70">{d.label || d.date}</div>
+                    {analytics.isCompare ? (
+                      <div className="flex flex-col gap-1">
+                        {Object.entries(d.branches).map(([branch, data], idx) => (
+                          <div key={branch} className="flex items-center gap-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${branchColors[idx % branchColors.length]}`} />
+                            <span className="text-primary-container font-black">{data.count}</span>
+                            <span className="opacity-70">{branch.replace('Simba Supermarket ', '')}</span>
+                          </div>
+                        ))}
+                        <div className="h-px bg-white/20 my-1" />
+                        <div className="flex justify-between font-black">
+                          <span>Total</span>
+                          <span>{d.totalCount}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-primary-container font-black mb-0.5">{d.count} orders</div>
+                        <div className="text-[8px] opacity-70">{d.label || d.date}</div>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

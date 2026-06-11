@@ -24,6 +24,12 @@ const getUsers = async (req, res) => {
 
 const addUser = async (req, res) => {
   const { name, email, password, role, branch } = req.body;
+
+  // Validation for branch-specific roles
+  if ((role === 'BRANCH_MANAGER' || role === 'BRANCH_STAFF') && !branch) {
+    return res.status(400).json({ message: `Branch is required for role ${role}` });
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
@@ -54,11 +60,24 @@ const addUser = async (req, res) => {
 
 const updateUserRole = async (req, res) => {
   const { id } = req.params;
-  const { role } = req.body;
+  const { role, branch } = req.body;
+
+  // Validation for branch-specific roles
+  if ((role === 'BRANCH_MANAGER' || role === 'BRANCH_STAFF') && !branch) {
+    // Check if user already has a branch if not provided in request
+    const existingUser = await prisma.user.findUnique({ where: { id } });
+    if (!existingUser.branch && !branch) {
+      return res.status(400).json({ message: `Branch is required for role ${role}` });
+    }
+  }
+
   try {
     const user = await prisma.user.update({
       where: { id },
-      data: { role },
+      data: { 
+        role,
+        branch: branch || undefined
+      },
     });
 
     // Log the action
@@ -282,11 +301,34 @@ const getPeriodRange = (period, startDate, endDate) => {
 // System Analytics
 const getAnalytics = async (req, res) => {
   try {
-    const { period = '7d', startDate, endDate } = req.query;
-    console.log(`[Backend] getAnalytics request - period: ${period}, startDate: ${startDate}, endDate: ${endDate}`);
-    
+    let { period = '7d', startDate, endDate, branchName } = req.query;
+
+    // Enforce branch filter for branch-specific roles
+    if (req.user.role === 'BRANCH_MANAGER' || req.user.role === 'BRANCH_STAFF') {
+      branchName = req.user.branch;
+      if (!branchName) {
+        return res.status(403).json({ message: 'User not assigned to any branch' });
+      }
+    }
+
     const { fromDate, toDate, grouping } = getPeriodRange(period, startDate, endDate);
-    console.log(`[Backend] Computed range: ${fromDate.toISOString()} to ${toDate.toISOString()}, grouping: ${grouping}`);
+    
+    // Get list of all branches for Admin to choose from
+    let availableBranches = [];
+    if (req.user.role === 'ADMIN') {
+      const branches = await prisma.order.findMany({
+        select: { branchName: true },
+        distinct: ['branchName'],
+        where: { branchName: { not: null } }
+      });
+      availableBranches = branches.map(b => b.branchName).filter(Boolean);
+    }
+
+    const isCompare = branchName === 'compare' && req.user.role === 'ADMIN';
+    const actualBranchName = isCompare ? undefined : branchName;
+
+    const branchFilter = actualBranchName ? { branchName: actualBranchName } : {};
+    const userBranchFilter = actualBranchName ? { branch: actualBranchName } : {};
 
     const [
       userCount, 
@@ -298,24 +340,39 @@ const getAnalytics = async (req, res) => {
       prevRevenue,
       filteredOrders
     ] = await Promise.all([
-      prisma.user.count(),
-      prisma.order.count(),
+      prisma.user.count({ where: userBranchFilter }),
+      prisma.order.count({ where: branchFilter }),
       prisma.product.count(),
       prisma.order.aggregate({
-        where: { status: 'COMPLETED' },
+        where: { ...branchFilter, status: 'COMPLETED' },
         _sum: { totalPrice: true },
       }),
-      prisma.user.count({ where: { createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } }),
-      prisma.order.count({ where: { createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } }),
+      prisma.user.count({ 
+        where: { 
+          ...userBranchFilter,
+          createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } 
+        } 
+      }),
+      prisma.order.count({ 
+        where: { 
+          ...branchFilter,
+          createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } 
+        } 
+      }),
       prisma.order.aggregate({
-        where: { status: 'COMPLETED', createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+        where: { 
+          ...branchFilter,
+          status: 'COMPLETED', 
+          createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } 
+        },
         _sum: { totalPrice: true },
       }),
       prisma.order.findMany({
         where: { 
+          ...(isCompare ? {} : branchFilter),
           createdAt: { gte: fromDate, lte: toDate } 
         },
-        select: { createdAt: true, totalPrice: true, status: true },
+        select: { createdAt: true, totalPrice: true, status: true, branchName: true },
         orderBy: { createdAt: 'asc' }
       })
     ]);
@@ -327,25 +384,43 @@ const getAnalytics = async (req, res) => {
     };
 
     const aggregatedData = {};
-    
-    // Helper for timezone-safe keys (using local date parts)
     const getDateKey = (date) => {
       const d = new Date(date);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
+    const initializeDataPoint = (key, label = null) => {
+      if (isCompare) {
+        const branchData = {};
+        availableBranches.forEach(b => {
+          branchData[b] = { count: 0, revenue: 0 };
+        });
+        return { branches: branchData, totalCount: 0, totalRevenue: 0, label };
+      }
+      return { count: 0, revenue: 0, label };
     };
 
     if (grouping === 'day') {
       const iterDate = new Date(fromDate);
       while (iterDate <= toDate) {
         const key = getDateKey(iterDate);
-        aggregatedData[key] = { count: 0, revenue: 0 };
+        aggregatedData[key] = initializeDataPoint(key);
         iterDate.setDate(iterDate.getDate() + 1);
       }
       filteredOrders.forEach(order => {
         const key = getDateKey(order.createdAt);
         if (aggregatedData[key]) {
-          aggregatedData[key].count++;
-          if (order.status === 'COMPLETED') aggregatedData[key].revenue += order.totalPrice;
+          if (isCompare) {
+            if (order.branchName && aggregatedData[key].branches[order.branchName]) {
+              aggregatedData[key].branches[order.branchName].count++;
+              if (order.status === 'COMPLETED') aggregatedData[key].branches[order.branchName].revenue += order.totalPrice;
+            }
+            aggregatedData[key].totalCount++;
+            if (order.status === 'COMPLETED') aggregatedData[key].totalRevenue += order.totalPrice;
+          } else {
+            aggregatedData[key].count++;
+            if (order.status === 'COMPLETED') aggregatedData[key].revenue += order.totalPrice;
+          }
         }
       });
     } else if (grouping === 'week') {
@@ -355,11 +430,7 @@ const getAnalytics = async (req, res) => {
 
       while (iterDate <= toDate) {
         const key = getDateKey(iterDate);
-        aggregatedData[key] = { 
-          count: 0, 
-          revenue: 0, 
-          label: `Week of ${iterDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` 
-        };
+        aggregatedData[key] = initializeDataPoint(key, `Week of ${iterDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`);
         iterDate.setDate(iterDate.getDate() + 7);
       }
 
@@ -371,8 +442,17 @@ const getAnalytics = async (req, res) => {
         const key = getDateKey(sunday);
         
         if (aggregatedData[key]) {
-          aggregatedData[key].count++;
-          if (order.status === 'COMPLETED') aggregatedData[key].revenue += order.totalPrice;
+          if (isCompare) {
+            if (order.branchName && aggregatedData[key].branches[order.branchName]) {
+              aggregatedData[key].branches[order.branchName].count++;
+              if (order.status === 'COMPLETED') aggregatedData[key].branches[order.branchName].revenue += order.totalPrice;
+            }
+            aggregatedData[key].totalCount++;
+            if (order.status === 'COMPLETED') aggregatedData[key].totalRevenue += order.totalPrice;
+          } else {
+            aggregatedData[key].count++;
+            if (order.status === 'COMPLETED') aggregatedData[key].revenue += order.totalPrice;
+          }
         }
       });
     } else if (grouping === 'month') {
@@ -382,11 +462,7 @@ const getAnalytics = async (req, res) => {
 
       while (iterDate <= toDate) {
         const key = `${iterDate.getFullYear()}-${String(iterDate.getMonth() + 1).padStart(2, '0')}`;
-        aggregatedData[key] = { 
-          count: 0, 
-          revenue: 0, 
-          label: iterDate.toLocaleDateString(undefined, { month: 'short', year: '2-digit' }) 
-        };
+        aggregatedData[key] = initializeDataPoint(key, iterDate.toLocaleDateString(undefined, { month: 'short', year: '2-digit' }));
         iterDate.setMonth(iterDate.getMonth() + 1);
       }
 
@@ -394,8 +470,17 @@ const getAnalytics = async (req, res) => {
         const d = new Date(order.createdAt);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         if (aggregatedData[key]) {
-          aggregatedData[key].count++;
-          if (order.status === 'COMPLETED') aggregatedData[key].revenue += order.totalPrice;
+          if (isCompare) {
+            if (order.branchName && aggregatedData[key].branches[order.branchName]) {
+              aggregatedData[key].branches[order.branchName].count++;
+              if (order.status === 'COMPLETED') aggregatedData[key].branches[order.branchName].revenue += order.totalPrice;
+            }
+            aggregatedData[key].totalCount++;
+            if (order.status === 'COMPLETED') aggregatedData[key].totalRevenue += order.totalPrice;
+          } else {
+            aggregatedData[key].count++;
+            if (order.status === 'COMPLETED') aggregatedData[key].revenue += order.totalPrice;
+          }
         }
       });
     }
@@ -404,8 +489,6 @@ const getAnalytics = async (req, res) => {
       date: key,
       ...aggregatedData[key]
     }));
-
-    console.log(`[Backend] Returning ${graphData.length} graph points`);
 
     res.json({
       stats: {
@@ -420,7 +503,9 @@ const getAnalytics = async (req, res) => {
           products: '+2.4%'
         }
       },
-      graphData
+      graphData,
+      availableBranches,
+      isCompare
     });
   } catch (error) {
     console.error('[Analytics Error]:', error);
@@ -430,11 +515,24 @@ const getAnalytics = async (req, res) => {
 
 const generateReport = async (req, res) => {
   try {
-    const { period = '7d', startDate, endDate } = req.query;
+    let { period = '7d', startDate, endDate, branchName } = req.query;
+
+    // Enforce branch filter for branch-specific roles
+    if (req.user.role === 'BRANCH_MANAGER' || req.user.role === 'BRANCH_STAFF') {
+      branchName = req.user.branch;
+      if (!branchName) {
+        return res.status(403).json({ message: 'User not assigned to any branch' });
+      }
+    }
+
     const { fromDate, toDate } = getPeriodRange(period, startDate, endDate);
     
+    // Reports can be filtered by branch for branch managers
+    const branchFilter = branchName ? { branchName } : {};
+
     const orders = await prisma.order.findMany({
       where: {
+        ...branchFilter,
         createdAt: { gte: fromDate, lte: toDate }
       },
       include: {
@@ -453,6 +551,9 @@ const generateReport = async (req, res) => {
     });
 
     let filename = `Simba_Report_${period}_${new Date().toISOString().split('T')[0]}.csv`;
+    if (branchName) {
+      filename = `Simba_Report_${branchName.replace(/\s+/g, '_')}_${period}.csv`;
+    }
     if (period === 'custom') {
       filename = `Simba_Report_Custom_${startDate}_to_${endDate}.csv`;
     }

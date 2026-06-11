@@ -17,8 +17,14 @@ const {
 } = require('../controllers/adminController');
 const { authenticateUser, authorizeRoles } = require('../middleware/authMiddleware');
 
-// All admin routes are protected and restricted to ADMIN role
+// All admin routes are protected
 router.use(authenticateUser);
+
+// System Analytics (Accessible by Admin and Branch Manager)
+router.get('/analytics', authorizeRoles('ADMIN', 'BRANCH_MANAGER'), getAnalytics);
+router.get('/report', authorizeRoles('ADMIN', 'BRANCH_MANAGER'), generateReport);
+
+// Restricted to ADMIN only
 router.use(authorizeRoles('ADMIN'));
 
 // User Management
@@ -39,9 +45,5 @@ router.post('/settings', updateSetting);
 
 // Security Logs
 router.get('/logs', getLogs);
-
-// System Analytics
-router.get('/analytics', getAnalytics);
-router.get('/report', generateReport);
 
 module.exports = router;

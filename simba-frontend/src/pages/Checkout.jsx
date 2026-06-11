@@ -96,26 +96,19 @@ const Checkout = () => {
       const createdOrderId = orderData.id;
       setOrderId(createdOrderId);
 
-      // 2. Initiate Payment (500 RWF Deposit)
-      setStatus('initiating');
-      const payRes = await fetch(`${API_URL}/api/payments/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          orderId: createdOrderId, 
-          phoneNumber: phone 
-        })
-      });
-
-      const payData = await payRes.json();
-      if (!payRes.ok) throw new Error(payData.message || 'Failed to initiate payment');
-
-      // 3. Start Polling
-      setStatus('polling');
-      startPolling(createdOrderId);
+      // 2. Success - Simplified Flow (Navigate immediately)
+      setStatus('success');
+      setLoading(false);
+      clearCart();
+      
+      setTimeout(() => navigate('/success', { 
+        state: { 
+          pickupLocation, 
+          pickupTime,
+          totalPrice: getTotalPrice(),
+          orderId: createdOrderId
+        } 
+      }), 1500);
 
     } catch (err) {
       setStatus('error');

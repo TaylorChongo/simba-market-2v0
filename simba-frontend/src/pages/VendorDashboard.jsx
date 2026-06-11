@@ -51,6 +51,15 @@ const VendorDashboard = () => {
 
   useEffect(() => {
     fetchVendorData();
+    
+    // Set up polling for new orders
+    const interval = setInterval(() => {
+      if (activeTab === 'orders') {
+        fetchVendorData();
+      }
+    }, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval);
   }, [activeTab]);
 
   const handleAddProduct = async (e) => {

@@ -622,9 +622,11 @@ const OrderCard = ({ order, isHistory = false }) => (
         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
           order.status === 'COMPLETED' ? 'bg-success/10 text-success border-success/20' :
           order.status === 'CANCELLED' ? 'bg-error/10 text-error border-error/20' :
+          order.status === 'APPROVED' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+          order.status === 'PENDING' ? 'bg-amber-100 text-amber-700 border-amber-200' :
           'bg-primary/10 text-primary border-primary/20'
         }`}>
-          {order.status}
+          {order.status.replace(/_/g, ' ')}
         </span>
       </div>
     </div>

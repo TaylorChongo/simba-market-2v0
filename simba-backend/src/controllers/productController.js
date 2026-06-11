@@ -5,7 +5,15 @@ const { prisma } = require('../config/db');
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const { branch } = req.query;
+    let { branch } = req.query;
+
+    // Enforce branch filter for branch-specific roles
+    if (req.user && (req.user.role === 'BRANCH_MANAGER' || req.user.role === 'BRANCH_STAFF')) {
+      branch = req.user.branch;
+      if (!branch) {
+        return res.status(403).json({ message: 'User not assigned to any branch' });
+      }
+    }
 
     let include = {
       vendor: {

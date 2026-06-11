@@ -148,8 +148,8 @@ const createOrder = async (req, res) => {
       return order;
     });
 
-    // Auto-assign orders for this branch after successful creation
-    autoAssignOrders(pickupLocation);
+    // Auto-assignment disabled for manual approval flow
+    // autoAssignOrders(pickupLocation);
 
     res.status(201).json(result);
   } catch (error) {
@@ -236,9 +236,16 @@ const assignOrder = async (req, res) => {
 // @access  Private/BRANCH_STAFF
 const getStaffOrders = async (req, res) => {
   try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    
+    if (!user.branch) {
+      console.warn(`Staff ${user.email} has no branch assigned.`);
+      return res.status(200).json([]);
+    }
+
     const orders = await prisma.order.findMany({
       where: {
-        assignedTo: req.user.id,
+        branchName: user.branch,
       },
       include: {
         user: { select: { name: true, email: true } },
@@ -249,6 +256,7 @@ const getStaffOrders = async (req, res) => {
 
     res.status(200).json(orders);
   } catch (error) {
+    console.error('getStaffOrders error:', error);
     res.status(500).json({ message: 'Error fetching staff orders', error: error.message });
   }
 };
@@ -261,23 +269,43 @@ const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['PREPARING', 'READY_FOR_PICKUP', 'COMPLETED'].includes(status)) {
+    if (!['APPROVED', 'PREPARING', 'READY_FOR_PICKUP', 'COMPLETED'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status update' });
     }
 
     const order = await prisma.order.update({
-      where: { id, assignedTo: req.user.id },
-      data: { status },
+      where: { id },
+      data: { 
+        status,
+        // Ensure it's assigned to this staff if not already
+        assignedTo: req.user.id 
+      },
     });
-
-    // If order is now READY_FOR_PICKUP or COMPLETED, the staff member is free for next task
-    if (['READY_FOR_PICKUP', 'COMPLETED'].includes(status)) {
-      autoAssignOrders(order.branchName);
-    }
 
     res.status(200).json(order);
   } catch (error) {
     res.status(500).json({ message: 'Error updating status', error: error.message });
+  }
+};
+
+// @desc    Approve a pending order (STAFF)
+// @route   PUT /api/staff/orders/:id/approve
+// @access  Private/BRANCH_STAFF
+const approveOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const order = await prisma.order.update({
+      where: { id },
+      data: { 
+        status: 'APPROVED',
+        assignedTo: req.user.id
+      },
+    });
+
+    res.status(200).json(order);
+  } catch (error) {
+    res.status(500).json({ message: 'Error approving order', error: error.message });
   }
 };
 
@@ -300,12 +328,51 @@ const getBranchStaff = async (req, res) => {
   }
 };
 
+// @desc    Get all orders for a vendor (VENDOR)
+// @route   GET /api/orders/vendor
+// @access  Private/VENDOR
+const getVendorOrders = async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        items: {
+          some: {
+            product: {
+              vendorId: req.user.id,
+            },
+          },
+        },
+      },
+      include: {
+        user: { select: { name: true, email: true } },
+        items: {
+          where: {
+            product: {
+              vendorId: req.user.id,
+            },
+          },
+          include: {
+            product: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json(orders);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching vendor orders', error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getMyOrders,
   getBranchOrders,
+  getVendorOrders,
   assignOrder,
   getStaffOrders,
   updateOrderStatus,
+  approveOrder,
   getBranchStaff,
 };

@@ -76,49 +76,55 @@ const Navbar = () => {
             </Link>
 
             {/* Branch Selector - Desktop */}
-            <div className="hidden lg:flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={toggleMap}
-                className={`h-10 rounded-2xl px-4 text-xs font-black uppercase tracking-widest flex items-center gap-2 border transition-all ${
-                  selectedBranch 
-                    ? 'border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5' 
-                    : 'border-outline-variant text-outline hover:border-primary hover:text-primary hover:bg-primary/5'
-                }`}
-              >
-                <MapPin className="w-4 h-4" />
-                <span className="max-w-[120px] truncate">
-                  {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : t('select_branch')}
-                </span>
-                <MapIcon className="w-3.5 h-3.5 ml-1 opacity-50" />
-              </Button>
-            </div>
+            {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
+              <div className="hidden lg:flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={toggleMap}
+                  className={`h-10 rounded-2xl px-4 text-xs font-black uppercase tracking-widest flex items-center gap-2 border transition-all ${
+                    selectedBranch 
+                      ? 'border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5' 
+                      : 'border-outline-variant text-outline hover:border-primary hover:text-primary hover:bg-primary/5'
+                  }`}
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span className="max-w-[120px] truncate">
+                    {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : t('select_branch')}
+                  </span>
+                  <MapIcon className="w-3.5 h-3.5 ml-1 opacity-50" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* AI Conversational Search - Desktop */}
-          <div className="hidden md:flex flex-grow max-w-xl justify-center">
-            <AISearch placeholder={t('search_placeholder')} />
-          </div>
+          {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
+            <div className="hidden md:flex flex-grow max-w-xl justify-center">
+              <AISearch placeholder={t('search_placeholder')} />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center gap-1 md:gap-2 text-on-surface">
             {/* Mobile Branch Select */}
-            <div className="lg:hidden flex items-center mr-2">
-              <button 
-                onClick={toggleMap}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-all ${
-                  selectedBranch 
-                    ? 'border-primary/30 bg-primary/5 text-primary' 
-                    : 'border-outline-variant bg-surface-container-low text-outline'
-                }`}
-              >
-                <MapPin className="w-3 h-3" />
-                <span className="max-w-[80px] truncate">
-                  {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : 'Branch'}
-                </span>
-              </button>
-            </div>
+            {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
+              <div className="lg:hidden flex items-center mr-2">
+                <button 
+                  onClick={toggleMap}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-all ${
+                    selectedBranch 
+                      ? 'border-primary/30 bg-primary/5 text-primary' 
+                      : 'border-outline-variant bg-surface-container-low text-outline'
+                  }`}
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span className="max-w-[80px] truncate">
+                    {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : 'Branch'}
+                  </span>
+                </button>
+              </div>
+            )}
 
             <div className="hidden sm:flex items-center gap-1">
               {/* Language Switcher - Desktop */}
@@ -216,7 +222,7 @@ const Navbar = () => {
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}`);
+                        navigate(`/dashboard/${rolePath}?tab=profile`);
                         setShowDropdown(false);
                       }}
                     >
@@ -224,29 +230,33 @@ const Navbar = () => {
                       {t('my_profile')}
                     </button>
                     
-                    <button 
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
-                      onClick={() => {
-                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}?tab=orders`);
-                        setShowDropdown(false);
-                      }}
-                    >
-                      <Package className="w-4 h-4 text-outline" />
-                      {t('my_orders')}
-                    </button>
-                    
-                    <button 
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
-                      onClick={() => {
-                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}?tab=preferences`);
-                        setShowDropdown(false);
-                      }}
-                    >
-                      <SlidersHorizontal className="w-4 h-4 text-outline" />
-                      {t('preferences')}
-                    </button>
+                    {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
+                      <>
+                        <button 
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                          onClick={() => {
+                            const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                            navigate(`/dashboard/${rolePath}?tab=orders`);
+                            setShowDropdown(false);
+                          }}
+                        >
+                          <Package className="w-4 h-4 text-outline" />
+                          {t('my_orders')}
+                        </button>
+                        
+                        <button 
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                          onClick={() => {
+                            const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                            navigate(`/dashboard/${rolePath}?tab=preferences`);
+                            setShowDropdown(false);
+                          }}
+                        >
+                          <SlidersHorizontal className="w-4 h-4 text-outline" />
+                          {t('preferences')}
+                        </button>
+                      </>
+                    )}
                     
                     <button 
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
@@ -322,13 +332,15 @@ const Navbar = () => {
 
           <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-8">
             {/* Mobile AI Search */}
-            <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4 flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                <span>Conversational Search</span>
-              </h3>
-              <AISearch placeholder={t('search_placeholder')} />
-            </div>
+            {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
+              <div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4 flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span>Conversational Search</span>
+                </h3>
+                <AISearch placeholder={t('search_placeholder')} />
+              </div>
+            )}
 
             {/* Quick Links */}
             <div>
@@ -379,32 +391,38 @@ const Navbar = () => {
                       className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}`);
+                        navigate(`/dashboard/${rolePath}?tab=profile`);
                         setMobileMenuOpen(false);
                       }}
                     >
                       <User className="w-5 h-5 text-outline" /> {t('my_profile')}
                     </button>
-                    <button 
-                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
-                      onClick={() => {
-                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}?tab=orders`);
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <Package className="w-5 h-5 text-outline" /> {t('my_orders')}
-                    </button>
-                    <button 
-                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
-                      onClick={() => {
-                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}?tab=preferences`);
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <SlidersHorizontal className="w-5 h-5 text-outline" /> {t('preferences')}
-                    </button>
+
+                    {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
+                      <>
+                        <button 
+                          className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
+                          onClick={() => {
+                            const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                            navigate(`/dashboard/${rolePath}?tab=orders`);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <Package className="w-5 h-5 text-outline" /> {t('my_orders')}
+                        </button>
+                        <button 
+                          className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
+                          onClick={() => {
+                            const rolePath = user.role.toLowerCase().replace(/_/g, '-');
+                            navigate(`/dashboard/${rolePath}?tab=preferences`);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <SlidersHorizontal className="w-5 h-5 text-outline" /> {t('preferences')}
+                        </button>
+                      </>
+                    )}
+
                     <button 
                       className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
                       onClick={() => {
