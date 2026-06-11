@@ -101,10 +101,23 @@ const deleteUser = async (req, res) => {
 };
 
 // Roles and Permissions
+const getRoles = async (req, res) => {
+  try {
+    const roles = ['CLIENT', 'VENDOR', 'BRANCH_MANAGER', 'BRANCH_STAFF', 'ADMIN'];
+    res.json(roles);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching roles', error: error.message });
+  }
+};
+
 const getPermissions = async (req, res) => {
   try {
     const permissions = await prisma.permission.findMany({
-      include: { roles: true },
+      include: { 
+        roles: {
+          select: { role: true }
+        } 
+      },
     });
     res.json(permissions);
   } catch (error) {
@@ -112,25 +125,54 @@ const getPermissions = async (req, res) => {
   }
 };
 
+const createPermission = async (req, res) => {
+  const { name, code, description } = req.body;
+  try {
+    const permission = await prisma.permission.create({
+      data: { name, code, description },
+    });
+    res.json(permission);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating permission', error: error.message });
+  }
+};
+
 const assignPermissionToRole = async (req, res) => {
   const { role, permissionId } = req.body;
   try {
-    const rolePermission = await prisma.rolePermission.upsert({
+    // Check if it already exists
+    const existing = await prisma.rolePermission.findUnique({
       where: {
         role_permissionId: {
           role,
           permissionId,
         },
       },
-      update: {},
-      create: {
-        role,
-        permissionId,
-      },
     });
-    res.json(rolePermission);
+
+    if (existing) {
+      // Remove it (Toggle off)
+      await prisma.rolePermission.delete({
+        where: {
+          role_permissionId: {
+            role,
+            permissionId,
+          },
+        },
+      });
+      res.json({ message: 'Permission removed from role', removed: true });
+    } else {
+      // Add it (Toggle on)
+      const rolePermission = await prisma.rolePermission.create({
+        data: {
+          role,
+          permissionId,
+        },
+      });
+      res.json({ ...rolePermission, removed: false });
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Error assigning permission', error: error.message });
+    res.status(500).json({ message: 'Error toggling permission', error: error.message });
   }
 };
 
@@ -429,7 +471,9 @@ module.exports = {
   addUser,
   updateUserRole,
   deleteUser,
+  getRoles,
   getPermissions,
+  createPermission,
   assignPermissionToRole,
   getSettings,
   updateSetting,

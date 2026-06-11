@@ -1,5 +1,5 @@
 const { prisma } = require('../src/config/db');
-const { ensureCatalogSeeded } = require('../src/services/bootstrapService');
+const { ensureCatalogSeeded, seedAdminData } = require('../src/services/bootstrapService');
 
 async function main() {
   console.log('Seeding database...');
@@ -10,6 +10,10 @@ async function main() {
   } else {
     console.log(`Skipped product seed because ${result.productCount} products already exist.`);
   }
+
+  console.log('Seeding admin data (permissions & settings)...');
+  await seedAdminData();
+  console.log('Admin data seeded.');
 }
 
 main()

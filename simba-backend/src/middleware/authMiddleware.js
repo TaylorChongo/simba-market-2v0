@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const authenticateUser = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -32,4 +34,30 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-module.exports = { authenticateUser, authorizeRoles };
+const authorizePermissions = (...permissionCodes) => {
+  return async (req, res, next) => {
+    try {
+      const userRole = req.user.role;
+      
+      const rolePermissions = await prisma.rolePermission.findMany({
+        where: { role: userRole },
+        include: { permission: true }
+      });
+
+      const userPermissionCodes = rolePermissions.map(rp => rp.permission.code);
+      
+      const hasPermission = permissionCodes.every(code => userPermissionCodes.includes(code));
+
+      if (!hasPermission) {
+        return res.status(403).json({ 
+          message: `Permission denied. Required: [${permissionCodes.join(', ')}]` 
+        });
+      }
+      next();
+    } catch (error) {
+      res.status(500).json({ message: 'Error checking permissions', error: error.message });
+    }
+  };
+};
+
+module.exports = { authenticateUser, authorizeRoles, authorizePermissions };

@@ -18,6 +18,7 @@ import {
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState(['ADMIN', 'VENDOR', 'BRANCH_MANAGER', 'BRANCH_STAFF', 'CLIENT']);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -34,23 +35,46 @@ const UserManagement = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/admin/users`, {
+      
+      // Fetch Users
+      const userResponse = await fetch(`${API_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await response.json();
-      setUsers(data);
-      setLoading(false);
+      const userData = await userResponse.json();
+      if (userResponse.ok) {
+        setUsers(Array.isArray(userData) ? userData : []);
+      }
+
+      // Fetch Roles for the select dropdown
+      try {
+        const roleResponse = await fetch(`${API_URL}/api/admin/roles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (roleResponse.ok) {
+          const roleData = await roleResponse.json();
+          if (Array.isArray(roleData)) {
+            const dynamicRoles = roleData.map(r => typeof r === 'string' ? r : r.name);
+            // Ensure CLIENT is always there as a basic role
+            if (!dynamicRoles.includes('CLIENT')) dynamicRoles.push('CLIENT');
+            setRoles(dynamicRoles);
+          }
+        }
+      } catch (e) {
+        console.warn('Roles endpoint not found, using defaults');
+      }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching data:', error);
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchData();
   }, []);
 
   const handleAddUser = async (e) => {
@@ -70,13 +94,14 @@ const UserManagement = () => {
       if (response.ok) {
         setIsAddModalOpen(false);
         setNewUser({ name: '', email: '', password: '', role: 'CLIENT', branch: '' });
-        fetchUsers();
+        fetchData();
       } else {
         const error = await response.json();
         alert(error.message || 'Failed to add user');
       }
     } catch (error) {
       console.error('Error adding user:', error);
+      alert('Network error while adding user');
     } finally {
       setIsSubmitting(false);
     }
@@ -85,7 +110,7 @@ const UserManagement = () => {
   const handleRoleChange = async (userId, newRole) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${API_URL}/api/admin/users/${userId}/role`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}/role`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -93,9 +118,16 @@ const UserManagement = () => {
         },
         body: JSON.stringify({ role: newRole })
       });
-      fetchUsers();
+      
+      if (response.ok) {
+        fetchData();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to update user role');
+      }
     } catch (error) {
       console.error('Error updating role:', error);
+      alert('Network error while updating role');
     }
   };
 
@@ -103,18 +135,26 @@ const UserManagement = () => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${API_URL}/api/admin/users/${userId}`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchUsers();
+      
+      if (response.ok) {
+        fetchData();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to delete user');
+      }
     } catch (error) {
       console.error('Error deleting user:', error);
+      alert('Network error while deleting user');
     }
   };
 
-  const getRoleBadgeColor = (role) => {
-    switch (role) {
+  const getRoleBadgeColor = (role = '') => {
+    const normalizedRole = role.toUpperCase();
+    switch (normalizedRole) {
       case 'ADMIN': return 'bg-error/10 text-error border-error/20';
       case 'VENDOR': return 'bg-primary/10 text-primary border-primary/20';
       case 'BRANCH_MANAGER': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
@@ -126,13 +166,14 @@ const UserManagement = () => {
   const filteredUsers = users.filter(u => {
     const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           u.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
+    const matchesRole = roleFilter === 'ALL' || u.role?.toUpperCase() === roleFilter.toUpperCase();
     return matchesSearch && matchesRole;
   });
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[400px]">
+  if (loading && users.length === 0) return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <p className="text-on-surface-variant font-bold animate-pulse">Syncing user database...</p>
     </div>
   );
 
@@ -174,7 +215,7 @@ const UserManagement = () => {
             <div className="flex-1 min-w-[200px]">
               <label className="block text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2">Filter by Role</label>
               <div className="flex flex-wrap gap-2">
-                {['ALL', 'ADMIN', 'VENDOR', 'BRANCH_MANAGER', 'BRANCH_STAFF', 'CLIENT'].map(role => (
+                {['ALL', ...roles].map(role => (
                   <button
                     key={role}
                     onClick={() => setRoleFilter(role)}
@@ -184,7 +225,7 @@ const UserManagement = () => {
                         : 'bg-surface-variant/20 text-on-surface-variant hover:bg-surface-variant/40'
                     }`}
                   >
-                    {role.replace('_', ' ')}
+                    {role.replace(/_/g, ' ')}
                   </button>
                 ))}
               </div>
@@ -202,7 +243,8 @@ const UserManagement = () => {
       )}
 
       <div className="bg-surface rounded-3xl border border-outline-variant shadow-sm overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-variant/5 border-b border-outline-variant">
@@ -217,7 +259,7 @@ const UserManagement = () => {
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold border border-outline-variant">
-                        {user.name.charAt(0).toUpperCase()}
+                        {user.name?.charAt(0).toUpperCase() || 'U'}
                       </div>
                       <div>
                         <p className="font-bold text-on-surface">{user.name}</p>
@@ -234,15 +276,13 @@ const UserManagement = () => {
                         {user.role}
                       </span>
                       <select 
-                        value={user.role} 
+                        value={user.role?.toUpperCase()} 
                         onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                        className="bg-transparent text-xs font-bold text-on-surface-variant hover:text-primary cursor-pointer focus:outline-none transition-colors"
+                        className="bg-transparent text-xs font-bold text-on-surface-variant hover:text-primary cursor-pointer focus:outline-none transition-colors uppercase"
                       >
-                        <option value="CLIENT">Set as Client</option>
-                        <option value="VENDOR">Set as Vendor</option>
-                        <option value="BRANCH_MANAGER">Set as Branch Mgr</option>
-                        <option value="BRANCH_STAFF">Set as Branch Staff</option>
-                        <option value="ADMIN">Set as Admin</option>
+                        {roles.map(r => (
+                          <option key={r} value={r.toUpperCase()}>Set as {r.replace(/_/g, ' ')}</option>
+                        ))}
                       </select>
                     </div>
                   </td>
@@ -264,19 +304,66 @@ const UserManagement = () => {
                   </td>
                 </tr>
               ))}
-              {filteredUsers.length === 0 && (
-                <tr>
-                  <td colSpan="3" className="py-20 text-center">
-                    <div className="flex flex-col items-center gap-2 text-on-surface-variant opacity-50">
-                      <Search size={48} />
-                      <p className="font-bold">No users found matching your search.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-outline-variant">
+          {filteredUsers.map(user => (
+            <div key={user.id} className="p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-bold border border-outline-variant shrink-0">
+                  {user.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-on-surface truncate">{user.name}</p>
+                  <p className="text-xs text-on-surface-variant truncate">{user.email}</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">System Role</label>
+                <div className="flex items-center justify-between gap-4 p-3 bg-surface-variant/5 rounded-2xl border border-outline-variant">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider border ${getRoleBadgeColor(user.role)}`}>
+                    {user.role}
+                  </span>
+                  <select 
+                    value={user.role?.toUpperCase()} 
+                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                    className="bg-transparent text-xs font-bold text-primary focus:outline-none uppercase"
+                  >
+                    {roles.map(r => (
+                      <option key={r} value={r.toUpperCase()}>{r.replace(/_/g, ' ')}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button 
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-error/10 text-error text-xs font-bold"
+                  onClick={() => handleDeleteUser(user.id)}
+                >
+                  <Trash2 size={16} />
+                  Delete User
+                </button>
+                <button className="p-2 text-on-surface-variant border border-outline-variant rounded-xl">
+                  <MoreVertical size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredUsers.length === 0 && (
+          <div className="py-20 text-center">
+            <div className="flex flex-col items-center gap-2 text-on-surface-variant opacity-50">
+              <Search size={48} />
+              <p className="font-bold">No users found matching your search.</p>
+            </div>
+          </div>
+        )}
         <div className="p-6 border-t border-outline-variant flex items-center justify-between text-sm text-on-surface-variant">
           <p>Showing <b>{filteredUsers.length}</b> users</p>
           <div className="flex items-center gap-4">
@@ -356,15 +443,13 @@ const UserManagement = () => {
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">Initial Role</label>
                   <select
-                    className="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold appearance-none cursor-pointer"
+                    className="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold appearance-none cursor-pointer uppercase"
                     value={newUser.role}
                     onChange={(e) => setNewUser({...newUser, role: e.target.value})}
                   >
-                    <option value="CLIENT">Client</option>
-                    <option value="VENDOR">Vendor</option>
-                    <option value="BRANCH_MANAGER">Branch Manager</option>
-                    <option value="BRANCH_STAFF">Branch Staff</option>
-                    <option value="ADMIN">Administrator</option>
+                    {roles.map(r => (
+                      <option key={r} value={r.toUpperCase()}>{r.replace(/_/g, ' ')}</option>
+                    ))}
                   </select>
                 </div>
 

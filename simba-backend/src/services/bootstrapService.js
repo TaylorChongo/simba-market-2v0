@@ -59,17 +59,17 @@ async function ensureCatalogSeeded() {
 async function seedAdminData() {
   // Seed Permissions
   const permissions = [
-    { name: 'MANAGE_USERS', description: 'Can create, update, and delete users' },
-    { name: 'MANAGE_ROLES', description: 'Can assign permissions to roles' },
-    { name: 'VIEW_LOGS', description: 'Can view system security logs' },
-    { name: 'MANAGE_SETTINGS', description: 'Can modify system-wide settings' },
-    { name: 'VIEW_ANALYTICS', description: 'Can view system performance analytics' },
+    { name: 'Manage Users', code: 'MANAGE_USERS', description: 'Can create, update, and delete users' },
+    { name: 'Manage Roles', code: 'MANAGE_ROLES', description: 'Can assign permissions to roles' },
+    { name: 'View Logs', code: 'VIEW_LOGS', description: 'Can view system security logs' },
+    { name: 'Manage Settings', code: 'MANAGE_SETTINGS', description: 'Can modify system-wide settings' },
+    { name: 'View Analytics', code: 'VIEW_ANALYTICS', description: 'Can view system performance analytics' },
   ];
 
   for (const perm of permissions) {
     await prisma.permission.upsert({
-      where: { name: perm.name },
-      update: { description: perm.description },
+      where: { code: perm.code },
+      update: { name: perm.name, description: perm.description },
       create: perm,
     });
   }

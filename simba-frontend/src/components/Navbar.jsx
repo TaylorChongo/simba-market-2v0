@@ -324,7 +324,8 @@ const Navbar = () => {
             {/* Mobile AI Search */}
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4 flex items-center gap-2">
-                <span className="w-3 h-3 text-primary"><Sparkles /></span> Conversational Search
+                <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span>Conversational Search</span>
               </h3>
               <AISearch placeholder={t('search_placeholder')} />
             </div>

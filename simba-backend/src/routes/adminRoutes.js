@@ -5,7 +5,9 @@ const {
   addUser,
   updateUserRole, 
   deleteUser, 
+  getRoles,
   getPermissions, 
+  createPermission,
   assignPermissionToRole, 
   getSettings, 
   updateSetting, 
@@ -26,7 +28,9 @@ router.put('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
 
 // Roles and Permissions
+router.get('/roles', getRoles);
 router.get('/permissions', getPermissions);
+router.post('/permissions', createPermission);
 router.post('/permissions/assign', assignPermissionToRole);
 
 // System Settings
