@@ -25,13 +25,13 @@ services:
         value: "10000"
 
   # 2. Frontend Service
-  - type: static_site
+  - type: web
     name: simba-market-frontend
     runtime: static
     plan: free
     rootDir: simba-frontend
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     headers:
       - key: Cache-Control
         value: public, max-age=0, must-revalidate
