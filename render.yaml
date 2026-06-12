@@ -25,7 +25,7 @@ services:
         value: "10000"
 
   # 2. Frontend Service
-  - type: static
+  - type: static_site
     name: simba-market-frontend
     runtime: static
     plan: free
