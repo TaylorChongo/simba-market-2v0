@@ -16,7 +16,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://simba-market-frontend.onrender.com
+        value: https://simba-market-2v0.vercel.app
       - key: GROQ_API_KEY
         sync: false # Set this to your Groq API Key
       - key: MOMO_MOCK_MODE
