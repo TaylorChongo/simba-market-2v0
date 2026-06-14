@@ -26,6 +26,8 @@ const UserManagement = () => {
   
   // Add User Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -112,6 +114,54 @@ const UserManagement = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+
+    // Validation for branch-specific roles
+    if ((editingUser.role === 'BRANCH_MANAGER' || editingUser.role === 'BRANCH_STAFF') && !editingUser.branch) {
+      alert(`Please select a branch for the ${editingUser.role.replace(/_/g, ' ')} role`);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(editingUser)
+      });
+      
+      if (response.ok) {
+        setIsEditModalOpen(false);
+        setEditingUser(null);
+        fetchData();
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Failed to update user');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Network error while updating user');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openEditModal = (user) => {
+    setEditingUser({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      branch: user.branch || ''
+    });
+    setIsEditModalOpen(true);
   };
 
   const handleRoleChange = async (userId, newRole) => {
@@ -295,7 +345,11 @@ const UserManagement = () => {
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-center gap-2">
-                      <button className="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                      <button 
+                        onClick={() => openEditModal(user)}
+                        className="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                        title="Edit User"
+                      >
                         <Shield size={18} />
                       </button>
                       <button 
@@ -349,6 +403,13 @@ const UserManagement = () => {
 
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button 
+                  onClick={() => openEditModal(user)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold"
+                >
+                  <Shield size={16} />
+                  Edit User
+                </button>
+                <button 
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-error/10 text-error text-xs font-bold"
                   onClick={() => handleDeleteUser(user.id)}
                 >
@@ -382,6 +443,117 @@ const UserManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit User Modal */}
+      {isEditModalOpen && editingUser && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-surface w-full max-w-md rounded-3xl border border-outline-variant shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-outline-variant flex items-center justify-between bg-surface-variant/5">
+              <h3 className="text-xl font-black flex items-center gap-2">
+                <Shield className="text-primary" />
+                Edit User
+              </h3>
+              <button 
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 hover:bg-surface-variant/20 rounded-xl transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditUser} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">Full Name</label>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
+                  <input
+                    required
+                    type="text"
+                    placeholder="John Doe"
+                    className="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold"
+                    value={editingUser.name}
+                    onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
+                  <input
+                    required
+                    type="email"
+                    placeholder="john@example.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">Role</label>
+                  <select
+                    className="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold appearance-none cursor-pointer uppercase"
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                  >
+                    {roles.map(r => (
+                      <option key={r} value={r.toUpperCase()}>{r.replace(/_/g, ' ')}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">
+                    Branch {(editingUser.role === 'BRANCH_MANAGER' || editingUser.role === 'BRANCH_STAFF') && <span className="text-error">*</span>}
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
+                    <select
+                      required={editingUser.role === 'BRANCH_MANAGER' || editingUser.role === 'BRANCH_STAFF'}
+                      className={`w-full pl-10 pr-4 py-2.5 bg-surface border rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold appearance-none cursor-pointer ${
+                        (editingUser.role === 'BRANCH_MANAGER' || editingUser.role === 'BRANCH_STAFF') && !editingUser.branch 
+                          ? 'border-error/50' 
+                          : 'border-outline-variant'
+                      }`}
+                      value={editingUser.branch}
+                      onChange={(e) => setEditingUser({...editingUser, branch: e.target.value})}
+                    >
+                      <option value="">No Branch</option>
+                      <option value="Simba Supermarket Centenary (City Centre)">Simba Centenary</option>
+                      <option value="Simba Supermarket Kigali Heights">Simba Kigali Heights</option>
+                      <option value="Simba Supermarket Gishushu">Simba Gishushu</option>
+                      <option value="Simba Supermarket Kimironko">Simba Kimironko</option>
+                      <option value="Simba Supermarket Kicukiro">Simba Kicukiro</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Updating...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add User Modal */}
       {isAddModalOpen && (

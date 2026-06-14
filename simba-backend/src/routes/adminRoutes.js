@@ -3,6 +3,7 @@ const router = express.Router();
 const { 
   getUsers, 
   addUser,
+  updateUser,
   updateUserRole, 
   deleteUser, 
   getRoles,
@@ -30,6 +31,7 @@ router.use(authorizeRoles('ADMIN'));
 // User Management
 router.get('/users', getUsers);
 router.post('/users', addUser);
+router.put('/users/:id', updateUser);
 router.put('/users/:id/role', updateUserRole);
 router.delete('/users/:id', deleteUser);
 

@@ -58,6 +58,46 @@ const addUser = async (req, res) => {
   }
 };
 
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, role, branch } = req.body;
+
+  // Validation for branch-specific roles
+  if ((role === 'BRANCH_MANAGER' || role === 'BRANCH_STAFF') && !branch) {
+    // Check if user already has a branch if not provided in request
+    const existingUser = await prisma.user.findUnique({ where: { id } });
+    if (!existingUser.branch && !branch) {
+      return res.status(400).json({ message: `Branch is required for role ${role}` });
+    }
+  }
+
+  try {
+    const user = await prisma.user.update({
+      where: { id },
+      data: { 
+        name,
+        email,
+        role,
+        branch: branch || undefined
+      },
+    });
+
+    // Log the action
+    await prisma.securityLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'UPDATE_USER',
+        details: `Updated user ${user.email} (Name: ${name}, Role: ${role})`,
+        ip: req.ip,
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating user', error: error.message });
+  }
+};
+
 const updateUserRole = async (req, res) => {
   const { id } = req.params;
   const { role, branch } = req.body;
