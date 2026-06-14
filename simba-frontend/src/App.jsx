@@ -25,6 +25,10 @@ import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorProducts from './pages/vendor/VendorProducts';
 import VendorOrders from './pages/vendor/VendorOrders';
 import AddProduct from './pages/vendor/AddProduct';
+import Contact from './pages/Contact';
+import FAQ from './pages/FAQ';
+import ShippingPolicy from './pages/ShippingPolicy';
+import Returns from './pages/Returns';
 import InlineBranchMap from './components/InlineBranchMap';
 import FloatingAI from './components/FloatingAI';
 
@@ -48,6 +52,10 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password/:token" element={<ResetPassword />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/shipping-policy" element={<ShippingPolicy />} />
+                  <Route path="/returns" element={<Returns />} />
 
                   {/* Protected Routes */}
                   <Route 

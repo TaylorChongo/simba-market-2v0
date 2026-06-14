@@ -17,12 +17,18 @@ const getAssistantSessionId = () => {
 
 const FloatingAI = () => {
   const { t, language } = useLanguage();
+  const location = useLocation();
+  
+  // Hide on admin end
+  if (location.pathname.startsWith('/dashboard/admin')) {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
-  const location = useLocation();
   const { cart, addToCart, removeFromCart } = useCart();
   const { selectedBranch } = useBranch();
   const [sessionId] = useState(() => getAssistantSessionId());

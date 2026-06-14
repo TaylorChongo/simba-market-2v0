@@ -10,11 +10,15 @@ const {
   getPermissions, 
   createPermission,
   assignPermissionToRole, 
+  updateRolePermissions,
   getSettings, 
   updateSetting, 
   getLogs, 
   getAnalytics,
-  generateReport 
+  generateReport,
+  getMessages,
+  markMessageAsRead,
+  deleteMessage
 } = require('../controllers/adminController');
 const { authenticateUser, authorizeRoles } = require('../middleware/authMiddleware');
 
@@ -40,6 +44,7 @@ router.get('/roles', getRoles);
 router.get('/permissions', getPermissions);
 router.post('/permissions', createPermission);
 router.post('/permissions/assign', assignPermissionToRole);
+router.post('/roles/permissions', updateRolePermissions);
 
 // System Settings
 router.get('/settings', getSettings);
@@ -47,5 +52,10 @@ router.post('/settings', updateSetting);
 
 // Security Logs
 router.get('/logs', getLogs);
+
+// Contact Messages
+router.get('/messages', getMessages);
+router.put('/messages/:id/read', markMessageAsRead);
+router.delete('/messages/:id', deleteMessage);
 
 module.exports = router;

@@ -6,6 +6,7 @@ import RolesPermissions from '../components/admin/RolesPermissions';
 import SystemSettings from '../components/admin/SystemSettings';
 import SecurityLogs from '../components/admin/SecurityLogs';
 import SystemAnalytics from '../components/admin/SystemAnalytics';
+import AdminInbox from '../components/admin/AdminInbox';
 import { 
   LayoutDashboard, 
   Users, 
@@ -15,7 +16,8 @@ import {
   LogOut,
   Menu,
   X,
-  User as UserIcon
+  User as UserIcon,
+  Inbox
 } from 'lucide-react';
 
 import { useSearchParams } from 'react-router-dom';
@@ -34,6 +36,7 @@ const AdminDashboard = () => {
   const tabs = [
     { id: 'analytics', label: 'Analytics', icon: LayoutDashboard },
     { id: 'users', label: 'User Management', icon: Users },
+    { id: 'messages', label: 'Inbox', icon: Inbox },
     { id: 'roles', label: 'Roles & Permissions', icon: Key },
     { id: 'settings', label: 'System Settings', icon: Settings },
     { id: 'logs', label: 'Security Logs', icon: ShieldAlert },
@@ -42,6 +45,7 @@ const AdminDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'users': return <UserManagement />;
+      case 'messages': return <AdminInbox />;
       case 'roles': return <RolesPermissions />;
       case 'settings': return <SystemSettings />;
       case 'logs': return <SecurityLogs />;

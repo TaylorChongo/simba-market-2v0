@@ -19,11 +19,12 @@ const RolesPermissions = () => {
   const [permissions, setPermissions] = useState([]);
   const [roles, setRoles] = useState(['ADMIN', 'VENDOR', 'BRANCH_MANAGER', 'BRANCH_STAFF']);
   const [activeRole, setActiveRole] = useState('ADMIN');
+  const [stagedPermissions, setStagedPermissions] = useState({}); // { ROLE: [permId1, permId2] }
   
   // --- UI State ---
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [processingId, setProcessingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // --- Modal State ---
@@ -51,17 +52,33 @@ const RolesPermissions = () => {
       setPermissions(Array.isArray(permData) ? permData : []);
 
       // 2. Fetch Roles
+      let finalRoles = roles;
       try {
         const roleRes = await fetch(`${API_URL}/api/admin/roles`, { headers });
         if (roleRes.ok) {
           const roleData = await roleRes.json();
           if (Array.isArray(roleData)) {
             const mappedRoles = roleData.map(r => typeof r === 'string' ? r : r.name).filter(Boolean);
-            if (mappedRoles.length > 0) setRoles(mappedRoles);
+            if (mappedRoles.length > 0) {
+              setRoles(mappedRoles);
+              finalRoles = mappedRoles;
+            }
           }
         }
       } catch (e) {
         console.warn('Roles fetch error (non-critical):', e);
+      }
+
+      // Initialize staged permissions from fetched data
+      if (Array.isArray(permData)) {
+        const initialStaged = {};
+        
+        finalRoles.forEach(r => {
+          initialStaged[r] = permData
+            .filter(p => p.roles?.some(pr => (pr.role || pr.name) === r))
+            .map(p => p.id);
+        });
+        setStagedPermissions(initialStaged);
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -75,19 +92,41 @@ const RolesPermissions = () => {
     fetchAllData();
   }, []);
 
-  const handleTogglePermission = async (permissionId) => {
-    if (processingId || !activeRole) return;
+  const handleTogglePermission = (permissionId) => {
+    if (!activeRole) return;
     
-    setProcessingId(permissionId);
+    setStagedPermissions(prev => {
+      const currentRolePerms = prev[activeRole] || [];
+      if (currentRolePerms.includes(permissionId)) {
+        return {
+          ...prev,
+          [activeRole]: currentRolePerms.filter(id => id !== permissionId)
+        };
+      } else {
+        return {
+          ...prev,
+          [activeRole]: [...currentRolePerms, permissionId]
+        };
+      }
+    });
+  };
+
+  const handleSaveChanges = async () => {
+    if (saving || !activeRole) return;
+    
+    setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/admin/permissions/assign`, {
+      const response = await fetch(`${API_URL}/api/admin/roles/permissions`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify({ role: activeRole, permissionId })
+        body: JSON.stringify({ 
+          role: activeRole, 
+          permissionIds: stagedPermissions[activeRole] || [] 
+        })
       });
 
       if (!response.ok) {
@@ -96,13 +135,39 @@ const RolesPermissions = () => {
       }
 
       await fetchAllData();
+      alert('Changes saved successfully!');
     } catch (err) {
-      console.error('Update error:', err);
-      alert(`Update Failed: ${err.message}`);
+      console.error('Save error:', err);
+      alert(`Save Failed: ${err.message}`);
     } finally {
-      setProcessingId(null);
+      setSaving(false);
     }
   };
+
+  const handleDiscardChanges = () => {
+    // Re-initialize staged permissions for the current role from original data
+    const originalRolePerms = permissions
+      .filter(p => p.roles?.some(pr => (pr.role || pr.name) === activeRole))
+      .map(p => p.id);
+    
+    setStagedPermissions(prev => ({
+      ...prev,
+      [activeRole]: originalRolePerms
+    }));
+  };
+
+  const hasChanges = useMemo(() => {
+    if (!activeRole || !stagedPermissions[activeRole]) return false;
+    
+    const originalRolePerms = permissions
+      .filter(p => p.roles?.some(pr => (pr.role || pr.name) === activeRole))
+      .map(p => p.id)
+      .sort();
+    
+    const currentStagedPerms = [...stagedPermissions[activeRole]].sort();
+    
+    return JSON.stringify(originalRolePerms) !== JSON.stringify(currentStagedPerms);
+  }, [activeRole, stagedPermissions, permissions]);
 
   const handleCreateRole = async (e) => {
     e.preventDefault();
@@ -157,12 +222,8 @@ const RolesPermissions = () => {
 
   // --- Helpers ---
   
-  const isGranted = (perm) => {
-    if (!perm || !perm.roles || !Array.isArray(perm.roles)) return false;
-    return perm.roles.some(r => {
-      const roleName = typeof r === 'string' ? r : r.role || r.name;
-      return roleName === activeRole;
-    });
+  const isGranted = (permId) => {
+    return stagedPermissions[activeRole]?.includes(permId);
   };
 
   const filteredPermissions = useMemo(() => {
@@ -194,6 +255,26 @@ const RolesPermissions = () => {
           <p className="text-sm text-on-surface-variant">Configure system roles and permissions.</p>
         </div>
         <div className="flex items-center gap-2">
+          {hasChanges && (
+            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDiscardChanges}
+                className="h-10 px-4 text-[10px] font-black uppercase tracking-widest border-error/30 text-error hover:bg-error/5"
+              >
+                Discard
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={handleSaveChanges}
+                disabled={saving}
+                className="h-10 px-6 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          )}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
             <input 
@@ -251,33 +332,37 @@ const RolesPermissions = () => {
         {/* Permissions Grid */}
         <div className="lg:col-span-3">
           <div className="bg-surface border border-outline-variant rounded-3xl p-6 shadow-sm min-h-[400px]">
-            <div className="mb-6">
+            <div className="mb-6 flex items-center justify-between">
               <h3 className="text-lg font-black flex items-center gap-2">
                 <Lock size={18} className="text-primary" />
                 {activeRole.replace(/_/g, ' ')} Privileges
               </h3>
+              {hasChanges && (
+                <span className="text-[9px] font-black uppercase tracking-widest bg-warning/10 text-warning px-2 py-1 rounded-lg animate-pulse">
+                  Unsaved Changes
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {filteredPermissions.map(perm => {
-                const granted = isGranted(perm);
-                const isUpdating = processingId === perm.id;
+                const granted = isGranted(perm.id);
                 
                 return (
                   <button
                     key={perm.id}
-                    disabled={isUpdating || loading}
+                    disabled={saving || loading}
                     onClick={() => handleTogglePermission(perm.id)}
                     className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
                       granted 
                         ? 'bg-primary/5 border-primary/30 shadow-sm' 
                         : 'bg-surface border-outline-variant hover:border-primary/30'
-                    } ${isUpdating ? 'opacity-50' : ''}`}
+                    }`}
                   >
                     <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-all ${
                       granted ? 'bg-primary border-primary text-on-primary' : 'border-outline-variant'
                     }`}>
-                      {isUpdating ? <RefreshCw size={12} className="animate-spin" /> : granted ? <Check size={14} strokeWidth={4} /> : null}
+                      {granted ? <Check size={14} strokeWidth={4} /> : null}
                     </div>
                     <div className="overflow-hidden">
                       <p className="font-bold text-sm truncate">{perm.name}</p>

@@ -14,6 +14,7 @@ const paymentRoutes = require('./src/routes/paymentRoutes');
 const branchRoutes = require('./src/routes/branchRoutes');
 const aiSearchRoutes = require('./src/routes/aiSearchRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const contactRoutes = require('./src/routes/contactRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,6 +46,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/branch', branchRoutes);
 app.use('/api/ai-search', aiSearchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/contact', contactRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running');

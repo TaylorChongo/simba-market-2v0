@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { prisma } = require('../config/db');
 const bcrypt = require('bcryptjs');
 
 // User Management
@@ -232,6 +231,54 @@ const assignPermissionToRole = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: 'Error toggling permission', error: error.message });
+  }
+};
+
+const updateRolePermissions = async (req, res) => {
+  const { role, permissionIds } = req.body;
+  
+  console.log(`[AdminController] Updating permissions for role: ${role}`, permissionIds);
+
+  if (!role || !Array.isArray(permissionIds)) {
+    return res.status(400).json({ message: 'Role and permissionIds array are required' });
+  }
+
+  try {
+    // Use a transaction to delete existing and create new ones
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Delete all current permissions for this role
+      await tx.rolePermission.deleteMany({
+        where: { role: role }
+      });
+
+      // 2. Create new permissions if any
+      if (permissionIds.length > 0) {
+        return await tx.rolePermission.createMany({
+          data: permissionIds.map(id => ({
+            role: role,
+            permissionId: id
+          }))
+        });
+      }
+      return { count: 0 };
+    });
+
+    console.log(`[AdminController] Successfully updated permissions for ${role}`);
+
+    // Log the action
+    await prisma.securityLog.create({
+      data: {
+        userId: req.user.id,
+        action: 'UPDATE_ROLE_PERMISSIONS',
+        details: `Updated permissions for role ${role}. Total: ${permissionIds.length}`,
+        ip: req.ip,
+      },
+    });
+
+    res.json({ message: 'Permissions updated successfully', role, count: permissionIds.length });
+  } catch (error) {
+    console.error('[UpdateRolePermissions Error]:', error);
+    res.status(500).json({ message: 'Error updating role permissions', error: error.message });
   }
 };
 
@@ -607,18 +654,60 @@ const generateReport = async (req, res) => {
   }
 };
 
+// Contact Message Management
+const getMessages = async (req, res) => {
+  try {
+    const messages = await prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching messages', error: error.message });
+  }
+};
+
+const markMessageAsRead = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const message = await prisma.contactMessage.update({
+      where: { id },
+      data: { isRead: true },
+    });
+    res.json(message);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating message', error: error.message });
+  }
+};
+
+const deleteMessage = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.contactMessage.delete({
+      where: { id },
+    });
+    res.json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting message', error: error.message });
+  }
+};
+
 module.exports = {
   getUsers,
   addUser,
+  updateUser,
   updateUserRole,
   deleteUser,
   getRoles,
   getPermissions,
   createPermission,
   assignPermissionToRole,
+  updateRolePermissions,
   getSettings,
   updateSetting,
   getLogs,
   getAnalytics,
   generateReport,
+  getMessages,
+  markMessageAsRead,
+  deleteMessage,
 };

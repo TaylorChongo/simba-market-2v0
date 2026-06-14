@@ -5,10 +5,9 @@ import { API_URL } from '../../lib/utils';
 import { 
   Search, 
   UserPlus, 
-  MoreVertical, 
   Trash2, 
   Mail, 
-  Shield, 
+  Edit2, 
   Filter,
   X,
   Lock,
@@ -237,27 +236,31 @@ const UserManagement = () => {
   return (
     <div className="space-y-6 pb-10">
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
+        <div className="relative w-full md:w-96 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors" size={18} />
           <input 
             type="text" 
             placeholder="Search users by name or email..."
-            className="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary transition-colors text-sm"
+            className="w-full pl-12 pr-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all text-sm font-medium shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           <Button 
             variant={isFilterOpen ? 'primary' : 'outline'} 
-            className="flex-1 md:flex-none flex items-center gap-2"
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+              isFilterOpen 
+                ? 'shadow-lg shadow-primary/25 ring-2 ring-primary/20' 
+                : 'bg-surface hover:border-primary/50 hover:bg-primary/5'
+            }`}
             onClick={() => setIsFilterOpen(!isFilterOpen)}
           >
-            <Filter size={18} />
+            <Filter size={18} className={isFilterOpen ? 'animate-pulse' : ''} />
             Filter
           </Button>
           <Button 
-            className="flex-1 md:flex-none flex items-center gap-2"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary text-on-primary shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all border-none"
             onClick={() => setIsAddModalOpen(true)}
           >
             <UserPlus size={18} />
@@ -348,18 +351,15 @@ const UserManagement = () => {
                       <button 
                         onClick={() => openEditModal(user)}
                         className="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                        title="Edit User"
+                        title="Edit User Info"
                       >
-                        <Shield size={18} />
+                        <Edit2 size={18} />
                       </button>
                       <button 
                         className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg transition-all"
                         onClick={() => handleDeleteUser(user.id)}
                       >
                         <Trash2 size={18} />
-                      </button>
-                      <button className="p-2 text-on-surface-variant hover:bg-surface-variant/20 rounded-lg transition-all">
-                        <MoreVertical size={18} />
                       </button>
                     </div>
                   </td>
@@ -406,7 +406,7 @@ const UserManagement = () => {
                   onClick={() => openEditModal(user)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold"
                 >
-                  <Shield size={16} />
+                  <Edit2 size={16} />
                   Edit User
                 </button>
                 <button 
@@ -415,9 +415,6 @@ const UserManagement = () => {
                 >
                   <Trash2 size={16} />
                   Delete User
-                </button>
-                <button className="p-2 text-on-surface-variant border border-outline-variant rounded-xl">
-                  <MoreVertical size={18} />
                 </button>
               </div>
             </div>
@@ -450,7 +447,7 @@ const UserManagement = () => {
           <div className="bg-surface w-full max-w-md rounded-3xl border border-outline-variant shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-6 border-b border-outline-variant flex items-center justify-between bg-surface-variant/5">
               <h3 className="text-xl font-black flex items-center gap-2">
-                <Shield className="text-primary" />
+                <Edit2 className="text-primary" />
                 Edit User
               </h3>
               <button 
