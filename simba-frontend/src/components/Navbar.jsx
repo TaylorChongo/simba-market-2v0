@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useBranch } from '../context/BranchContext';
 import { useLanguage } from '../context/LanguageContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import AISearch from './AISearch';
 import GoogleLoginButton from './GoogleLoginButton';
 
@@ -16,6 +16,7 @@ const Navbar = () => {
   const { selectedBranch, toggleMap } = useBranch();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,6 +25,8 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
   const langDropdownRef = useRef(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  const isActive = (path) => location.pathname === path;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -112,7 +115,7 @@ const Navbar = () => {
               <div className="lg:hidden flex items-center mr-2">
                 <button 
                   onClick={toggleMap}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-all min-h-[44px] ${
                     selectedBranch 
                       ? 'border-primary/30 bg-primary/5 text-primary' 
                       : 'border-outline-variant bg-surface-container-low text-outline'
@@ -131,7 +134,7 @@ const Navbar = () => {
               <div className="relative" ref={langDropdownRef}>
                 <Button 
                   variant="ghost" 
-                  className="px-2 text-xs font-bold text-on-surface flex items-center gap-1.5 uppercase"
+                  className="px-2 text-xs font-bold text-on-surface flex items-center gap-1.5 uppercase min-h-[44px]"
                   onClick={() => setShowLangDropdown(!showLangDropdown)}
                 >
                   <Languages className="w-4 h-4 text-outline" />
@@ -144,7 +147,7 @@ const Navbar = () => {
                     {languages.map((lang) => (
                       <button
                         key={lang.code}
-                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors min-h-[44px] ${
                           language === lang.code ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high'
                         }`}
                         onClick={() => {
@@ -169,11 +172,11 @@ const Navbar = () => {
             {(!user || user.role === 'CLIENT') && (
               <Button 
                 variant="ghost" 
-                className="p-1.5 md:p-2 relative text-on-surface"
+                className="p-1.5 md:p-2 relative text-on-surface min-w-[44px] min-h-[44px]"
                 onClick={() => navigate('/cart')}
               >
                 <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-                <span className="absolute top-0 right-0 md:-top-1 md:-right-1 bg-primary text-on-primary text-[9px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1 bg-primary text-on-primary text-[9px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center">
                   {getCartCount()}
                 </span>
               </Button>
@@ -198,7 +201,7 @@ const Navbar = () => {
             ) : (
               <div className="relative" ref={dropdownRef}>
                 <button 
-                  className="flex items-center gap-2 p-1.5 md:p-2 hover:bg-surface-container-high rounded-full transition-colors"
+                  className="flex items-center gap-2 p-1.5 md:p-2 hover:bg-surface-container-high rounded-full transition-colors min-h-[44px]"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
                   <div className="w-8 h-8 md:w-9 md:h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
@@ -219,7 +222,7 @@ const Navbar = () => {
                     </div>
                     
                     <button 
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
                         navigate(`/dashboard/${rolePath}?tab=profile`);
@@ -233,7 +236,7 @@ const Navbar = () => {
                     {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
                       <>
                         <button 
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                           onClick={() => {
                             const rolePath = user.role.toLowerCase().replace(/_/g, '-');
                             navigate(`/dashboard/${rolePath}?tab=orders`);
@@ -245,7 +248,7 @@ const Navbar = () => {
                         </button>
                         
                         <button 
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                           onClick={() => {
                             const rolePath = user.role.toLowerCase().replace(/_/g, '-');
                             navigate(`/dashboard/${rolePath}?tab=preferences`);
@@ -259,7 +262,7 @@ const Navbar = () => {
                     )}
                     
                     <button 
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
                         navigate(`/dashboard/${rolePath}?tab=settings`);
@@ -273,7 +276,7 @@ const Navbar = () => {
                     <div className="h-px bg-outline-variant/50 my-1" />
                     
                     <button 
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 transition-colors min-h-[44px]"
                       onClick={handleLogout}
                     >
                       <LogOut className="w-4 h-4" />
@@ -286,14 +289,57 @@ const Navbar = () => {
 
             <Button 
               variant="ghost" 
-              className="p-1.5 md:p-2 md:hidden text-on-surface"
+              className="p-1.5 md:p-2 md:hidden text-on-surface min-w-[44px] min-h-[44px]"
               onClick={() => setMobileMenuOpen(true)}
             >
-              <Menu className="w-5 h-5 md:w-6 md:h-6" />
+              <Menu className="w-6 h-6" />
             </Button>
           </div>
         </div>
       </nav>
+
+      {/* Bottom Mobile Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-surface/90 backdrop-blur-lg border-t border-outline-variant px-6 py-2 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <button 
+          onClick={() => navigate('/')}
+          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isActive('/') ? 'text-primary' : 'text-outline'}`}
+        >
+          <ShoppingBag size={20} strokeWidth={isActive('/') ? 3 : 2} />
+          <span className="text-[9px] font-black uppercase tracking-tighter">Shop</span>
+        </button>
+        
+        <button 
+          onClick={toggleMap}
+          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${selectedBranch ? 'text-primary' : 'text-outline'}`}
+        >
+          <MapPin size={20} strokeWidth={selectedBranch ? 3 : 2} />
+          <span className="text-[9px] font-black uppercase tracking-tighter">Branch</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/cart')}
+          className={`flex flex-col items-center gap-1 min-w-[50px] relative transition-colors min-h-[44px] ${isActive('/cart') ? 'text-primary' : 'text-outline'}`}
+        >
+          <ShoppingCart size={20} strokeWidth={isActive('/cart') ? 3 : 2} />
+          {getCartCount() > 0 && (
+            <span className="absolute -top-1 right-2 bg-primary text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+              {getCartCount()}
+            </span>
+          )}
+          <span className="text-[9px] font-black uppercase tracking-tighter">Cart</span>
+        </button>
+
+        <button 
+          onClick={() => setMobileMenuOpen(true)}
+          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${mobileMenuOpen ? 'text-primary' : 'text-outline'}`}
+        >
+          <Menu size={20} strokeWidth={mobileMenuOpen ? 3 : 2} />
+          <span className="text-[9px] font-black uppercase tracking-tighter">Menu</span>
+        </button>
+      </div>
+
+      {/* Mobile Menu Drawer */}
+...
 
       {/* Mobile Menu Drawer */}
       <div 

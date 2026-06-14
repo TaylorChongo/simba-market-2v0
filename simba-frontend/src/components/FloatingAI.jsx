@@ -321,26 +321,26 @@ const FloatingAI = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[9999] flex flex-col items-end max-w-[calc(100vw-2rem)]">
+    <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[9999] flex flex-col items-end max-w-[calc(100vw-2rem)]">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-full sm:w-[400px] h-[500px] max-h-[calc(100vh-120px)] bg-surface border border-outline-variant rounded-[32px] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+        <div className="mb-4 w-full sm:w-[400px] h-[500px] max-h-[calc(100vh-160px)] bg-surface border border-outline-variant rounded-[32px] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
-          <div className="p-4 bg-primary text-on-primary flex items-center justify-between shadow-lg">
+          <div className="p-4 bg-primary text-on-primary flex items-center justify-between shadow-lg min-h-[64px]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="font-black text-sm uppercase tracking-widest">Simba AI</h3>
-                <p className="text-[10px] font-medium opacity-80 uppercase">{t('hero_badge')}</p>
+                <h3 className="font-black text-sm uppercase tracking-widest leading-none">Simba AI</h3>
+                <p className="text-[10px] font-medium opacity-80 uppercase mt-1">{t('hero_badge')}</p>
               </div>
             </div>
             <button 
               onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="p-3 hover:bg-white/10 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
 
@@ -443,16 +443,16 @@ const FloatingAI = () => {
               <input 
                 type="text"
                 placeholder={t('type_message')}
-                className="w-full bg-surface-container-low border border-outline-variant rounded-2xl pl-4 pr-12 py-3 text-sm focus:outline-none focus:border-primary transition-all"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-2xl pl-4 pr-14 py-3 min-h-[48px] text-sm focus:outline-none focus:border-primary transition-all font-medium"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
               <button 
                 type="submit"
                 disabled={loading || !query.trim()}
-                className="absolute right-2 top-[5px] p-2 bg-primary text-on-primary rounded-xl disabled:opacity-50 transition-all hover:scale-105"
+                className="absolute right-1 top-[4px] p-3 bg-primary text-on-primary rounded-xl disabled:opacity-50 transition-all hover:scale-105 min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-5 h-5" />
               </button>
             </div>
           </form>
@@ -465,7 +465,7 @@ const FloatingAI = () => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 group ${
+        className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 group z-[100] ${
           isOpen ? 'bg-surface text-primary border border-outline-variant' : 'bg-primary text-on-primary'
         }`}
       >

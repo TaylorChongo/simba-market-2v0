@@ -275,7 +275,7 @@ const Home = () => {
             {/* Hero Section */}
             {!isFiltering && !user && (
               <section 
-                className="w-full rounded-[30px] md:rounded-[40px] p-6 md:p-16 mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[350px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10"
+                className="w-full rounded-[24px] md:rounded-[40px] p-5 md:p-16 mb-8 md:mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[300px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10"
               >
                 {/* Background Layers for smooth transition */}
                 {heroImages.map((img, i) => (
@@ -283,39 +283,39 @@ const Home = () => {
                     key={i}
                     className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${i === currentHeroIndex ? 'opacity-100' : 'opacity-0'}`}
                     style={{
-                      backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%), url('${img}')`,
+                      backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%), url('${img}')`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }}
                   />
                 ))}
 
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
+                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
                 
                 {/* Dots for slideshow */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
                   {heroImages.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentHeroIndex(i)}
-                      className={`w-2 h-2 rounded-full transition-all ${i === currentHeroIndex ? 'bg-primary w-6' : 'bg-white/50'}`}
+                      className={`w-1.5 h-1.5 rounded-full transition-all min-h-0 min-w-0 ${i === currentHeroIndex ? 'bg-primary w-5' : 'bg-white/40'}`}
                     />
                   ))}
                 </div>
                 
-                <span className="bg-primary text-on-primary font-black tracking-widest uppercase text-[9px] md:text-[10px] px-3 py-1 rounded-full mb-4 relative z-10 shadow-lg">
+                <span className="bg-primary text-on-primary font-black tracking-widest uppercase text-[8px] md:text-[10px] px-2.5 py-1 rounded-full mb-3 relative z-10 shadow-lg">
                   {t('hero_badge')}
                 </span>
-                <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-white mb-4 relative z-10 leading-[0.95] tracking-tighter max-w-2xl drop-shadow-2xl">
+                <h1 className="text-2xl md:text-6xl lg:text-7xl font-black text-white mb-3 relative z-10 leading-[0.95] tracking-tighter max-w-2xl drop-shadow-2xl">
                   {t('hero_title_1')} <br className="hidden sm:block" />
                   <span className="text-primary-container">{t('hero_title_2')}</span>
                 </h1>
-                <p className="text-white/90 max-w-lg mb-8 relative z-10 text-xs md:text-lg font-bold leading-relaxed drop-shadow-lg">
+                <p className="text-white/90 max-w-xs md:max-w-lg mb-6 md:mb-8 relative z-10 text-[10px] md:text-lg font-bold leading-relaxed drop-shadow-lg">
                   {t('hero_description')}
                 </p>
                 <Button 
                   onClick={scrollToProducts}
-                  className="px-8 md:px-12 py-3 md:py-4 !bg-primary !text-on-primary hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/40 border-none relative z-10 text-sm md:text-lg font-black shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95 rounded-2xl"
+                  className="px-6 md:px-12 py-2.5 md:py-4 !bg-primary !text-on-primary hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/40 border-none relative z-10 text-xs md:text-lg font-black shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95 rounded-xl md:rounded-2xl h-auto"
                 >
                   {t('shop_now')}
                 </Button>

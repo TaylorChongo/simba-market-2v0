@@ -96,7 +96,8 @@ const ProductCard = ({ product }) => {
             >
               <Button 
                 variant={isInCart ? "primary" : "outline"} 
-                className={`p-2 md:p-2.5 transition-all duration-300 ${
+                size="sm"
+                className={`w-11 h-11 md:w-10 md:h-10 p-0 flex items-center justify-center transition-all duration-300 ${
                   isOutOfStock 
                     ? 'cursor-not-allowed border-outline-variant text-outline' 
                     : isInCart 
@@ -105,7 +106,7 @@ const ProductCard = ({ product }) => {
                 }`}
                 disabled={isOutOfStock}
               >
-                <ShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <ShoppingCart className="w-4 h-4" />
               </Button>
             </div>
           </div>
