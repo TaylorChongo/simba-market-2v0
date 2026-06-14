@@ -69,7 +69,7 @@ const aiSearch = async (req, res) => {
       if (keywords && keywords.length > 0) {
         const fuse = new Fuse(matchedProducts, {
           keys: ['name', 'category'],
-          threshold: 0.35, // Slightly stricter for better precision
+          threshold: 0.45, // Relaxed threshold for better matching
           includeScore: true
         });
         

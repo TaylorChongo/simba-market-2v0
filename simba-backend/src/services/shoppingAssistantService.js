@@ -1,7 +1,7 @@
 const Groq = require('groq-sdk');
 const Fuse = require('fuse.js');
 
-const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
 const LANGUAGE_NAMES = {
   en: 'English',
@@ -169,7 +169,7 @@ const findRelevantProducts = (query, products, categories = []) => {
   const expandedQuery = expandQuery(query);
   const fuse = new Fuse(products, {
     keys: ['name', 'category', 'description'],
-    threshold: 0.38,
+    threshold: 0.45,
     ignoreLocation: true,
     includeScore: true,
   });

@@ -31,7 +31,9 @@ const extractSearchIntent = async (query, catalogSummary, history = [], mode = '
         response_format: { type: 'json_object' }
       });
 
-      return JSON.parse(chatCompletion.choices[0].message.content);
+      const result = JSON.parse(chatCompletion.choices[0].message.content);
+      console.log('AI Extracted Intent:', result);
+      return result;
     } catch (error) {
       console.error('Groq Error:', error.message);
     }
@@ -66,9 +68,9 @@ Your goal is to accurately understand user search intent and map it to catalog p
 IMPORTANT RULES:
 1. LANGUAGE: Respond ONLY in ${lang}.
 2. TYPOS & NORMALIZATION: Normalize typos (e.g., "malk" -> "milk").
-3. EXTRACTION: Extract search keywords, category, and max price.
-4. INTENT MESSAGE: Generate a friendly, helpful Rwandan-style response in the past tense.
-5. NO NEGATIVITY: Avoid saying "I couldn't find any products" if possible.
+3. EXTRACTION: Extract search keywords (be precise, use 1-3 words), category, and max price.
+4. INTENT MESSAGE: Generate a friendly, helpful Rwandan-style response. 
+5. NO NEGATIVITY: Even if you think we don't have it, respond positively like "Let me see if I can find that for you."
 6. CONTEXT: Use chat history to handle follow-up questions.
 
 JSON Format:
