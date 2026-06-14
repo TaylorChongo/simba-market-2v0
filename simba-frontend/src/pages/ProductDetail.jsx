@@ -113,9 +113,9 @@ const ProductDetail = () => {
             </Button>
           </Link>
           <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-outline">
-            <Link to="/" className="hover:text-primary transition-colors">{t('home')}</Link>
-            <span>/</span>
-            <span className="text-primary">{category}</span>
+            <Link to="/" className="hover:text-primary transition-colors flex items-center">{t('home')}</Link>
+            <span className="flex items-center">/</span>
+            <span className="text-primary flex items-center">{category}</span>
           </div>
         </div>
 

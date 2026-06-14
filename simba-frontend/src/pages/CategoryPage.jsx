@@ -115,10 +115,10 @@ const CategoryPage = () => {
       <main className="flex-grow max-w-7xl mx-auto px-4 py-8 md:px-8 w-full">
         {/* Breadcrumbs - Moved above sticky or kept for context */}
         <div className="mb-6 hidden md:block">
-          <nav className="flex text-[10px] uppercase tracking-widest font-bold text-outline">
+          <nav className="flex items-center text-[10px] uppercase tracking-widest font-bold text-outline">
             <Link to="/" className="hover:text-primary transition-colors">{t('home')}</Link>
-            <span className="mx-2">/</span>
-            <span className="text-on-surface">{categoryName}</span>
+            <span className="mx-2 flex items-center">/</span>
+            <span className="text-on-surface flex items-center">{categoryName}</span>
           </nav>
         </div>
 

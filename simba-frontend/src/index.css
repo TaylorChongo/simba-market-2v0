@@ -54,7 +54,12 @@
   
   /* Ensure minimum touch target size for interactive elements */
   button, a, input, select {
-    @apply min-h-[44px] min-w-[44px] transition-all;
+    @apply min-h-[44px] min-w-[44px] transition-all inline-flex items-center justify-center;
+  }
+  
+  /* Reset for inline links that should flow with text */
+  p a, li a, .prose a {
+    @apply min-h-0 min-w-0 inline;
   }
 }
 
