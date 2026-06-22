@@ -1,6 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { findClosestBranch } from '../lib/utils';
 
 const BranchContext = createContext();
+
+const BRANCHES = [
+  { name: "Simba Supermarket UTC", lat: -1.9495461, lng: 30.0599714 },
+  { name: "Simba Supermarket Kigali Heights", lat: -1.9523434, lng: 30.0937551 },
+  { name: "Simba Supermarket Kimironko", lat: -1.9497712, lng: 30.1262879 },
+  { name: "Simba Supermarket Gishushu", lat: -1.9530302, lng: 30.1014069 },
+  { name: "Simba Supermarket Kicukiro", lat: -1.9818128, lng: 30.1044453 },
+  { name: "Simba Supermarket Rebero", lat: -1.9900556, lng: 30.0616547 },
+  { name: "Simba Kisimenti", lat: -1.9596980, lng: 30.1069614 },
+  { name: "Simba Gikondo Branch", lat: -1.9797293, lng: 30.0772419 },
+  { name: "Simba Nyamirambo", lat: -1.9638560, lng: 30.0599307 },
+];
 
 export const useBranch = () => {
   const context = useContext(BranchContext);
@@ -15,16 +28,12 @@ export const BranchProvider = ({ children }) => {
     return localStorage.getItem('simba_selected_branch') || '';
   });
   const [isMapVisible, setIsMapVisible] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [closestBranch, setClosestBranch] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
-  const branches = [
-    { name: "Simba Supermarket Centenary (City Centre)", lat: -1.94606, lng: 30.05990 },
-    { name: "Simba Supermarket Kigali Heights", lat: -1.95521, lng: 30.09706 },
-    { name: "Simba Supermarket Gishushu", lat: -1.95150, lng: 30.10310 },
-    { name: "Simba Supermarket Kimironko", lat: -1.94986, lng: 30.12472 },
-    { name: "Simba Supermarket Kicukiro", lat: -1.97321, lng: 30.10358 }
-  ];
-
-  const toggleMap = () => setIsMapVisible(!isMapVisible);
+  const toggleMap = () => setIsMapVisible((visible) => !visible);
 
   useEffect(() => {
     if (selectedBranch) {
@@ -34,13 +43,48 @@ export const BranchProvider = ({ children }) => {
     }
   }, [selectedBranch]);
 
+  // Fetch user location and find closest branch only when the map needs it.
+  useEffect(() => {
+    if (!isMapVisible || userLocation || isFetchingLocation) return;
+
+    if (!navigator.geolocation) return;
+
+    const handleLocation = () => {
+      setIsFetchingLocation(true);
+      setLocationError(null);
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+          setUserLocation([userLat, userLng]);
+
+          // Find closest branch
+          const closest = findClosestBranch(BRANCHES, userLat, userLng);
+          setClosestBranch(closest);
+          setIsFetchingLocation(false);
+        },
+        (error) => {
+          setLocationError(error.message);
+          setIsFetchingLocation(false);
+        }
+      );
+    };
+
+    handleLocation();
+  }, [isMapVisible, userLocation, isFetchingLocation]);
+
   const value = {
     selectedBranch,
     setSelectedBranch,
-    branches,
+    branches: BRANCHES,
     isMapVisible,
     setIsMapVisible,
-    toggleMap
+    toggleMap,
+    userLocation,
+    closestBranch,
+    locationError,
+    isFetchingLocation
   };
 
   return <BranchContext.Provider value={value}>{children}</BranchContext.Provider>;

@@ -8,42 +8,32 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Button from '../components/Button';
 import Input from '../components/Input';
-import { API_URL } from '../lib/utils';
+import { API_URL, MINIMUM_ORDER_AMOUNT, formatRwf } from '../lib/utils';
 import { 
   ArrowLeft, 
-  CreditCard, 
-  Smartphone, 
   Loader2, 
-  CheckCircle2, 
   AlertCircle,
-  ShoppingBag,
   Store,
-  Clock,
   MapPin,
-  ChevronDown
 } from 'lucide-react';
 
 const Checkout = () => {
   const { cart, getTotalPrice, clearCart } = useCart();
   const { user, token } = useAuth();
-  const { selectedBranch, branches } = useBranch();
+  const { selectedBranch } = useBranch();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  const [deliveryAddress, setDeliveryAddress] = useState('');
   const [phone, setPhone] = useState('');
-  const [pickupLocation, setPickupLocation] = useState(selectedBranch || '');
-  const [pickupTime, setPickupTime] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(''); // 'creating', 'initiating', 'polling', 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
-  const [orderId, setOrderId] = useState(null);
-
-  // Generate time slots (every 30 mins from 8:00 to 20:00)
-  const timeSlots = [];
-  for (let hour = 8; hour <= 20; hour++) {
-    timeSlots.push(`${hour}:00`);
-    timeSlots.push(`${hour}:30`);
-  }
+  const totalPrice = getTotalPrice();
+  const remainingMinimum = Math.max(MINIMUM_ORDER_AMOUNT - totalPrice, 0);
+  const isBelowMinimum = totalPrice < MINIMUM_ORDER_AMOUNT;
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -52,14 +42,27 @@ const Checkout = () => {
     }
   }, [cart, navigate, status]);
 
+  const RW_PHONE_REGEX = /^\+2507[2389]\d{7}$/;
+
+  const handlePhoneChange = (e) => {
+    const val = e.target.value;
+    setPhone(val);
+    setPhoneError(val && !RW_PHONE_REGEX.test(val) ? t('invalid_phone') : '');
+  };
+
   const handlePayment = async (e) => {
     e.preventDefault();
+    if (isBelowMinimum) {
+      setErrorMessage(t('minimum_order_error').replace('{amount}', formatRwf(MINIMUM_ORDER_AMOUNT)));
+      return;
+    }
+
     if (!user) {
       navigate('/login', { state: { from: '/checkout' } });
       return;
     }
 
-    if (!pickupLocation || !pickupTime || !phone) {
+    if (!selectedBranch || !deliveryAddress || !RW_PHONE_REGEX.test(phone)) {
       setErrorMessage(t('fill_all_details'));
       return;
     }
@@ -68,8 +71,9 @@ const Checkout = () => {
     setErrorMessage('');
     
     try {
-      // 1. Create Order with Pickup Details and Deposit
+      // 1. Create Order with Delivery Details
       setStatus('creating');
+      const cartSnapshot = [...cart];
       const orderItems = cart.map(item => ({
         productId: item.id,
         quantity: item.quantity
@@ -83,10 +87,10 @@ const Checkout = () => {
         },
         body: JSON.stringify({ 
           items: orderItems,
-          pickupLocation,
-          pickupTime,
-          depositPaid: false,
-          depositAmount: 500
+          fulfillmentBranch: selectedBranch,
+          deliveryAddress,
+          deliveryInstructions,
+          phone,
         })
       });
 
@@ -94,7 +98,6 @@ const Checkout = () => {
       if (!orderRes.ok) throw new Error(orderData.message || 'Failed to create order');
       
       const createdOrderId = orderData.id;
-      setOrderId(createdOrderId);
 
       // 2. Success - Simplified Flow (Navigate immediately)
       setStatus('success');
@@ -103,10 +106,13 @@ const Checkout = () => {
       
       setTimeout(() => navigate('/success', { 
         state: { 
-          pickupLocation, 
-          pickupTime,
-          totalPrice: getTotalPrice(),
-          orderId: createdOrderId
+          fulfillmentBranch: selectedBranch,
+          deliveryAddress, 
+          deliveryInstructions,
+          totalPrice,
+          phone,
+          orderId: createdOrderId,
+          items: cartSnapshot,
         } 
       }), 1500);
 
@@ -117,158 +123,103 @@ const Checkout = () => {
     }
   };
 
-  const startPolling = (id) => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/payments/status/${id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-
-        if (data.status === 'SUCCESSFUL') {
-          clearInterval(interval);
-          setStatus('success');
-          setLoading(false);
-          clearCart();
-          setTimeout(() => navigate('/success', { 
-            state: { 
-              pickupLocation, 
-              pickupTime,
-              totalPrice: getTotalPrice()
-            } 
-          }), 1500);
-        } else if (data.status === 'FAILED') {
-          clearInterval(interval);
-          setStatus('error');
-          setErrorMessage(t('payment_failed'));
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-    }, 3000);
-
-    // Stop polling after 2 minutes
-    setTimeout(() => {
-      clearInterval(interval);
-      if (status === 'polling') {
-        setStatus('error');
-        setErrorMessage(t('payment_timeout'));
-        setLoading(false);
-      }
-    }, 120000);
-  };
-
-  const isFormComplete = pickupLocation && pickupTime && phone.length >= 10;
+  const isFormComplete = selectedBranch && deliveryAddress && RW_PHONE_REGEX.test(phone) && !isBelowMinimum;
 
   return (
     <div className="min-h-screen bg-surface-container-lowest flex flex-col">
       <Navbar />
 
       <main className="flex-grow max-w-6xl mx-auto w-full px-4 py-8 md:px-8">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <Link to="/cart">
             <Button variant="ghost" className="p-2 rounded-full">
               <ArrowLeft className="w-6 h-6" />
             </Button>
           </Link>
-          <h1 className="text-3xl font-black">{t('secure_checkout')}</h1>
+          <h1 className="text-2xl md:text-3xl font-black">{t('secure_checkout')}</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Mobile sticky total bar */}
+        <div className="lg:hidden sticky top-[55px] z-30 bg-surface border-b border-outline-variant px-4 py-3 -mx-4 mb-6 flex items-center justify-between">
+          <span className="text-xs font-black uppercase tracking-widest text-outline">{cart.length} items</span>
+          <span className="text-lg font-black text-primary">{formatRwf(totalPrice)}</span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
           {/* Left Side: Forms */}
           <div className="lg:col-span-7 space-y-8">
             
-            {/* Step 1: Pickup Location */}
-            <section className="bg-surface border border-outline-variant rounded-[40px] p-8 shadow-sm">
-              <div className="flex items-center gap-4 mb-8">
+            {/* Step 1: Fulfillment Branch (Automatic) */}
+            <section className="bg-surface border border-outline-variant rounded-[28px] md:rounded-[40px] p-5 md:p-8 shadow-sm">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                  <Store className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg md:text-xl font-black">{t('select_fulfillment_branch')}</h2>
+                  <p className="text-xs text-outline font-medium uppercase tracking-widest">{t('where_collect')}</p>
+                </div>
+              </div>
+              <div className="p-5 bg-surface-container-low border border-outline-variant rounded-2xl flex items-center justify-between font-bold text-on-surface">
+                <span>{selectedBranch || 'Simba Supermarket'}</span>
+                <span className="text-[10px] bg-primary/15 text-primary px-3 py-1 rounded-full uppercase tracking-widest font-black">Selected</span>
+              </div>
+            </section>
+
+            {/* Step 2: Delivery Address */}
+            <section className="bg-surface border border-outline-variant rounded-[28px] md:rounded-[40px] p-5 md:p-8 shadow-sm">
+              <div className="flex items-center gap-4 mb-6 md:mb-8">
                 <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                   <MapPin className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black">{t('select_pickup_location')}</h2>
-                  <p className="text-xs text-outline font-medium uppercase tracking-widest">{t('where_collect')}</p>
+                  <h2 className="text-lg md:text-xl font-black">{t('delivery_address')}</h2>
+                  <p className="text-xs text-outline font-medium uppercase tracking-widest">{t('delivery_address_desc')}</p>
                 </div>
-              </div>
-
-              <div className="relative">
-                <select 
-                  className="w-full h-14 px-5 rounded-2xl border border-outline bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold appearance-none"
-                  value={pickupLocation}
-                  onChange={(e) => setPickupLocation(e.target.value)}
-                >
-                  <option value="">{t('choose_branch')}</option>
-                  {branches.map(loc => (
-                    <option key={loc.name} value={loc.name}>{loc.name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
-              </div>
-            </section>
-
-            {/* Step 2: Pickup Time */}
-            <section className="bg-surface border border-outline-variant rounded-[40px] p-8 shadow-sm">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black">{t('select_pickup_time')}</h2>
-                  <p className="text-xs text-outline font-medium uppercase tracking-widest">{t('when_arriving')}</p>
-                </div>
-              </div>
-
-              <div className="relative">
-                <select 
-                  className="w-full h-14 px-5 rounded-2xl border border-outline bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold appearance-none"
-                  value={pickupTime}
-                  onChange={(e) => setPickupTime(e.target.value)}
-                >
-                  <option value="">{t('choose_time')}</option>
-                  {timeSlots.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" />
-              </div>
-            </section>
-
-            {/* Step 3: Payment */}
-            <section className="bg-surface border border-outline-variant rounded-[40px] p-8 shadow-sm">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-xl font-black">{t('momo_deposit')}</h2>
-                    <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/9/93/New-mtn-logo.jpg" 
-                      alt="MTN MoMo" 
-                      className="h-8 w-auto object-contain rounded-lg"
-                    />
-                  </div>
-                  <p className="text-xs text-outline font-medium uppercase tracking-widest">{t('secure_order_deposit')}</p>
-                </div>
-              </div>
-
-              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-8">
-                <p className="text-sm font-medium text-on-surface-variant leading-relaxed">
-                  {t('deposit_desc').replace('{amount}', '500')}
-                </p>
-                <p className="text-[11px] font-bold text-outline mt-3 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> {t('remaining_balance_desc')}
-                </p>
               </div>
 
               <div className="space-y-4">
-                <label className="text-sm font-black text-on-surface ml-1">{t('mtn_phone')}</label>
+                <Input 
+                  type="text" 
+                  placeholder={t('delivery_address_placeholder')} 
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  className="h-14 rounded-2xl text-base font-bold"
+                />
                 <Input 
                   type="tel" 
-                  placeholder="078XXXXXXX" 
+                  placeholder="+250 78X XXX XXX"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="h-14 rounded-2xl text-lg font-bold tracking-widest"
+                  onChange={handlePhoneChange}
+                  className="h-14 rounded-2xl text-base font-bold"
+                />
+                {phoneError && (
+                  <p className="text-xs font-bold text-error flex items-center gap-1 ml-1">
+                    <AlertCircle className="w-3 h-3" /> {phoneError}
+                  </p>
+                )}
+              </div>
+            </section>
+
+            {/* Step 3: Delivery Instructions & Landmarks */}
+            <section className="bg-surface border border-outline-variant rounded-[28px] md:rounded-[40px] p-5 md:p-8 shadow-sm">
+              <div className="flex items-center gap-4 mb-6 md:mb-8">
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                  <MapPin className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg md:text-xl font-black">{t('delivery_instructions')}</h2>
+                  <p className="text-xs text-outline font-medium uppercase tracking-widest">{t('delivery_instructions_desc')}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Input 
+                  type="text" 
+                  placeholder={t('delivery_instructions_placeholder')} 
+                  value={deliveryInstructions}
+                  onChange={(e) => setDeliveryInstructions(e.target.value)}
+                  className="h-14 rounded-2xl text-base font-bold"
                 />
               </div>
             </section>
@@ -276,12 +227,12 @@ const Checkout = () => {
 
           {/* Right Side: Summary & Action */}
           <div className="lg:col-span-5">
-            <div className="bg-surface border border-outline-variant rounded-[40px] p-8 shadow-sm sticky top-28">
-              <h2 className="text-xl font-bold mb-8 flex items-center gap-2">
+            <div className="bg-surface border border-outline-variant rounded-[28px] md:rounded-[40px] p-5 md:p-8 shadow-sm lg:sticky lg:top-28">
+              <h2 className="text-xl font-bold mb-6 md:mb-8 flex items-center gap-2">
                 {t('summary')}
               </h2>
 
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar mb-8">
+              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar mb-6 md:mb-8">
                 {cart.map((item) => (
                   <div key={item.id} className="flex justify-between items-center gap-4">
                     <div className="flex items-center gap-3">
@@ -301,18 +252,23 @@ const Checkout = () => {
               </div>
 
               <div className="space-y-4 pt-6 border-t border-outline-variant">
-                <div className="flex justify-between text-outline font-bold text-sm">
+                <div className="flex justify-between font-black text-lg">
                   <span>{t('grand_total')}</span>
-                  <span>RWF {getTotalPrice().toLocaleString()}</span>
+                  <span>{formatRwf(totalPrice)}</span>
                 </div>
-                <div className="flex justify-between text-primary font-black text-lg">
-                  <span>{t('pay_now')}</span>
-                  <span>RWF 500</span>
-                </div>
-                <div className="flex justify-between text-on-surface font-bold text-sm">
-                  <span>{t('pay_at_pickup')}</span>
-                  <span>RWF {(getTotalPrice() - 500).toLocaleString()}</span>
-                </div>
+                {isBelowMinimum && status !== 'success' && (
+                  <div className="p-4 bg-error/5 border border-error/10 rounded-2xl flex items-start gap-3 text-error">
+                    <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-black">
+                        {t('minimum_order_title').replace('{amount}', formatRwf(MINIMUM_ORDER_AMOUNT))}
+                      </p>
+                      <p className="text-[11px] font-bold text-on-surface mt-1 leading-tight">
+                        {t('minimum_order_desc').replace('{remaining}', formatRwf(remainingMinimum))}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {loading ? (
@@ -321,10 +277,7 @@ const Checkout = () => {
                    <div className="text-center">
                     <p className="text-sm font-black text-on-surface">
                       {status === 'creating' && t('creating_order')}
-                      {status === 'initiating' && t('connecting_momo')}
-                      {status === 'polling' && t('waiting_confirmation')}
                     </p>
-                    <p className="text-[10px] text-outline font-medium mt-1">{t('confirm_prompt').replace('{amount}', '500')}</p>
                    </div>
                 </div>
               ) : (
@@ -341,12 +294,11 @@ const Checkout = () => {
                     className="w-full py-4 h-auto text-lg font-black rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
                     disabled={!isFormComplete}
                   >
-                    <Smartphone className="w-5 h-5" />
-                    {t('pay_now')}
+                    {t('place_order')}
                   </Button>
 
                   <p className="text-[10px] text-center text-outline uppercase tracking-[0.2em] font-black">
-                    {t('secure_pickup_badge')}
+                    {t('secure_delivery_badge')}
                   </p>
                 </div>
               )}

@@ -53,7 +53,7 @@ const AddProduct = () => {
         image: data.image,
         description: data.description || ''
       });
-    } catch (err) {
+    } catch {
       setError('Failed to load product data');
     } finally {
       setFetching(false);
@@ -62,8 +62,12 @@ const AddProduct = () => {
 
   useEffect(() => {
     if (isEditMode) {
-      fetchProduct();
+      const timer = setTimeout(() => {
+        fetchProduct();
+      }, 0);
+      return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleSubmit = async (e) => {

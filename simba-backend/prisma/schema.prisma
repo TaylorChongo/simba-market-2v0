@@ -21,7 +21,7 @@ enum OrderStatus {
   APPROVED
   ASSIGNED
   PREPARING
-  READY_FOR_PICKUP
+  READY_FOR_DELIVERY
   COMPLETED
   CANCELLED
 }
@@ -116,14 +116,15 @@ model Order {
   status         OrderStatus @default(PENDING)
   momoReference  String?     // External reference from MTN MoMo
   branchName     String?     // e.g. Simba Supermarket Remera (fulfillment branch)
-  pickupTime     String?     // e.g. 14:30
-  depositPaid    Boolean     @default(false)
-  depositAmount  Float       @default(0)
+  deliveryAddress      String?     // e.g. Gisozi, Gasabo, Kigali
+  deliveryInstructions String?     // e.g. Opposite Gisozi Sector Office or Near the pharmacy
+  depositPaid          Boolean     @default(false)
+  depositAmount        Float       @default(0)
   
-  assignedTo     String?     // User ID of BRANCH_STAFF
-  assignedBy     String?     // User ID of BRANCH_MANAGER
+  assignedTo           String?     // User ID of BRANCH_STAFF
+  assignedBy           String?     // User ID of BRANCH_MANAGER
   
-  createdAt      DateTime    @default(now())
+  createdAt            DateTime    @default(now())
   
   // Relations
   user           User        @relation("ClientOrders", fields: [userId], references: [id])

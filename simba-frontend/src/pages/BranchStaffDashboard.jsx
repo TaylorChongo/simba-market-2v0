@@ -31,7 +31,7 @@ const BranchStaffDashboard = () => {
   };
 
   const activeOrders = useMemo(() => {
-    return orders.filter(o => ['PENDING', 'APPROVED', 'ASSIGNED', 'PREPARING', 'READY_FOR_PICKUP'].includes(o.status));
+    return orders.filter(o => ['PENDING', 'APPROVED', 'ASSIGNED', 'PREPARING', 'READY_FOR_DELIVERY'].includes(o.status));
   }, [orders]);
 
   const historyOrders = useMemo(() => {
@@ -98,7 +98,7 @@ const BranchStaffDashboard = () => {
       case 'APPROVED': return 'bg-blue-100 text-blue-700';
       case 'ASSIGNED': return 'bg-primary/10 text-primary';
       case 'PREPARING': return 'bg-warning/10 text-warning';
-      case 'READY_FOR_PICKUP': return 'bg-success/10 text-success';
+      case 'READY_FOR_DELIVERY': return 'bg-success/10 text-success';
       case 'COMPLETED': return 'bg-success text-white';
       case 'CANCELLED': return 'bg-error/10 text-error';
       default: return 'bg-outline-variant/30 text-outline';
@@ -208,6 +208,15 @@ const BranchStaffDashboard = () => {
                             </p>
                           </div>
                         </div>
+
+                        {order.deliveryInstructions && (
+                          <div className="mb-6 bg-surface-container-low p-4 rounded-2xl border border-outline-variant/50">
+                            <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">Delivery Instructions & Landmarks</p>
+                            <p className="text-sm font-bold text-on-surface leading-relaxed">
+                              {order.deliveryInstructions}
+                            </p>
+                          </div>
+                        )}
 
                         <div className="space-y-3">
                           <p className="text-[10px] font-black text-outline uppercase tracking-widest">Order Items</p>

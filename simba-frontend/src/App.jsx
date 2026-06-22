@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { BranchProvider } from './context/BranchContext';
@@ -29,8 +30,16 @@ import Contact from './pages/Contact';
 import FAQ from './pages/FAQ';
 import ShippingPolicy from './pages/ShippingPolicy';
 import Returns from './pages/Returns';
+import Branches from './pages/Branches';
+import About from './pages/About';
 import InlineBranchMap from './components/InlineBranchMap';
 import FloatingAI from './components/FloatingAI';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+};
 
 function App() {
   return (
@@ -40,6 +49,7 @@ function App() {
           <BranchProvider>
             <CartProvider>
               <Router>
+                <ScrollToTop />
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
@@ -56,6 +66,8 @@ function App() {
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/shipping-policy" element={<ShippingPolicy />} />
                   <Route path="/returns" element={<Returns />} />
+                  <Route path="/branches" element={<Branches />} />
+                  <Route path="/about" element={<About />} />
 
                   {/* Protected Routes */}
                   <Route 

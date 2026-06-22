@@ -27,7 +27,7 @@ const VendorOrders = () => {
       });
       const data = await res.json();
       setOrders(data);
-    } catch (err) {
+    } catch {
       console.error('Failed to fetch orders');
     } finally {
       setLoading(false);
@@ -35,7 +35,11 @@ const VendorOrders = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
+    const timer = setTimeout(() => {
+      fetchOrders();
+    }, 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredOrders = orders.filter(order => 

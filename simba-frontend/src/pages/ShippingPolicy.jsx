@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Truck, Package, MapPin, Clock, ShieldCheck, ArrowLeft } from 'lucide-react';

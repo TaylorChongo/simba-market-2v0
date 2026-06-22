@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
@@ -11,6 +11,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { API_URL } from '../lib/utils';
 import { Filter, X, ChevronDown, ChevronUp, SlidersHorizontal, Loader2, MapPin, ArrowRight } from 'lucide-react';
 import localProducts from '../data/simba_products.json';
+import AISearch from '../components/AISearch';
 
 const Home = () => {
   const { user } = useAuth();
@@ -23,13 +24,18 @@ const Home = () => {
     productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+  }, [searchParams]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const navigate = useNavigate();
 
   // Hero Slideshow Logic
   const heroImages = [
@@ -322,7 +328,20 @@ const Home = () => {
               </section>
             )}
 
-            {/* Loading Overlay for branch switch */}
+            {/* Branches Strip */}
+            <Link
+              to="/branches"
+              className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/15 rounded-2xl px-5 py-4 hover:bg-primary/10 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-black text-on-surface">9 branches across Kigali</p>
+                  <p className="text-[11px] text-outline font-medium">Open Mon–Fri 7AM–9PM · Sun 8AM–8PM</p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
+            </Link>
             {loading && (
               <div className="absolute inset-0 bg-surface/50 z-10 flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />

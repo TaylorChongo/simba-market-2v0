@@ -34,6 +34,9 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 
+// Strip "Simba Supermarket " or "Simba " prefix for compact display
+const shortName = (name) => name.replace(/^Simba Supermarket\s*/i, '').replace(/^Simba\s*/i, '') || name;
+
 const BranchMapModal = ({ isOpen, onClose }) => {
   const { branches, setSelectedBranch, selectedBranch } = useBranch();
   const [userLocation, setUserLocation] = useState(null);
@@ -125,7 +128,7 @@ const BranchMapModal = ({ isOpen, onClose }) => {
               >
                 <Popup closeButton={false} className="custom-popup-container">
                   <div className="p-1 min-w-[140px]">
-                    <h3 className="font-black text-xs mb-2 text-primary">{branch.name.replace('Simba Supermarket ', '')}</h3>
+                    <h3 className="font-black text-xs mb-2 text-primary">{shortName(branch.name)}</h3>
                     <Button 
                       size="sm" 
                       className="w-full h-8 text-[10px] font-black rounded-lg"
@@ -183,7 +186,7 @@ const BranchMapModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <h3 className={`font-black text-sm mb-1 ${selectedBranch === branch.name ? 'text-primary' : 'text-on-surface'}`}>
-                  {branch.name.replace('Simba Supermarket ', '')}
+                  {shortName(branch.name)}
                 </h3>
                 <p className="text-[10px] text-outline font-medium uppercase tracking-widest flex items-center gap-1.5 mb-4">
                   <Navigation className="w-3 h-3" /> Kigali, Rwanda

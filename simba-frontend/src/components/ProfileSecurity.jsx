@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+
 import Button from './Button';
 import Input from './Input';
 import { User, Save, Loader2, CheckCircle2, AlertCircle, Lock, Shield } from 'lucide-react';
 
 const ProfileSecurity = ({ activeTab = 'profile' }) => {
   const { user, updateUser, token } = useAuth();
-  const { t } = useLanguage();
+
   const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -26,10 +26,13 @@ const ProfileSecurity = ({ activeTab = 'profile' }) => {
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-      });
+      const timer = setTimeout(() => {
+        setFormData({
+          name: user.name,
+          email: user.email,
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [user]);
 
@@ -63,7 +66,7 @@ const ProfileSecurity = ({ activeTab = 'profile' }) => {
       } else {
         setStatus({ loading: false, success: '', error: data.message || 'Failed to update profile' });
       }
-    } catch (error) {
+    } catch {
       setStatus({ loading: false, success: '', error: 'Network error. Please try again.' });
     }
   };
@@ -97,7 +100,7 @@ const ProfileSecurity = ({ activeTab = 'profile' }) => {
       } else {
         setPasswordStatus({ loading: false, success: '', error: data.message || 'Failed to change password' });
       }
-    } catch (error) {
+    } catch {
       setPasswordStatus({ loading: false, success: '', error: 'Network error. Please try again.' });
     }
   };

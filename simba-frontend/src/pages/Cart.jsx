@@ -5,13 +5,18 @@ import { useBranch } from '../context/BranchContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Button from '../components/Button';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, MapPin, Map as MapIcon } from 'lucide-react';
+import { MINIMUM_ORDER_AMOUNT, formatRwf, shortName } from '../lib/utils';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, MapPin, Map as MapIcon, AlertCircle, Bookmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Cart = () => {
-  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, getTotalPrice } = useCart();
+  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, getTotalPrice, clearCart, savedItems, saveForLater, moveToCart, removeFromSaved } = useCart();
   const { t } = useLanguage();
   const { selectedBranch, toggleMap } = useBranch();
+  const totalPrice = getTotalPrice();
+  const remainingMinimum = Math.max(MINIMUM_ORDER_AMOUNT - totalPrice, 0);
+  const isBelowMinimum = totalPrice < MINIMUM_ORDER_AMOUNT;
+  const isCheckoutBlocked = !selectedBranch || isBelowMinimum;
 
   return (
     <div className="min-h-screen bg-surface-container-lowest flex flex-col">
@@ -26,6 +31,14 @@ const Cart = () => {
               </Button>
             </Link>
             <h1 className="text-3xl font-black">{t('your_cart')}</h1>
+            {cart.length > 0 && (
+              <button
+                onClick={clearCart}
+                className="ml-2 text-xs font-black text-error uppercase tracking-widest hover:underline flex items-center gap-1"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> {t('clear_cart') || 'Clear Cart'}
+              </button>
+            )}
           </div>
           
           <div className="hidden sm:block">
@@ -39,23 +52,25 @@ const Cart = () => {
               }`}
             >
               <MapPin className="w-4 h-4" />
-              <span>{selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : t('select_branch')}</span>
+              <span>{selectedBranch ? shortName(selectedBranch) : t('select_branch')}</span>
               <MapIcon className="w-3.5 h-3.5 opacity-50" />
             </Button>
           </div>
         </div>
 
         {cart.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-24 h-24 bg-surface-container-low rounded-full flex items-center justify-center mb-6">
-              <ShoppingBag className="w-12 h-12 text-outline" />
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-28 h-28 bg-surface-container-low border border-outline-variant rounded-full flex items-center justify-center mb-6">
+              <ShoppingBag className="w-14 h-14 text-outline/40" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">{t('empty_cart')}</h2>
-            <p className="text-outline mb-8 max-w-md">
+            <h2 className="text-2xl font-black mb-2">{t('empty_cart')}</h2>
+            <p className="text-outline font-medium mb-8 max-w-xs leading-relaxed">
               {t('empty_cart_desc')}
             </p>
             <Link to="/">
-              <Button className="px-8 h-12 text-base">{t('start_shopping')}</Button>
+              <Button className="px-10 h-12 text-base font-black rounded-2xl">
+                {t('go_to_shop') || 'Go to Shop'}
+              </Button>
             </Link>
           </div>
         ) : (
@@ -100,16 +115,56 @@ const Cart = () => {
                   </div>
 
                   {/* Remove Button */}
-                  <Button 
-                    variant="ghost" 
-                    className="p-2 text-error hover:bg-error/10 rounded-full"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      className="p-2 text-outline hover:bg-surface-container-high rounded-full"
+                      onClick={() => saveForLater(item.id)}
+                      title="Save for later"
+                    >
+                      <Bookmark className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="p-2 text-error hover:bg-error/10 rounded-full"
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
+
+            {/* Saved for Later */}
+            {savedItems.length > 0 && (
+              <div className="lg:col-span-2 mt-2">
+                <h2 className="text-lg font-black mb-4 flex items-center gap-2">
+                  <Bookmark className="w-5 h-5 text-outline" /> Saved for Later ({savedItems.length})
+                </h2>
+                <div className="space-y-3">
+                  {savedItems.map(item => (
+                    <div key={item.id} className="bg-surface-container-low border border-outline-variant rounded-3xl p-4 flex gap-4 items-center opacity-80">
+                      <div className="w-16 h-16 bg-surface rounded-2xl overflow-hidden flex-shrink-0">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <p className="font-bold text-sm truncate">{item.name}</p>
+                        <p className="text-primary font-black text-sm">RWF {item.price.toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button variant="outline" size="sm" className="h-9 px-3 text-xs font-black rounded-xl" onClick={() => moveToCart(item.id)}>
+                          Move to Cart
+                        </Button>
+                        <Button variant="ghost" className="p-2 text-error hover:bg-error/10 rounded-full" onClick={() => removeFromSaved(item.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
@@ -146,7 +201,7 @@ const Cart = () => {
                         <div>
                           <p className="text-[10px] font-black text-outline uppercase tracking-widest">Pickup at</p>
                           <p className="text-xs font-bold truncate max-w-[120px]">
-                            {selectedBranch.replace('Simba Supermarket ', '')}
+                            {shortName(selectedBranch)}
                           </p>
                         </div>
                       </div>
@@ -159,9 +214,21 @@ const Cart = () => {
                     </div>
                   )}
 
+                  {isBelowMinimum && (
+                    <div className="bg-error/5 border border-error/15 rounded-2xl p-4 mb-4">
+                      <p className="text-[10px] font-black text-error uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {t('minimum_order_title').replace('{amount}', formatRwf(MINIMUM_ORDER_AMOUNT))}
+                      </p>
+                      <p className="text-[11px] font-bold text-on-surface leading-tight">
+                        {t('minimum_order_desc').replace('{remaining}', formatRwf(remainingMinimum))}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex justify-between text-outline">
                     <span>{t('subtotal')}</span>
-                    <span>RWF {getTotalPrice().toLocaleString()}</span>
+                    <span>{formatRwf(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between text-outline">
                     <span>{t('delivery_fee')}</span>
@@ -170,14 +237,14 @@ const Cart = () => {
                   <div className="h-px bg-outline-variant my-4" />
                   <div className="flex justify-between text-xl font-black">
                     <span>{t('total')}</span>
-                    <span className="text-primary">RWF {getTotalPrice().toLocaleString()}</span>
+                    <span className="text-primary">{formatRwf(totalPrice)}</span>
                   </div>
                 </div>
 
-                <Link to="/checkout" className={!selectedBranch ? "pointer-events-none" : ""}>
+                <Link to="/checkout" className={isCheckoutBlocked ? "pointer-events-none" : ""}>
                   <Button 
-                    className={`w-full py-4 h-auto text-lg font-bold rounded-2xl ${!selectedBranch ? 'opacity-50 grayscale' : ''}`}
-                    disabled={!selectedBranch}
+                    className={`w-full py-4 h-auto text-lg font-bold rounded-2xl ${isCheckoutBlocked ? 'opacity-50 grayscale' : ''}`}
+                    disabled={isCheckoutBlocked}
                   >
                     {t('proceed_to_checkout')}
                   </Button>

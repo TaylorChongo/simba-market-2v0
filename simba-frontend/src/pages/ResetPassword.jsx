@@ -46,7 +46,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest p-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest p-4 pb-24 md:pb-4">
       <div className="w-full max-w-md">
         <div className="bg-surface p-8 rounded-[32px] shadow-sm border border-outline-variant">
           <h2 className="text-2xl font-black text-on-surface mb-2">{t('reset_password_title')}</h2>

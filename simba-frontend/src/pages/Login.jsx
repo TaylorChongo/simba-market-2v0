@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { API_URL } from '../lib/utils';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 import GoogleLoginButton from '../components/GoogleLoginButton';
 
@@ -16,6 +16,7 @@ const Login = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -62,7 +63,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest p-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest p-4 pb-24 md:pb-4">
       <div className="w-full max-w-md">
         <Link to="/" className="inline-flex items-center gap-2 text-outline hover:text-primary transition-colors mb-6 ml-1 font-bold text-sm">
           <ArrowLeft className="w-4 h-4" />
@@ -97,14 +98,20 @@ const Login = () => {
                 {t('forgot_password')}
               </Link>
             </div>
+            <div className="relative">
             <Input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="h-12 rounded-xl"
+              className="h-12 rounded-xl pr-12"
             />
+            <button type="button" onClick={() => setShowPassword(v => !v)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors">
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+            </div>
           </div>
           
           <Button type="submit" className="w-full h-12 rounded-xl font-black mt-2 shadow-lg shadow-primary/20" disabled={loading}>

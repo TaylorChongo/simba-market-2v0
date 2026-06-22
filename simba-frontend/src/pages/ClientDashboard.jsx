@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { shortName } from '../lib/utils';
+
 import { useLanguage } from '../context/LanguageContext';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { User, Package, Settings, LogOut, Save, Loader2, CheckCircle2, AlertCircle, Clock, History, Lock, Shield, Pencil, X as CloseIcon, SlidersHorizontal, Moon, Languages } from 'lucide-react';
+import { User, Package, Settings, LogOut, Save, Loader2, CheckCircle2, AlertCircle, Clock, History, Lock, Shield, Pencil, X as CloseIcon, SlidersHorizontal, Moon, Languages, Printer } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
+import { printInvoice } from '../lib/printInvoice';
 
 const ClientDashboard = () => {
   const { user, logout, updateUser, token } = useAuth();
-  const { t } = useLanguage();
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'profile';
@@ -35,18 +38,15 @@ const ClientDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-      });
+      const timer = setTimeout(() => {
+        setFormData({
+          name: user.name,
+          email: user.email,
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [user]);
-
-  useEffect(() => {
-    if (activeTab === 'orders' && token) {
-      fetchOrders();
-    }
-  }, [activeTab, token]);
 
   const fetchOrders = async () => {
     setOrdersLoading(true);
@@ -66,6 +66,16 @@ const ClientDashboard = () => {
       setOrdersLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (activeTab === 'orders' && token) {
+      const timer = setTimeout(() => {
+        fetchOrders();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, token]);
 
   const handleTabChange = (tab) => {
     setSearchParams({ tab });
@@ -107,7 +117,7 @@ const ClientDashboard = () => {
       } else {
         setStatus({ loading: false, success: '', error: data.message || 'Failed to update profile' });
       }
-    } catch (error) {
+    } catch {
       setStatus({ loading: false, success: '', error: 'Server error. Please try again later.' });
     }
   };
@@ -143,7 +153,7 @@ const ClientDashboard = () => {
       } else {
         setPasswordStatus({ loading: false, success: '', error: data.message || 'Failed to change password' });
       }
-    } catch (error) {
+    } catch {
       setPasswordStatus({ loading: false, success: '', error: 'Server error. Please try again later.' });
     }
   };
@@ -182,8 +192,8 @@ const ClientDashboard = () => {
       
       <main className="flex-grow max-w-6xl mx-auto px-4 py-8 md:py-12 w-full">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar */}
-          <aside className="w-full md:w-64 shrink-0">
+          {/* Sidebar – desktop only */}
+          <aside className="hidden md:block w-full md:w-64 shrink-0">
             <div className="bg-surface border border-outline-variant rounded-3xl overflow-hidden sticky top-24 shadow-sm">
               <div className="p-6 bg-primary/5 border-b border-outline-variant">
                 <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-4 shadow-inner">
@@ -221,6 +231,31 @@ const ClientDashboard = () => {
               </nav>
             </div>
           </aside>
+
+          {/* Mobile tab bar */}
+          <div className="md:hidden -mx-4 px-4 mb-4 overflow-x-auto flex gap-2 no-scrollbar border-b border-outline-variant pb-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all flex-shrink-0 ${
+                  activeTab === tab.id
+                    ? 'bg-primary text-on-primary shadow-md shadow-primary/20'
+                    : 'bg-surface-container-low text-outline border border-outline-variant'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest bg-error/10 text-error flex-shrink-0"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
 
           {/* Main Content Area */}
           <div className="flex-grow">
@@ -628,6 +663,21 @@ const OrderCard = ({ order, isHistory = false }) => (
         }`}>
           {order.status.replace(/_/g, ' ')}
         </span>
+        <button
+          onClick={() => printInvoice({
+            orderId: order.id,
+            fulfillmentBranch: order.branchName,
+            deliveryAddress: order.deliveryAddress,
+            deliveryInstructions: order.deliveryInstructions,
+            phone: order.phone,
+            totalPrice: order.totalPrice,
+            items: order.items,
+          })}
+          title="Print Invoice"
+          className="p-2 rounded-full text-outline hover:bg-surface-container-high hover:text-on-surface transition-colors"
+        >
+          <Printer className="w-4 h-4" />
+        </button>
       </div>
     </div>
 
@@ -657,9 +707,16 @@ const OrderCard = ({ order, isHistory = false }) => (
         <p className="text-[9px] font-black text-outline uppercase tracking-[0.2em] mb-1 px-1">Fulfillment</p>
         <div className="flex items-center gap-2 px-1">
           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-          <p className="text-xs font-black uppercase tracking-widest leading-tight">{order.branchName?.replace('Simba Supermarket ', '') || 'Processing'}</p>
+          <p className="text-xs font-black uppercase tracking-widest leading-tight">{shortName(order.branchName) || 'Processing'}</p>
         </div>
-        <p className="text-[10px] text-outline font-bold uppercase tracking-widest px-1 ml-3.5">{order.pickupTime ? `Pickup: ${order.pickupTime}` : 'Standard Delivery'}</p>
+        <p className="text-[10px] text-outline font-bold uppercase tracking-widest px-1 ml-3.5 leading-tight">
+          Delivery Address: <span className="text-on-surface font-black normal-case">{order.deliveryAddress || 'Standard Delivery'}</span>
+        </p>
+        {order.deliveryInstructions && (
+          <p className="text-[10px] text-outline font-bold uppercase tracking-widest px-1 ml-3.5 mt-1 leading-tight">
+            Notes: <span className="text-on-surface font-black normal-case">{order.deliveryInstructions}</span>
+          </p>
+        )}
       </div>
 
       <div className="md:text-right space-y-1">

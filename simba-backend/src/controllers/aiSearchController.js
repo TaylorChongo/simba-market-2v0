@@ -56,55 +56,56 @@ const aiSearch = async (req, res) => {
         matchedProducts = matchedProducts.filter(p => p.price <= maxPrice);
       }
 
-      // B. Category match (Loose)
-      if (category) {
-        const catLower = category.toLowerCase();
-        matchedProducts = matchedProducts.filter(product => {
-          const pCatLower = product.category.toLowerCase();
-          return pCatLower.includes(catLower) || catLower.includes(pCatLower);
-        });
-      }
-
-      // C. Keyword match (Improved Multi-Item Support)
+      // B. Keyword match against full pool (category is a boost, not a hard filter)
       if (keywords && keywords.length > 0) {
         const fuse = new Fuse(matchedProducts, {
           keys: ['name', 'category'],
-          threshold: 0.45, // Relaxed threshold for better matching
+          threshold: 0.4,
           includeScore: true
         });
-        
+
         let allResults = [];
-        
-        // Perform a separate fuzzy search for each keyword/phrase
         keywords.forEach(kw => {
-          const results = fuse.search(kw);
-          allResults = [...allResults, ...results];
+          allResults = [...allResults, ...fuse.search(kw)];
         });
 
         if (allResults.length > 0) {
-          // Sort by score and remove duplicates
           allResults.sort((a, b) => a.score - b.score);
           const seen = new Set();
           const uniqueProducts = [];
-          
           for (const res of allResults) {
             if (!seen.has(res.item.id)) {
               seen.add(res.item.id);
               uniqueProducts.push(res.item);
             }
           }
+          // Boost: category matches float to the top
+          if (category) {
+            const catLower = category.toLowerCase();
+            uniqueProducts.sort((a, b) => {
+              const aMatch = a.category.toLowerCase().includes(catLower) ? 0 : 1;
+              const bMatch = b.category.toLowerCase().includes(catLower) ? 0 : 1;
+              return aMatch - bMatch;
+            });
+          }
           matchedProducts = uniqueProducts;
         } else {
-          // Fallback to word-by-word OR matching if fuzzy fails
+          // Fallback: substring match
           matchedProducts = matchedProducts.filter(product => {
             const nameLower = product.name.toLowerCase();
-            const catLower = product.category.toLowerCase();
-            return keywords.some(kw => 
-              nameLower.includes(kw.toLowerCase()) || 
-              catLower.includes(kw.toLowerCase())
+            const catLower2 = product.category.toLowerCase();
+            return keywords.some(kw =>
+              nameLower.includes(kw.toLowerCase()) ||
+              catLower2.includes(kw.toLowerCase())
             );
           });
         }
+      } else if (category) {
+        // Category-only search (no keywords)
+        const catLower = category.toLowerCase();
+        matchedProducts = matchedProducts.filter(p =>
+          p.category.toLowerCase().includes(catLower) || catLower.includes(p.category.toLowerCase())
+        );
       }
     }
 

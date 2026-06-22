@@ -30,7 +30,7 @@ const VendorProducts = () => {
       if (Array.isArray(data)) {
         setProducts(data.filter(p => p.vendorId === user.id));
       }
-    } catch (err) {
+    } catch {
       console.error('Failed to load products');
     } finally {
       setLoading(false);
@@ -39,8 +39,12 @@ const VendorProducts = () => {
 
   useEffect(() => {
     if (!authLoading && user?.id) {
-      fetchProducts();
+      const timer = setTimeout(() => {
+        fetchProducts();
+      }, 0);
+      return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, authLoading]);
 
   const handleDelete = async (id) => {

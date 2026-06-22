@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Button from '../Button';
 import Input from '../Input';
 import { API_URL } from '../../lib/utils';
-import { 
-  Search, 
-  UserPlus, 
-  Trash2, 
-  Mail, 
-  Edit2, 
+import {
+  Search,
+  UserPlus,
+  Trash2,
+  Mail,
+  Edit2,
   Filter,
   X,
   Lock,
@@ -22,7 +22,7 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState('ALL');
-  
+
   // Add User Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -40,7 +40,7 @@ const UserManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      
+
       // Fetch Users
       const userResponse = await fetch(`${API_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -64,7 +64,7 @@ const UserManagement = () => {
             setRoles(dynamicRoles);
           }
         }
-      } catch (e) {
+      } catch {
         console.warn('Roles endpoint not found, using defaults');
       }
     } catch (error) {
@@ -75,7 +75,11 @@ const UserManagement = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddUser = async (e) => {
@@ -92,13 +96,13 @@ const UserManagement = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/admin/users`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(newUser)
       });
-      
+
       if (response.ok) {
         setIsAddModalOpen(false);
         setNewUser({ name: '', email: '', password: '', role: 'CLIENT', branch: '' });
@@ -129,13 +133,13 @@ const UserManagement = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/admin/users/${editingUser.id}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(editingUser)
       });
-      
+
       if (response.ok) {
         setIsEditModalOpen(false);
         setEditingUser(null);
@@ -168,13 +172,13 @@ const UserManagement = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/admin/users/${userId}/role`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ role: newRole })
       });
-      
+
       if (response.ok) {
         fetchData();
       } else {
@@ -195,7 +199,7 @@ const UserManagement = () => {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (response.ok) {
         fetchData();
       } else {
@@ -220,7 +224,7 @@ const UserManagement = () => {
   };
 
   const filteredUsers = users.filter(u => {
-    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'ALL' || u.role?.toUpperCase() === roleFilter.toUpperCase();
     return matchesSearch && matchesRole;
@@ -238,8 +242,8 @@ const UserManagement = () => {
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors" size={18} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search users by name or email..."
             className="w-full pl-12 pr-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all text-sm font-medium shadow-sm"
             value={searchTerm}
@@ -247,11 +251,11 @@ const UserManagement = () => {
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Button 
-            variant={isFilterOpen ? 'primary' : 'outline'} 
+          <Button
+            variant={isFilterOpen ? 'primary' : 'outline'}
             className={`flex-1 md:flex-none flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-              isFilterOpen 
-                ? 'shadow-lg shadow-primary/25 ring-2 ring-primary/20' 
+              isFilterOpen
+                ? 'shadow-lg shadow-primary/25 ring-2 ring-primary/20'
                 : 'bg-surface hover:border-primary/50 hover:bg-primary/5'
             }`}
             onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -259,7 +263,7 @@ const UserManagement = () => {
             <Filter size={18} className={isFilterOpen ? 'animate-pulse' : ''} />
             Filter
           </Button>
-          <Button 
+          <Button
             className="flex-1 md:flex-none flex items-center justify-center gap-2 py-2.5 px-6 rounded-xl text-[11px] font-black uppercase tracking-widest bg-primary text-on-primary shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all border-none"
             onClick={() => setIsAddModalOpen(true)}
           >
@@ -280,8 +284,8 @@ const UserManagement = () => {
                     key={role}
                     onClick={() => setRoleFilter(role)}
                     className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
-                      roleFilter === role 
-                        ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' 
+                      roleFilter === role
+                        ? 'bg-primary text-on-primary shadow-lg shadow-primary/20'
                         : 'bg-surface-variant/20 text-on-surface-variant hover:bg-surface-variant/40'
                     }`}
                   >
@@ -291,7 +295,7 @@ const UserManagement = () => {
               </div>
             </div>
             {roleFilter !== 'ALL' && (
-              <button 
+              <button
                 onClick={() => setRoleFilter('ALL')}
                 className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline mt-6"
               >
@@ -335,8 +339,8 @@ const UserManagement = () => {
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider border ${getRoleBadgeColor(user.role)}`}>
                         {user.role}
                       </span>
-                      <select 
-                        value={user.role?.toUpperCase()} 
+                      <select
+                        value={user.role?.toUpperCase()}
                         onChange={(e) => handleRoleChange(user.id, e.target.value)}
                         className="bg-transparent text-xs font-bold text-on-surface-variant hover:text-primary cursor-pointer focus:outline-none transition-colors uppercase"
                       >
@@ -348,14 +352,14 @@ const UserManagement = () => {
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-center gap-2">
-                      <button 
+                      <button
                         onClick={() => openEditModal(user)}
                         className="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
                         title="Edit User Info"
                       >
                         <Edit2 size={18} />
                       </button>
-                      <button 
+                      <button
                         className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg transition-all"
                         onClick={() => handleDeleteUser(user.id)}
                       >
@@ -382,15 +386,15 @@ const UserManagement = () => {
                   <p className="text-xs text-on-surface-variant truncate">{user.email}</p>
                 </div>
               </div>
-              
+
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">System Role</label>
                 <div className="flex items-center justify-between gap-4 p-3 bg-surface-variant/5 rounded-2xl border border-outline-variant">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider border ${getRoleBadgeColor(user.role)}`}>
                     {user.role}
                   </span>
-                  <select 
-                    value={user.role?.toUpperCase()} 
+                  <select
+                    value={user.role?.toUpperCase()}
                     onChange={(e) => handleRoleChange(user.id, e.target.value)}
                     className="bg-transparent text-xs font-bold text-primary focus:outline-none uppercase"
                   >
@@ -402,14 +406,14 @@ const UserManagement = () => {
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
-                <button 
+                <button
                   onClick={() => openEditModal(user)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold"
                 >
                   <Edit2 size={16} />
                   Edit User
                 </button>
-                <button 
+                <button
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-error/10 text-error text-xs font-bold"
                   onClick={() => handleDeleteUser(user.id)}
                 >
@@ -450,14 +454,14 @@ const UserManagement = () => {
                 <Edit2 className="text-primary" />
                 Edit User
               </h3>
-              <button 
+              <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="p-2 hover:bg-surface-variant/20 rounded-xl transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleEditUser} className="p-6 space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">Full Name</label>
@@ -512,35 +516,39 @@ const UserManagement = () => {
                     <select
                       required={editingUser.role === 'BRANCH_MANAGER' || editingUser.role === 'BRANCH_STAFF'}
                       className={`w-full pl-10 pr-4 py-2.5 bg-surface border rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold appearance-none cursor-pointer ${
-                        (editingUser.role === 'BRANCH_MANAGER' || editingUser.role === 'BRANCH_STAFF') && !editingUser.branch 
-                          ? 'border-error/50' 
+                        (editingUser.role === 'BRANCH_MANAGER' || editingUser.role === 'BRANCH_STAFF') && !editingUser.branch
+                          ? 'border-error/50'
                           : 'border-outline-variant'
                       }`}
                       value={editingUser.branch}
                       onChange={(e) => setEditingUser({...editingUser, branch: e.target.value})}
                     >
                       <option value="">No Branch</option>
-                      <option value="Simba Supermarket Centenary (City Centre)">Simba Centenary</option>
+                      <option value="Simba Supermarket (UTC Branch)">Simba UTC Branch</option>
                       <option value="Simba Supermarket Kigali Heights">Simba Kigali Heights</option>
-                      <option value="Simba Supermarket Gishushu">Simba Gishushu</option>
                       <option value="Simba Supermarket Kimironko">Simba Kimironko</option>
+                      <option value="Simba Supermarket Gishushu">Simba Gishushu</option>
                       <option value="Simba Supermarket Kicukiro">Simba Kicukiro</option>
+                      <option value="Simba Supermarket Rebero">Simba Rebero</option>
+                      <option value="Simba Kisimenti">Simba Kisimenti</option>
+                      <option value="Simba Gikondo Branch">Simba Gikondo Branch</option>
+                      <option value="Simba Nyamirambo">Simba Nyamirambo</option>
                     </select>
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 flex gap-3">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   className="flex-1"
                   onClick={() => setIsEditModalOpen(false)}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="flex-1"
                   disabled={isSubmitting}
                 >
@@ -561,14 +569,14 @@ const UserManagement = () => {
                 <UserPlus className="text-primary" />
                 Add New User
               </h3>
-              <button 
+              <button
                 onClick={() => setIsAddModalOpen(false)}
                 className="p-2 hover:bg-surface-variant/20 rounded-xl transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleAddUser} className="p-6 space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-1">Full Name</label>
@@ -638,35 +646,39 @@ const UserManagement = () => {
                     <select
                       required={newUser.role === 'BRANCH_MANAGER' || newUser.role === 'BRANCH_STAFF'}
                       className={`w-full pl-10 pr-4 py-2.5 bg-surface border rounded-xl focus:outline-none focus:border-primary transition-colors text-sm font-bold appearance-none cursor-pointer ${
-                        (newUser.role === 'BRANCH_MANAGER' || newUser.role === 'BRANCH_STAFF') && !newUser.branch 
-                          ? 'border-error/50' 
+                        (newUser.role === 'BRANCH_MANAGER' || newUser.role === 'BRANCH_STAFF') && !newUser.branch
+                          ? 'border-error/50'
                           : 'border-outline-variant'
                       }`}
                       value={newUser.branch}
                       onChange={(e) => setNewUser({...newUser, branch: e.target.value})}
                     >
                       <option value="">No Branch</option>
-                      <option value="Simba Supermarket Centenary (City Centre)">Simba Centenary</option>
+                      <option value="Simba Supermarket (UTC Branch)">Simba UTC Branch</option>
                       <option value="Simba Supermarket Kigali Heights">Simba Kigali Heights</option>
-                      <option value="Simba Supermarket Gishushu">Simba Gishushu</option>
                       <option value="Simba Supermarket Kimironko">Simba Kimironko</option>
+                      <option value="Simba Supermarket Gishushu">Simba Gishushu</option>
                       <option value="Simba Supermarket Kicukiro">Simba Kicukiro</option>
+                      <option value="Simba Supermarket Rebero">Simba Rebero</option>
+                      <option value="Simba Kisimenti">Simba Kisimenti</option>
+                      <option value="Simba Gikondo Branch">Simba Gikondo Branch</option>
+                      <option value="Simba Nyamirambo">Simba Nyamirambo</option>
                     </select>
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 flex gap-3">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   className="flex-1"
                   onClick={() => setIsAddModalOpen(false)}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="flex-1"
                   disabled={isSubmitting}
                 >

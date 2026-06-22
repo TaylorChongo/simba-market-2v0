@@ -10,10 +10,6 @@ const AdminInbox = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all'); // all, unread, read
 
-  useEffect(() => {
-    fetchMessages();
-  }, []);
-
   const fetchMessages = async () => {
     setLoading(true);
     try {
@@ -30,6 +26,13 @@ const AdminInbox = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMessages();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const markAsRead = async (id) => {
     try {

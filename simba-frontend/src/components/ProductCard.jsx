@@ -1,4 +1,4 @@
-import { ShoppingCart, Star, AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { ShoppingCart, Star, AlertCircle, CheckCircle2, X, Eye } from 'lucide-react';
 import Button from './Button';
 import { useCart } from '../context/CartContext';
 import { useBranch } from '../context/BranchContext';
@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { fallbackToOriginalImage, optimizeCloudinaryUrl } from '../lib/utils';
+import { useState } from 'react';
+import QuickViewModal from './QuickViewModal';
 
 const ProductCard = ({ product }) => {
   const { cart, addToCart } = useCart();
@@ -13,6 +15,7 @@ const ProductCard = ({ product }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [showQuickView, setShowQuickView] = useState(false);
   
   // Placeholder data if no product is passed
   const { id, name = "Product Name", price = 0, image = "https://via.placeholder.com/300", category = "Category", stock } = product || {};
@@ -25,6 +28,7 @@ const ProductCard = ({ product }) => {
   const isLowStock = user && selectedBranch && stock > 0 && stock < 5;
 
   return (
+    <>
     <div className={`group bg-surface-container-lowest border border-outline-variant rounded-2xl md:rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col ${isOutOfStock ? 'opacity-75' : ''}`}>
       <Link to={`/product/${id}`} className="flex flex-col flex-grow">
         {/* Image Container */}
@@ -60,6 +64,14 @@ const ProductCard = ({ product }) => {
             <Star className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary fill-primary" />
             <span>4.5</span>
           </div>
+
+          {/* Quick View Button */}
+          <button
+            onClick={e => { e.preventDefault(); e.stopPropagation(); setShowQuickView(true); }}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-surface/95 backdrop-blur-sm border border-outline-variant text-on-surface text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg hover:bg-primary hover:text-white hover:border-primary whitespace-nowrap"
+          >
+            <Eye className="w-3 h-3" /> Quick View
+          </button>
         </div>
 
         {/* Content */}
@@ -113,6 +125,8 @@ const ProductCard = ({ product }) => {
         </div>
       </Link>
     </div>
+    {showQuickView && <QuickViewModal product={product} onClose={() => setShowQuickView(false)} />}
+  </>
   );
 };
 

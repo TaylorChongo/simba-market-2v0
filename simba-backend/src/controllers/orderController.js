@@ -1,5 +1,7 @@
 const { prisma } = require('../config/db');
 
+const MINIMUM_ORDER_TOTAL_RWF = Number(process.env.MINIMUM_ORDER_TOTAL_RWF || 2500);
+
 /**
  * Automatically assigns PENDING orders to available staff in a branch
  */
@@ -70,14 +72,15 @@ const autoAssignOrders = async (branchName) => {
 // @access  Private/Client
 const createOrder = async (req, res) => {
   try {
-    const { items, pickupLocation, pickupTime, depositPaid, depositAmount } = req.body;
+    const { items, pickupLocation, fulfillmentBranch, deliveryAddress, deliveryInstructions, depositPaid, depositAmount } = req.body;
+    const finalBranchName = fulfillmentBranch || pickupLocation;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'No order items provided' });
     }
 
-    if (!pickupLocation) {
-      return res.status(400).json({ message: 'Pickup location (branch) is required' });
+    if (!finalBranchName) {
+      return res.status(400).json({ message: 'Fulfillment branch is required' });
     }
 
     // Use transaction to ensure stock consistency
@@ -89,7 +92,7 @@ const createOrder = async (req, res) => {
         where: { id: { in: productIds } },
         include: {
           stocks: {
-            where: { branchName: pickupLocation }
+            where: { branchName: finalBranchName }
           }
         }
       });
@@ -101,6 +104,7 @@ const createOrder = async (req, res) => {
       // 2. Validate stock and calculate total price
       let totalPrice = 0;
       const orderItemsData = [];
+      const stockUpdates = [];
 
       for (const item of items) {
         const product = products.find((p) => p.id === item.productId);
@@ -119,10 +123,21 @@ const createOrder = async (req, res) => {
           price: product.price,
         });
 
-        // 3. Update stock
+        stockUpdates.push({
+          id: branchStock.id,
+          stock: branchStock.stock - item.quantity
+        });
+      }
+
+      if (totalPrice < MINIMUM_ORDER_TOTAL_RWF) {
+        throw new Error(`Minimum order total is ${MINIMUM_ORDER_TOTAL_RWF.toLocaleString()} RWF`);
+      }
+
+      // 3. Update stock
+      for (const update of stockUpdates) {
         await tx.branchStock.update({
-          where: { id: branchStock.id },
-          data: { stock: branchStock.stock - item.quantity }
+          where: { id: update.id },
+          data: { stock: update.stock }
         });
       }
 
@@ -132,8 +147,9 @@ const createOrder = async (req, res) => {
           userId: req.user.id,
           totalPrice,
           status: 'PENDING',
-          branchName: pickupLocation,
-          pickupTime,
+          branchName: finalBranchName,
+          deliveryAddress,
+          deliveryInstructions,
           depositPaid: depositPaid || false,
           depositAmount: depositAmount || 0,
           items: {
@@ -153,7 +169,8 @@ const createOrder = async (req, res) => {
 
     res.status(201).json(result);
   } catch (error) {
-    const status = error.message.includes('out of stock') ? 400 : 500;
+    const isBadRequest = error.message.includes('out of stock') || error.message.includes('Minimum order total');
+    const status = isBadRequest ? 400 : 500;
     res.status(status).json({ message: error.message });
   }
 };
@@ -269,7 +286,7 @@ const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['APPROVED', 'PREPARING', 'READY_FOR_PICKUP', 'COMPLETED'].includes(status)) {
+    if (!['APPROVED', 'PREPARING', 'READY_FOR_DELIVERY', 'COMPLETED'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status update' });
     }
 

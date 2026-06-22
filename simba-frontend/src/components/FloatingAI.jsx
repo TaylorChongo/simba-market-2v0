@@ -18,12 +18,6 @@ const getAssistantSessionId = () => {
 const FloatingAI = () => {
   const { t, language } = useLanguage();
   const location = useLocation();
-  
-  // Hide on admin end
-  if (location.pathname.startsWith('/dashboard/admin')) {
-    return null;
-  }
-
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +27,7 @@ const FloatingAI = () => {
   const { selectedBranch } = useBranch();
   const [sessionId] = useState(() => getAssistantSessionId());
   const [messages, setMessages] = useState([
-    { role: 'ai', text: t('ai_welcome') }
+    { role: 'ai', key: 'ai_welcome' }
   ]);
   const chatEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -59,13 +53,6 @@ const FloatingAI = () => {
     fetchProducts();
   }, [selectedBranch]);
 
-  useEffect(() => {
-    // Update welcome message if it's the only message and language changed
-    if (messages.length === 1 && messages[0].role === 'ai') {
-      setMessages([{ role: 'ai', text: t('ai_welcome') }]);
-    }
-  }, [language, t]);
-
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
@@ -84,6 +71,11 @@ const FloatingAI = () => {
       scrollToBottom();
     }
   }, [messages, loading, isOpen]);
+
+  // Hide on admin end
+  if (location.pathname.startsWith('/dashboard/admin')) {
+    return null;
+  }
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
@@ -252,7 +244,7 @@ const FloatingAI = () => {
     });
   };
 
-  const getRouteForPage = (page = '') => {
+  const _getRouteForPage = (page = '') => {
     const normalized = normalizeText(page);
     
     // Core pages
@@ -356,7 +348,7 @@ const FloatingAI = () => {
                     ? 'bg-primary text-on-primary rounded-tr-none' 
                     : 'bg-surface border border-outline-variant rounded-tl-none'
                 }`}>
-                  <p className="text-sm font-medium leading-relaxed">{msg.text}</p>
+                  <p className="text-sm font-medium leading-relaxed">{msg.key ? t(msg.key) : msg.text}</p>
                   
                   {/* Embedded Products */}
                   {msg.products && msg.products.length > 0 && (

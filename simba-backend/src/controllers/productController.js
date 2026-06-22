@@ -1,4 +1,5 @@
 const { prisma } = require('../config/db');
+const { branches, DEFAULT_BRANCH_STOCK } = require('../services/bootstrapService');
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -56,24 +57,39 @@ const getProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        vendor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+    const { branch } = req.query;
+
+    const include = {
+      vendor: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
         },
       },
+    };
+
+    if (branch) {
+      include.stocks = {
+        where: {
+          branchName: branch
+        }
+      };
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include,
     });
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    res.status(200).json(product);
+    res.status(200).json(branch ? {
+      ...product,
+      stock: product.stocks[0]?.stock || 0
+    } : product);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching product', error: error.message });
   }
@@ -91,15 +107,28 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'Please provide name, price, category, and image' });
     }
 
-    const product = await prisma.product.create({
-      data: {
-        name,
-        price: parseFloat(price),
-        category,
-        image,
-        description,
-        vendorId: req.user.id,
-      },
+    const product = await prisma.$transaction(async (tx) => {
+      const createdProduct = await tx.product.create({
+        data: {
+          name,
+          price: parseFloat(price),
+          category,
+          image,
+          description,
+          vendorId: req.user.id,
+        },
+      });
+
+      await tx.branchStock.createMany({
+        data: branches.map((branchName) => ({
+          productId: createdProduct.id,
+          branchName,
+          stock: DEFAULT_BRANCH_STOCK,
+        })),
+        skipDuplicates: true,
+      });
+
+      return createdProduct;
     });
 
     res.status(201).json(product);

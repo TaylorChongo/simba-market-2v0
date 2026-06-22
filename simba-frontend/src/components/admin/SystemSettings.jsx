@@ -33,7 +33,11 @@ const SystemSettings = () => {
   };
 
   useEffect(() => {
-    fetchSettings();
+    const timer = setTimeout(() => {
+      fetchSettings();
+    }, 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUpdateSetting = async (key, value) => {
@@ -60,7 +64,7 @@ const SystemSettings = () => {
     setNewValue('');
   };
 
-  const handleDeleteSetting = async (id) => {
+  const handleDeleteSetting = async (_id) => {
     if (!window.confirm('Are you sure you want to delete this setting?')) return;
     // Note: Assuming there is a DELETE endpoint or we use POST with null value
     // For now, let's just implement the UI improvement

@@ -45,7 +45,7 @@ const VendorDashboard = () => {
           totalOrders: vendorOrders.length,
           pendingOrders: vendorOrders.filter(o => o.status === 'PENDING').length
         });
-      } catch (err) {
+      } catch {
         console.error('Failed to fetch dashboard stats');
       } finally {
         setLoading(false);

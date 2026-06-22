@@ -36,7 +36,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest p-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest p-4 pb-24 md:pb-4">
       <div className="w-full max-w-md">
         <Link to="/login" className="inline-flex items-center gap-2 text-outline hover:text-primary transition-colors mb-6 ml-1 font-bold text-sm">
           <ArrowLeft className="w-4 h-4" />

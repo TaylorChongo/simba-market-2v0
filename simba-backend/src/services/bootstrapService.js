@@ -4,16 +4,58 @@ const path = require('path');
 const { prisma } = require('../config/db');
 
 const branches = [
-  'Simba Supermarket Centenary (City Centre)',
+  'Simba Supermarket (UTC Branch)',
   'Simba Supermarket Kigali Heights',
-  'Simba Supermarket Gishushu',
   'Simba Supermarket Kimironko',
-  'Simba Supermarket Kicukiro'
+  'Simba Supermarket Gishushu',
+  'Simba Supermarket Kicukiro',
+  'Simba Supermarket Rebero',
+  'Simba Kisimenti',
+  'Simba Gikondo Branch',
+  'Simba Nyamirambo'
 ];
+
+const DEFAULT_BRANCH_STOCK = Number(process.env.DEFAULT_BRANCH_STOCK || 100);
+
+async function ensureBranchStockForProduct(productId, stock = DEFAULT_BRANCH_STOCK) {
+  await prisma.branchStock.createMany({
+    data: branches.map((branchName) => ({
+      productId,
+      branchName,
+      stock,
+    })),
+    skipDuplicates: true,
+  });
+}
+
+async function ensureBranchStockSeeded(stock = DEFAULT_BRANCH_STOCK) {
+  const products = await prisma.product.findMany({
+    select: { id: true },
+  });
+
+  const stockRows = products.flatMap((product) => (
+    branches.map((branchName) => ({
+      productId: product.id,
+      branchName,
+      stock,
+    }))
+  ));
+
+  const chunkSize = 1000;
+  for (let index = 0; index < stockRows.length; index += chunkSize) {
+    await prisma.branchStock.createMany({
+      data: stockRows.slice(index, index + chunkSize),
+      skipDuplicates: true,
+    });
+  }
+
+  return stockRows.length;
+}
 
 async function ensureCatalogSeeded() {
   const existingProducts = await prisma.product.count();
   if (existingProducts > 0) {
+    await ensureBranchStockSeeded();
     return { seeded: false, productCount: existingProducts };
   }
 
@@ -44,13 +86,7 @@ async function ensureCatalogSeeded() {
       },
     });
 
-    await prisma.branchStock.createMany({
-      data: branches.map((branchName) => ({
-        productId: product.id,
-        branchName,
-        stock: 100,
-      })),
-    });
+    await ensureBranchStockForProduct(product.id);
   }
 
   return { seeded: true, productCount: products.length };
@@ -110,6 +146,9 @@ async function seedAdminData() {
 
 module.exports = {
   ensureCatalogSeeded,
+  ensureBranchStockForProduct,
+  ensureBranchStockSeeded,
   seedAdminData,
   branches,
+  DEFAULT_BRANCH_STOCK,
 };

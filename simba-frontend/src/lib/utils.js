@@ -2,9 +2,68 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const MINIMUM_ORDER_AMOUNT = 2500;
+
+export function formatRwf(amount) {
+  return `RWF ${Number(amount || 0).toLocaleString()}`;
+}
+
+export function shortName(name = '') {
+  return name.replace(/^Simba Supermarket\s*/i, '').replace(/^Simba\s*/i, '') || name;
+}
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Calculates the distance between two coordinates using the Haversine formula
+ * @param {number} lat1 - Latitude of point 1
+ * @param {number} lng1 - Longitude of point 1
+ * @param {number} lat2 - Latitude of point 2
+ * @param {number} lng2 - Longitude of point 2
+ * @returns {number} - Distance in kilometers
+ */
+export function calculateDistance(lat1, lng1, lat2, lng2) {
+  const toRadians = (degrees) => degrees * Math.PI / 180;
+  
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = toRadians(lat2 - lat1);
+  const dLng = toRadians(lng2 - lng1);
+  
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Finds the closest branch to the user's location
+ * @param {Array} branches - Array of branch objects with lat/lng properties
+ * @param {number} userLat - User's latitude
+ * @param {number} userLng - User's longitude
+ * @returns {Object|null} - The closest branch object or null if no branches
+ */
+export function findClosestBranch(branches, userLat, userLng) {
+  if (!branches || branches.length === 0 || !userLat || !userLng) {
+    return null;
+  }
+  
+  let closestBranch = null;
+  let minDistance = Infinity;
+  
+  branches.forEach(branch => {
+    const distance = calculateDistance(userLat, userLng, branch.lat, branch.lng);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestBranch = { ...branch, distance };
+    }
+  });
+  
+  return closestBranch;
 }
 
 /**

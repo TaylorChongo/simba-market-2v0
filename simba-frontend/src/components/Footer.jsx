@@ -20,7 +20,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-surface-container-low border-t border-outline-variant mt-auto">
+    <footer className="bg-surface-container-low border-t border-outline-variant mt-auto pb-20 md:pb-0">
       <div className="max-w-7xl mx-auto px-4 py-12 md:px-8 grid grid-cols-2 md:grid-cols-4 gap-8">
         {/* Brand */}
         <div className="col-span-2 md:col-span-1">
@@ -49,8 +49,10 @@ const Footer = () => {
         <div className="col-span-1">
           <h4 className="font-bold mb-4 text-sm md:text-base">{t('support')}</h4>
           <ul className="space-y-2 text-xs md:text-sm text-outline font-medium">
+            <li><Link to="/about" className="hover:text-primary transition-colors">About Us</Link></li>
             <li><Link to="/contact" className="hover:text-primary transition-colors">{t('contact_us')}</Link></li>
             <li><Link to="/faq" className="hover:text-primary transition-colors">{t('faqs')}</Link></li>
+            <li><Link to="/branches" className="hover:text-primary transition-colors">Our Branches</Link></li>
             <li><Link to="/shipping-policy" className="hover:text-primary transition-colors">{t('shipping_policy')}</Link></li>
             <li><Link to="/returns" className="hover:text-primary transition-colors">{t('returns')}</Link></li>
           </ul>
