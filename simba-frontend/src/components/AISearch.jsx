@@ -61,6 +61,10 @@ const AISearch = ({ placeholder, autoOpen = false, onClose }) => {
         products: data.products || [] 
       };
       setMessages(prev => [...prev, aiMessage]);
+      // ensure results panel is visible and scrolled into view
+      setIsExpanded(true);
+      // allow render to complete then scroll
+      setTimeout(() => scrollToBottom(), 80);
     } catch (error) {
       console.error('AI Search error:', error);
       setMessages(prev => [...prev, { 
