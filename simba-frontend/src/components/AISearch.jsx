@@ -13,8 +13,15 @@ const AISearch = ({ placeholder, autoOpen = false, onClose }) => {
   const [isExpanded, setIsExpanded] = useState(autoOpen);
   const containerRef = useRef(null);
   const chatEndRef = useRef(null);
+  // refs for controlling/focusing inputs when showing empty states
+  const topInputRef = useRef(null);
+  const bottomInputRef = useRef(null);
   const navigate = useNavigate();
   const { addToCart } = useCart();
+
+  // helpers to inspect recent messages for empty-result handling
+  const lastAi = messages.slice().reverse().find(m => m.role === 'ai');
+  const lastUser = messages.slice().reverse().find(m => m.role === 'user');
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -111,6 +118,7 @@ const AISearch = ({ placeholder, autoOpen = false, onClose }) => {
           </div>
         </div>
         <input
+          ref={topInputRef}
           type="text"
           placeholder={messages.length > 0 && !isExpanded ? "Continue conversation..." : (placeholder || "Ask Simba AI...")}
           className="w-full bg-surface-container-low border border-outline-variant rounded-xl md:rounded-2xl pl-10 md:pl-12 pr-12 py-2.5 md:py-3 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
@@ -157,7 +165,7 @@ const AISearch = ({ placeholder, autoOpen = false, onClose }) => {
             </div>
             
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-container-lowest p-4 space-y-6 min-h-0">
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-container-lowest p-4 space-y-6 min-h-[120px] md:min-h-[180px]">
               {messages.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
                   <div className="w-16 h-16 bg-primary/5 rounded-3xl flex items-center justify-center">
@@ -218,6 +226,21 @@ const AISearch = ({ placeholder, autoOpen = false, onClose }) => {
                 </div>
               ))}
 
+              {/* Empty-state when AI returns no products */}
+              {lastAi && !loading && (lastAi.products?.length === 0) && (
+                <div className="flex flex-col items-center justify-center py-8 space-y-3 text-center w-full">
+                  <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-bold text-on-surface">No results found</p>
+                  <p className="text-xs text-outline max-w-[280px]">We couldn't find products matching your request. Try different keywords, check spelling, or broaden the search.</p>
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={() => { setQuery(''); bottomInputRef.current?.focus(); }} className="px-3 py-2 bg-primary text-on-primary rounded-xl text-sm">Try again</button>
+                    <button onClick={() => { setMessages([]); setIsExpanded(false); }} className="px-3 py-2 bg-surface border border-outline-variant rounded-xl text-sm">Close</button>
+                  </div>
+                </div>
+              )}
+
               {loading && (
                 <div className="flex items-start gap-3">
                   <div className="bg-primary/10 p-2 rounded-xl animate-pulse">
@@ -239,6 +262,7 @@ const AISearch = ({ placeholder, autoOpen = false, onClose }) => {
             <div className="shrink-0 p-4 bg-surface border-t border-outline-variant">
               <form onSubmit={handleSearch} className="flex items-center gap-2">
                 <input
+                  ref={bottomInputRef}
                   autoFocus
                   type="text"
                   placeholder="Send a message..."
