@@ -30,11 +30,18 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Allow non-browser/server requests (e.g., curl) when origin is undefined
+    if (!origin) return callback(null, true);
+
+    // Allow configured origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    // During development, allow common local network origins so mobile devices on the LAN can reach the API
+    const isLocalNetwork = origin.includes('localhost') || origin.includes('127.0.0.1') || origin.startsWith('http://192.') || origin.startsWith('http://10.') || origin.startsWith('http://172.');
+    if (process.env.NODE_ENV !== 'production' && isLocalNetwork) return callback(null, true);
+
+    // Otherwise block
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true
 }));
