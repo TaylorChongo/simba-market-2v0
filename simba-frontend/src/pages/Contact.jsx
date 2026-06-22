@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Button from '../components/Button';
-import { Mail, Phone, MapPin, Clock, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, MessageSquare, Send, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { API_URL } from '../lib/utils';
 
@@ -22,14 +22,14 @@ const Contact = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       const res = await fetch(`${API_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      
+
       if (res.ok) {
         setSuccess(true);
         setFormData({ name: '', email: '', subject: 'Order Inquiry', message: '' });
@@ -47,8 +47,15 @@ const Contact = () => {
   return (
     <div className="min-h-screen flex flex-col bg-surface">
       <Navbar />
-      
+
       <main className="flex-grow">
+
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-outline hover:text-primary">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Home</span>
+          </Link>
+        </div>
         {/* Hero Header */}
         <section className="bg-primary/5 py-16 md:py-24 border-b border-outline-variant/30">
           <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
@@ -59,7 +66,7 @@ const Contact = () => {
               We're Here to <span className="text-primary">Help You.</span>
             </h1>
             <p className="text-outline max-w-2xl mx-auto text-sm md:text-lg font-medium">
-              Have a question about an order, a product, or just want to say hi? 
+              Have a question about an order, a product, or just want to say hi?
               Our team at Simba Supermarket is ready to assist you.
             </p>
           </div>
@@ -67,7 +74,7 @@ const Contact = () => {
 
         <section className="max-w-7xl mx-auto px-4 py-16 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            
+
             {/* Contact Info Cards */}
             <div className="lg:col-span-1 space-y-6">
               <div className="bg-surface border border-outline-variant rounded-[32px] p-8 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all group">
@@ -117,8 +124,8 @@ const Contact = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Your Name</label>
-                          <input 
-                            type="text" 
+                          <input
+                            type="text"
                             placeholder="John Doe"
                             required
                             value={formData.name}
@@ -128,8 +135,8 @@ const Contact = () => {
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Email Address</label>
-                          <input 
-                            type="email" 
+                          <input
+                            type="email"
                             placeholder="john@example.com"
                             required
                             value={formData.email}
@@ -138,10 +145,10 @@ const Contact = () => {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Subject</label>
-                        <select 
+                        <select
                           className="w-full bg-surface-container-low border border-outline-variant rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-primary transition-all font-bold appearance-none"
                           value={formData.subject}
                           onChange={(e) => setFormData({...formData, subject: e.target.value})}
@@ -155,7 +162,7 @@ const Contact = () => {
 
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Message</label>
-                        <textarea 
+                        <textarea
                           rows={5}
                           placeholder="How can we help you?"
                           required
@@ -167,8 +174,8 @@ const Contact = () => {
 
                       {error && <p className="text-error text-xs font-bold ml-1">{error}</p>}
 
-                      <Button 
-                        type="submit" 
+                      <Button
+                        type="submit"
                         disabled={loading}
                         className="w-full py-4 rounded-2xl text-base font-black uppercase tracking-widest flex items-center justify-center gap-3 group"
                       >
@@ -184,37 +191,6 @@ const Contact = () => {
           </div>
         </section>
 
-        {/* Branch Map Section Placeholder */}
-        <section className="bg-surface-container-low py-20">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 text-center mb-12">
-            <h2 className="text-3xl font-black mb-4">Our Locations</h2>
-            <p className="text-outline">Visit any of our 5 branches across Kigali for the best shopping experience.</p>
-          </div>
-          <div className="max-w-5xl mx-auto px-4">
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  { name: "Simba Centenary", area: "City Centre", phone: "+250 788 123 001" },
-                  { name: "Simba Kigali Heights", area: "Kacyiru", phone: "+250 788 123 002" },
-                  { name: "Simba Gishushu", area: "Remera", phone: "+250 788 123 003" },
-                  { name: "Simba Kimironko", area: "Kimironko", phone: "+250 788 123 004" },
-                  { name: "Simba Kicukiro", area: "Kicukiro", phone: "+250 788 123 005" },
-                ].map((branch, i) => (
-                  <div key={i} className="bg-surface border border-outline-variant p-6 rounded-3xl shadow-sm hover:border-primary transition-all">
-                    <h4 className="font-black text-lg mb-1">{branch.name}</h4>
-                    <p className="text-outline text-xs uppercase tracking-widest font-bold mb-4">{branch.area}</p>
-                    <div className="flex items-center gap-2 text-sm font-bold text-on-surface mb-2">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      Kigali, Rwanda
-                    </div>
-                    <div className="flex items-center gap-2 text-sm font-bold text-on-surface">
-                      <Phone className="w-4 h-4 text-primary" />
-                      {branch.phone}
-                    </div>
-                  </div>
-                ))}
-             </div>
-          </div>
-        </section>
       </main>
 
       <Footer />

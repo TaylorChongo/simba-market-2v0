@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { ChevronDown, ChevronUp, Search, MessageCircle, HelpCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, MessageCircle, HelpCircle, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const FAQ = () => {
@@ -71,6 +71,12 @@ const FAQ = () => {
       <Navbar />
       
       <main className="flex-grow">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-outline hover:text-primary">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Home</span>
+          </Link>
+        </div>
         {/* Header */}
         <section className="bg-primary py-16 md:py-24 text-on-primary">
           <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">

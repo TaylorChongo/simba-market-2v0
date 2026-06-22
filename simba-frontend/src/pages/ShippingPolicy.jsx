@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Truck, Package, MapPin, Clock, ShieldCheck } from 'lucide-react';
+import { Truck, Package, MapPin, Clock, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const ShippingPolicy = () => {
@@ -12,6 +12,12 @@ const ShippingPolicy = () => {
       <Navbar />
       
       <main className="flex-grow">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-outline hover:text-primary">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Home</span>
+          </Link>
+        </div>
         <section className="bg-surface-container-low py-16 md:py-24 border-b border-outline-variant/30">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="max-w-3xl">
