@@ -8,18 +8,20 @@ import { useBranch } from '../context/BranchContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import AISearch from './AISearch';
+import { shortName } from '../lib/utils';
 import GoogleLoginButton from './GoogleLoginButton';
 
 const Navbar = () => {
   const { getCartCount } = useCart();
   const { user, logout } = useAuth();
-  const { selectedBranch, toggleMap } = useBranch();
+  const { selectedBranch, toggleMap, isMapVisible } = useBranch();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [mobileAuthLoading, setMobileAuthLoading] = useState(false);
   const [mobileAuthError, setMobileAuthError] = useState('');
   const dropdownRef = useRef(null);
@@ -41,13 +43,16 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Prevent scroll when mobile menu is open
+  // Prevent page scroll only while the mobile drawer is open, then restore it.
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    if (!mobileMenuOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow || '';
+    };
   }, [mobileMenuOpen]);
 
   const handleLogout = () => {
@@ -65,37 +70,45 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 glass-header border-b border-outline-variant px-4 py-3 md:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 md:gap-8">
-          {/* Logo & Branch Selector */}
-          <div className="flex items-center gap-4 md:gap-6 shrink-0">
+      <nav className="sticky top-0 z-50 glass-header border-b border-outline-variant px-3 py-3 md:px-8">
+        <div className="max-w-7xl mx-auto flex min-h-12 items-center justify-between gap-2 sm:gap-4 md:gap-6">
+
+          {/* Mobile AI search — open the AI panel on small screens */}
+          {mobileSearchOpen && (
+            <div className="md:hidden flex-1">
+              <AISearch placeholder={t('search_placeholder')} autoOpen={true} onClose={() => setMobileSearchOpen(false)} />
+            </div>
+          )}
+
+          {/* Normal navbar content — hidden on mobile when search is open */}
+          <div className={`flex min-w-0 items-center gap-2 sm:gap-4 md:gap-6 shrink ${mobileSearchOpen ? 'hidden md:flex' : 'flex'}`}>
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex shrink-0 items-center justify-center">
                 <span className="text-on-primary font-bold text-lg md:text-xl">S</span>
               </div>
-              <span className="text-lg md:text-xl font-bold tracking-tight hidden sm:inline">
+              <span className="text-lg md:text-xl font-bold tracking-tight hidden sm:inline whitespace-nowrap">
                 Simba <span className="text-primary">Supermarket</span>
               </span>
             </Link>
 
             {/* Branch Selector - Desktop */}
             {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
-              <div className="hidden lg:flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+              <div className="hidden lg:flex items-center gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={toggleMap}
-                  className={`h-10 rounded-2xl px-4 text-xs font-black uppercase tracking-widest flex items-center gap-2 border transition-all ${
-                    selectedBranch 
-                      ? 'border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5' 
+                  className={`h-10 max-w-48 rounded-2xl px-4 text-xs font-black uppercase tracking-widest flex items-center gap-2 border transition-colors ${
+                    selectedBranch
+                      ? 'border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary hover:bg-primary/5'
                       : 'border-outline-variant text-outline hover:border-primary hover:text-primary hover:bg-primary/5'
                   }`}
                 >
-                  <MapPin className="w-4 h-4" />
-                  <span className="max-w-[120px] truncate">
-                    {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : t('select_branch')}
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span className="min-w-0 max-w-[120px] truncate">
+                    {selectedBranch ? shortName(selectedBranch) : t('select_branch')}
                   </span>
-                  <MapIcon className="w-3.5 h-3.5 ml-1 opacity-50" />
+                  <MapIcon className="w-3.5 h-3.5 ml-1 shrink-0 opacity-50" />
                 </Button>
               </div>
             )}
@@ -103,27 +116,27 @@ const Navbar = () => {
 
           {/* AI Conversational Search - Desktop */}
           {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
-            <div className="hidden md:flex flex-grow max-w-xl justify-center">
+            <div className="hidden md:flex min-w-0 flex-1 justify-center">
               <AISearch placeholder={t('search_placeholder')} />
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-1 md:gap-2 text-on-surface">
+          <div className={`flex shrink-0 items-center gap-1 md:gap-2 text-on-surface ${mobileSearchOpen ? 'hidden md:flex' : 'flex'}`}>
             {/* Mobile Branch Select */}
             {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
-              <div className="lg:hidden flex items-center mr-2">
-                <button 
+              <div className="hidden sm:flex lg:hidden items-center mr-1 sm:mr-2">
+                <button
                   onClick={toggleMap}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-all min-h-[44px] ${
-                    selectedBranch 
-                      ? 'border-primary/30 bg-primary/5 text-primary' 
+                  className={`flex max-w-28 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter transition-colors min-h-[44px] ${
+                    selectedBranch
+                      ? 'border-primary/30 bg-primary/5 text-primary'
                       : 'border-outline-variant bg-surface-container-low text-outline'
                   }`}
                 >
-                  <MapPin className="w-3 h-3" />
-                  <span className="max-w-[80px] truncate">
-                    {selectedBranch ? selectedBranch.replace('Simba Supermarket ', '') : 'Branch'}
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="min-w-0 max-w-[80px] truncate">
+                    {selectedBranch ? shortName(selectedBranch) : 'Branch'}
                   </span>
                 </button>
               </div>
@@ -132,8 +145,8 @@ const Navbar = () => {
             <div className="hidden sm:flex items-center gap-1">
               {/* Language Switcher - Desktop */}
               <div className="relative" ref={langDropdownRef}>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="px-2 text-xs font-bold text-on-surface flex items-center gap-1.5 uppercase min-h-[44px]"
                   onClick={() => setShowLangDropdown(!showLangDropdown)}
                 >
@@ -170,28 +183,37 @@ const Navbar = () => {
             </div>
 
             {(!user || user.role === 'CLIENT') && (
-              <Button 
-                variant="ghost" 
-                className="p-1.5 md:p-2 relative text-on-surface min-w-[44px] min-h-[44px]"
-                onClick={() => navigate('/cart')}
-              >
-                <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-                <span className="absolute top-1 right-1 bg-primary text-on-primary text-[9px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center">
-                  {getCartCount()}
-                </span>
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  className="md:hidden p-1.5 relative text-on-surface min-w-[44px] min-h-[44px]"
+                  onClick={() => setMobileSearchOpen(true)}
+                >
+                  <Search className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="p-1.5 md:p-2 relative text-on-surface min-w-[44px] min-h-[44px]"
+                  onClick={() => navigate('/cart')}
+                >
+                  <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+                  <span className="absolute top-1 right-1 bg-primary text-on-primary text-[9px] font-bold w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center">
+                    {getCartCount()}
+                  </span>
+                </Button>
+              </>
             )}
 
             {!user ? (
               <div className="hidden md:flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="h-10 text-sm px-4"
                   onClick={() => navigate('/login')}
                 >
                   {t('login')}
                 </Button>
-                <Button 
+                <Button
                   className="h-10 text-sm px-4 bg-primary text-white hover:bg-primary-container"
                   onClick={() => navigate('/register')}
                 >
@@ -200,16 +222,16 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="relative" ref={dropdownRef}>
-                <button 
+                <button
                   className="flex items-center gap-2 p-1.5 md:p-2 hover:bg-surface-container-high rounded-full transition-colors min-h-[44px]"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
                   <div className="w-8 h-8 md:w-9 md:h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
                     <User className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
-                  <div className="hidden md:flex flex-col items-start leading-tight mr-1">
-                    <span className="text-sm font-bold text-on-surface">{user.name}</span>
-                    <span className="text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
+                  <div className="hidden md:flex max-w-32 flex-col items-start leading-tight mr-1">
+                    <span className="max-w-full truncate text-sm font-bold text-on-surface">{user.name}</span>
+                    <span className="max-w-full truncate text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-outline transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
                 </button>
@@ -220,8 +242,8 @@ const Navbar = () => {
                       <p className="text-sm font-bold text-on-surface">{user.name}</p>
                       <p className="text-[10px] text-outline uppercase">{user.role}</p>
                     </div>
-                    
-                    <button 
+
+                    <button
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -232,10 +254,10 @@ const Navbar = () => {
                       <User className="w-4 h-4 text-outline" />
                       {t('my_profile')}
                     </button>
-                    
+
                     {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
                       <>
-                        <button 
+                        <button
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                           onClick={() => {
                             const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -246,8 +268,8 @@ const Navbar = () => {
                           <Package className="w-4 h-4 text-outline" />
                           {t('my_orders')}
                         </button>
-                        
-                        <button 
+
+                        <button
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                           onClick={() => {
                             const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -260,8 +282,8 @@ const Navbar = () => {
                         </button>
                       </>
                     )}
-                    
-                    <button 
+
+                    <button
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-high transition-colors min-h-[44px]"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -272,10 +294,10 @@ const Navbar = () => {
                       <Lock className="w-4 h-4 text-outline" />
                       {t('security')}
                     </button>
-                    
+
                     <div className="h-px bg-outline-variant/50 my-1" />
-                    
-                    <button 
+
+                    <button
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 transition-colors min-h-[44px]"
                       onClick={handleLogout}
                     >
@@ -287,36 +309,30 @@ const Navbar = () => {
               </div>
             )}
 
-            <Button 
-              variant="ghost" 
-              className="p-1.5 md:p-2 md:hidden text-on-surface min-w-[44px] min-h-[44px]"
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <Menu className="w-6 h-6" />
-            </Button>
+
           </div>
         </div>
       </nav>
 
       {/* Bottom Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-surface/90 backdrop-blur-lg border-t border-outline-variant px-6 py-2 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <button 
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-surface/90 backdrop-blur-lg border-t border-outline-variant px-4 py-2 grid grid-cols-4 items-center shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <button
           onClick={() => navigate('/')}
           className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isActive('/') ? 'text-primary' : 'text-outline'}`}
         >
           <ShoppingBag size={20} strokeWidth={isActive('/') ? 3 : 2} />
           <span className="text-[9px] font-black uppercase tracking-tighter">Shop</span>
         </button>
-        
-        <button 
+
+        <button
           onClick={toggleMap}
-          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${selectedBranch ? 'text-primary' : 'text-outline'}`}
+          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isMapVisible ? 'text-primary' : 'text-outline'}`}
         >
-          <MapPin size={20} strokeWidth={selectedBranch ? 3 : 2} />
+          <MapPin size={20} strokeWidth={isMapVisible ? 3 : 2} />
           <span className="text-[9px] font-black uppercase tracking-tighter">Branch</span>
         </button>
 
-        <button 
+        <button
           onClick={() => navigate('/cart')}
           className={`flex flex-col items-center gap-1 min-w-[50px] relative transition-colors min-h-[44px] ${isActive('/cart') ? 'text-primary' : 'text-outline'}`}
         >
@@ -329,7 +345,7 @@ const Navbar = () => {
           <span className="text-[9px] font-black uppercase tracking-tighter">Cart</span>
         </button>
 
-        <button 
+        <button
           onClick={() => setMobileMenuOpen(true)}
           className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${mobileMenuOpen ? 'text-primary' : 'text-outline'}`}
         >
@@ -338,25 +354,24 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu Drawer */}
-...
+      {/* Mobile Search Overlay */}
 
       {/* Mobile Menu Drawer */}
-      <div 
+      <div
         className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${
           mobileMenuOpen ? 'visible' : 'invisible'
         }`}
       >
         {/* Backdrop */}
-        <div 
+        <div
           className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
             mobileMenuOpen ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={() => setMobileMenuOpen(false)}
         />
-        
+
         {/* Drawer Content */}
-        <div 
+        <div
           className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-surface shadow-2xl transition-transform duration-300 flex flex-col ${
             mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
@@ -368,7 +383,7 @@ const Navbar = () => {
               </div>
               <span className="font-black text-lg">Simba</span>
             </div>
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 hover:bg-surface-container-high rounded-full transition-colors"
             >
@@ -377,17 +392,6 @@ const Navbar = () => {
           </div>
 
           <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-8">
-            {/* Mobile AI Search */}
-            {user?.role !== 'BRANCH_MANAGER' && user?.role !== 'BRANCH_STAFF' && (
-              <div>
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <span>Conversational Search</span>
-                </h3>
-                <AISearch placeholder={t('search_placeholder')} />
-              </div>
-            )}
-
             {/* Quick Links */}
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4">Account</h3>
@@ -407,14 +411,14 @@ const Navbar = () => {
                         </div>
                       </>
                     )}
-                    <button 
+                    <button
                       className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 disabled:opacity-60"
                       disabled={mobileAuthLoading}
                       onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
                     >
                       <User className="w-5 h-5" /> {t('login')}
                     </button>
-                    <button 
+                    <button
                       className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-outline-variant font-bold text-sm disabled:opacity-60"
                       disabled={mobileAuthLoading}
                       onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
@@ -424,16 +428,16 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-2xl mb-2">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
-                        {user.name.charAt(0)}
+                    <div className="flex min-w-0 items-center gap-3 p-3 bg-surface-container-low rounded-2xl mb-2">
+                      <div className="w-10 h-10 shrink-0 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
+                        {user.name?.charAt(0)}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold">{user.name}</span>
-                        <span className="text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-bold">{user.name}</span>
+                        <span className="truncate text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
                       </div>
                     </div>
-                    <button 
+                    <button
                       className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -446,7 +450,7 @@ const Navbar = () => {
 
                     {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
                       <>
-                        <button 
+                        <button
                           className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
                           onClick={() => {
                             const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -456,7 +460,7 @@ const Navbar = () => {
                         >
                           <Package className="w-5 h-5 text-outline" /> {t('my_orders')}
                         </button>
-                        <button 
+                        <button
                           className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
                           onClick={() => {
                             const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -469,7 +473,7 @@ const Navbar = () => {
                       </>
                     )}
 
-                    <button 
+                    <button
                       className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
                       onClick={() => {
                         const rolePath = user.role.toLowerCase().replace(/_/g, '-');
@@ -507,13 +511,12 @@ const Navbar = () => {
                         key={lang.code}
                         onClick={() => setLanguage(lang.code)}
                         className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all ${
-                          language === lang.code 
-                            ? 'bg-primary/10 border-primary text-primary font-bold' 
+                          language === lang.code
+                            ? 'bg-primary/10 border-primary text-primary font-bold'
                             : 'border-outline-variant text-outline'
                         }`}
                       >
                         <span className="text-lg">{lang.flag}</span>
-                        <span className="text-[10px] uppercase font-black tracking-tighter">{lang.code}</span>
                       </button>
                     ))}
                   </div>
@@ -524,7 +527,7 @@ const Navbar = () => {
 
           {user && (
             <div className="p-6 border-t border-outline-variant">
-              <button 
+              <button
                 className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-error/10 text-error font-bold text-sm hover:bg-error/20 transition-colors"
                 onClick={handleLogout}
               >
