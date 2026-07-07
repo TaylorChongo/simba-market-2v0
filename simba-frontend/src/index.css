@@ -124,3 +124,60 @@
     animation: none;
   }
 }
+
+/* ----------------------------------------------------------------
+   Mobile sizing: shrink text, cards, sections and page content so
+   everything fits comfortably on phones. These rules are unlayered so
+   they take precedence over Tailwind's utility layer on small screens.
+   ---------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* Scale all rem-based Tailwind utilities (text, padding, gap, margins). */
+  :root {
+    font-size: 14px;
+  }
+
+  /* Keep page footers clear of the fixed bottom navigation. */
+  body {
+    padding-bottom: 4.5rem;
+  }
+
+  /* Tame oversized display text (heroes, page titles). */
+  .text-6xl { font-size: 1.875rem; line-height: 2.1rem; }
+  .text-5xl { font-size: 1.625rem; line-height: 1.9rem; }
+  .text-4xl { font-size: 1.375rem; line-height: 1.6rem; }
+  .text-3xl { font-size: 1.2rem; line-height: 1.45rem; }
+  .text-2xl { font-size: 1.1rem; line-height: 1.4rem; }
+  .text-xl { font-size: 1rem; line-height: 1.45rem; }
+  .text-lg { font-size: 0.9375rem; line-height: 1.4rem; }
+
+  /* Reduce large section / container paddings. */
+  .py-24 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+  .py-20 { padding-top: 2.25rem; padding-bottom: 2.25rem; }
+  .py-16 { padding-top: 2rem; padding-bottom: 2rem; }
+  .py-12 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .py-10 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .p-12 { padding: 1.25rem; }
+  .p-10 { padding: 1.25rem; }
+  .p-8 { padding: 1.25rem; }
+  .px-8 { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .px-6 { padding-left: 1rem; padding-right: 1rem; }
+  .py-6 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+  .p-6 { padding: 1rem; }
+
+  /* Tighten big gaps. */
+  .gap-16 { gap: 1.75rem; }
+  .gap-12 { gap: 1.5rem; }
+  .gap-10 { gap: 1.25rem; }
+  .gap-8 { gap: 1rem; }
+  .gap-6 { gap: 0.875rem; }
+
+  /* Smaller horizontal gutters for page content. */
+  .mobile-safe-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Keep cards compact and image previews smaller. */
+  .rounded-3xl { border-radius: 1rem; }
+  .rounded-[32px] { border-radius: 1.25rem; }
+}

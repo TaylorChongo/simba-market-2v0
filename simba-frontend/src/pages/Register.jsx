@@ -59,15 +59,19 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest p-4 pb-24 md:pb-4">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest px-4 py-6 pb-24 md:pb-6">
       <div className="w-full max-w-md">
-        <Link to="/" className="inline-flex items-center gap-2 text-outline hover:text-primary transition-colors mb-6 ml-1 font-bold text-sm">
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-outline hover:text-primary transition-colors mb-4 font-bold text-sm active:scale-95"
+        >
           <ArrowLeft className="w-4 h-4" />
           {t('back_to_home')}
         </Link>
 
-        <div className="bg-surface p-8 rounded-[32px] shadow-sm border border-outline-variant">
-          <h2 className="text-2xl font-black text-on-surface mb-6 text-center">{t('register_title')}</h2>
+        <div className="bg-surface px-5 py-6 md:p-8 rounded-3xl shadow-xl border border-outline-variant">
+          <h2 className="text-xl md:text-2xl font-black text-on-surface mb-1 text-center">{t('register_title')}</h2>
+          <p className="text-xs text-outline text-center mb-5">Join Simba Market today</p>
 
           {error && (
             <div className="bg-error/10 text-error p-3 rounded-xl text-xs font-bold mb-4 border border-error/20 flex items-center gap-2">
@@ -76,20 +80,24 @@ const Register = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-black text-outline uppercase tracking-widest mb-2 ml-1">{t('full_name_label')}</label>
+              <label className="block text-[10px] font-black text-outline uppercase tracking-wider mb-1.5 ml-1">
+                {t('full_name_label')}
+              </label>
               <Input
                 name="name"
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="h-12 rounded-xl"
+                className="h-11 rounded-xl text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-black text-outline uppercase tracking-widest mb-2 ml-1">{t('email_label')}</label>
+              <label className="block text-[10px] font-black text-outline uppercase tracking-wider mb-1.5 ml-1">
+                {t('email_label')}
+              </label>
               <Input
                 type="email"
                 name="email"
@@ -97,36 +105,45 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="h-12 rounded-xl"
+                className="h-11 rounded-xl text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-black text-outline uppercase tracking-widest mb-2 ml-1">{t('password_label')}</label>
+              <label className="block text-[10px] font-black text-outline uppercase tracking-wider mb-1.5 ml-1">
+                {t('password_label')}
+              </label>
               <div className="relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="h-12 rounded-xl pr-12"
-              />
-              <button type="button" onClick={() => setShowPassword(v => !v)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors">
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="h-11 rounded-xl pr-11 text-sm"
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors active:scale-90 p-1"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 rounded-xl mt-4 font-black" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full h-11 rounded-xl mt-1 font-black active:scale-[0.98]" 
+              disabled={loading}
+            >
               {loading ? t('creating_account') : t('sign_up')}
             </Button>
           </form>
 
           {clientId && (
             <>
-              <div className="my-8 flex items-center gap-4">
+              <div className="my-6 flex items-center gap-3">
                 <div className="h-px bg-outline-variant flex-grow" />
                 <span className="text-[10px] font-black text-outline uppercase tracking-widest">OR</span>
                 <div className="h-px bg-outline-variant flex-grow" />
@@ -136,7 +153,7 @@ const Register = () => {
             </>
           )}
 
-          <p className="mt-8 text-center text-sm font-medium text-outline">
+          <p className="mt-6 text-center text-xs md:text-sm font-medium text-outline">
             {t('already_have_account')}{' '}
             <Link to="/login" className="text-primary hover:underline font-black">
               {t('login_here')}

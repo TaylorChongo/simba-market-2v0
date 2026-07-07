@@ -123,6 +123,11 @@ const translations = {
     secure_delivery_badge: "Secure Delivery by Simba",
     fill_all_details: "Please fill in all delivery and payment details.",
     invalid_phone: "Enter a valid Rwandan number (e.g. +250781234567)",
+    address_label: "Delivery Address",
+    phone_label: "Phone Number",
+    address_placeholder: "e.g., Gisozi, Gasabo, Kigali",
+    address_required: "Delivery address is required",
+    phone_required: "A valid phone number is required",
     delivery_instructions: "Delivery Instructions & Landmarks",
     delivery_instructions_placeholder: "e.g., Opposite Gisozi Sector Office or Near the pharmacy",
     delivery_instructions_desc: "Add landmarks to help our team locate you",
@@ -209,7 +214,22 @@ const translations = {
     concierge_open_faqs: "FAQs",
     concierge_open_shipping_policy: "Shipping Policy",
     concierge_open_returns: "Returns",
-    concierge_open_home: "Go Home"
+    concierge_open_home: "Go Home",
+
+    // Bottom navigation
+    nav_shop: "Shop",
+    nav_branch: "Branch",
+    nav_account: "Account",
+    nav_menu: "Menu",
+    nav_home: "Home",
+    language: "Language",
+    about: "About",
+
+    // Profile completion prompt
+    complete_profile_title: "Complete your profile",
+    complete_profile_desc: "Add your delivery address and phone number so we can deliver your orders.",
+    save: "Save",
+    later: "Later"
   },
   fr: {
     // Navbar
@@ -323,6 +343,11 @@ const translations = {
     secure_delivery_badge: "Livraison sécurisée par Simba",
     fill_all_details: "Veuillez remplir tous les détails de livraison et de paiement.",
     invalid_phone: "Entrez un numéro rwandais valide (ex. +250781234567)",
+    address_label: "Adresse de livraison",
+    phone_label: "Numéro de téléphone",
+    address_placeholder: "ex : Gisozi, Gasabo, Kigali",
+    address_required: "L'adresse de livraison est requise",
+    phone_required: "Un numéro de téléphone valide est requis",
     delivery_instructions: "Instructions de livraison et points de repère",
     delivery_instructions_placeholder: "ex : En face du bureau de secteur de Gisozi ou près de la pharmacie",
     delivery_instructions_desc: "Ajoutez des points de repère pour aider notre équipe à vous localiser",
@@ -409,7 +434,22 @@ const translations = {
     concierge_open_faqs: "FAQ",
     concierge_open_shipping_policy: "Livraison",
     concierge_open_returns: "Retours",
-    concierge_open_home: "Accueil"
+    concierge_open_home: "Accueil",
+
+    // Bottom navigation
+    nav_shop: "Boutique",
+    nav_branch: "Filiale",
+    nav_account: "Compte",
+    nav_menu: "Menu",
+    nav_home: "Accueil",
+    language: "Langue",
+    about: "À propos",
+
+    // Profile completion prompt
+    complete_profile_title: "Complétez votre profil",
+    complete_profile_desc: "Ajoutez votre adresse de livraison et votre numéro pour recevoir vos commandes.",
+    save: "Enregistrer",
+    later: "Plus tard"
   },
   kin: {
     // Navbar
@@ -523,6 +563,11 @@ const translations = {
     secure_delivery_badge: "Kugezwaho ibintu bifite umutekano na Simba",
     fill_all_details: "Andika neza aho uzafatira n'uburyo bwo kwishyura.",
     invalid_phone: "Injiza nimero y'u Rwanda igenga (urugero: +250781234567)",
+    address_label: "Aderesi y'iperereza",
+    phone_label: "Nimero ya telefoni",
+    address_placeholder: "Urugero: Gisozi, Gasabo, Kigali",
+    address_required: "Aderesi y'iperereza irakenewe",
+    phone_required: "Nimero ya telefoni y'agenga irakenewe",
     delivery_instructions: "Ibyerekeye aho uherereye n'aho bageza ibintu",
     delivery_instructions_placeholder: "Urugero: Imbere y'ibiro by'Umurenge wa Gisozi cyangwa Hafi ya farumasi",
     delivery_instructions_desc: "Andika ibimenyetso bifasha kugeza ibintu aho uri",
@@ -609,7 +654,22 @@ const translations = {
     concierge_open_faqs: "Ibibazo bisanzwe",
     concierge_open_shipping_policy: "Politiki y'iperereza",
     concierge_open_returns: "Isubizo",
-    concierge_open_home: "Subira ahabanza"
+    concierge_open_home: "Subira ahabanza",
+
+    // Bottom navigation
+    nav_shop: "Iduka",
+    nav_branch: "Filiali",
+    nav_account: "Konti",
+    nav_menu: "Ivyo wemerera",
+    nav_home: "Ahabanza",
+    language: "Ururimi",
+    about: "Amakuru",
+
+    // Profile completion prompt
+    complete_profile_title: "Uzuza amakuru yawe",
+    complete_profile_desc: "Ongeramo aderesi yawe y'iperereza n'umurongo wa telefoni kugirango dushobore kuguha itumizwa ryawe.",
+    save: "Bika",
+    later: "Nyuma"
   }
 };
 

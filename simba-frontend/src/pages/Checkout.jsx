@@ -17,6 +17,7 @@ import {
   MapPin,
   Phone,
   Truck,
+  ChevronDown,
 } from 'lucide-react';
 
 const Checkout = () => {
@@ -27,8 +28,8 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [fulfillmentMethod, setFulfillmentMethod] = useState('delivery');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [phone, setPhone] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState(user?.address || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [phoneError, setPhoneError] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [loading, setLoading] = useState(false);
@@ -254,38 +255,23 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFulfillmentMethod('delivery')}
-                  className={`min-h-[104px] rounded-2xl border-2 p-4 text-left flex items-start gap-4 transition-all ${
-                    fulfillmentMethod === 'delivery'
-                      ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
-                      : 'border-outline-variant bg-surface-container-low hover:border-primary/40'
-                  }`}
-                >
-                  <Truck className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                  <span>
-                    <span className="block text-sm font-black text-on-surface">{t('delivery_option')}</span>
-                    <span className="block text-xs font-bold text-outline mt-1 leading-relaxed">{t('delivery_option_desc')}</span>
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setFulfillmentMethod('pickup')}
-                  className={`min-h-[104px] rounded-2xl border-2 p-4 text-left flex items-start gap-4 transition-all ${
-                    fulfillmentMethod === 'pickup'
-                      ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
-                      : 'border-outline-variant bg-surface-container-low hover:border-primary/40'
-                  }`}
-                >
-                  <Store className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                  <span>
-                    <span className="block text-sm font-black text-on-surface">{t('pickup_option')}</span>
-                    <span className="block text-xs font-bold text-outline mt-1 leading-relaxed">{t('pickup_option_desc')}</span>
-                  </span>
-                </button>
+              <div className="space-y-3">
+                <div className="relative">
+                  <select
+                    value={fulfillmentMethod}
+                    onChange={(e) => setFulfillmentMethod(e.target.value)}
+                    aria-label={t('fulfillment_method')}
+                    className="w-full h-14 rounded-2xl bg-surface-container-low border border-outline-variant pl-12 pr-10 text-base font-bold text-on-surface appearance-none focus:outline-none focus:border-primary transition-all cursor-pointer"
+                  >
+                    <option value="delivery">{t('delivery_option')}</option>
+                    <option value="pickup">{t('pickup_option')}</option>
+                  </select>
+                  <Store className="w-5 h-5 text-primary absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="w-5 h-5 text-outline absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+                <p className="text-xs font-bold text-outline leading-relaxed">
+                  {isDelivery ? t('delivery_option_desc') : t('pickup_option_desc')}
+                </p>
               </div>
             </section>
 

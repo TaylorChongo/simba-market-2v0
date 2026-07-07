@@ -34,6 +34,7 @@ import Branches from './pages/Branches';
 import About from './pages/About';
 import InlineBranchMap from './components/InlineBranchMap';
 import Concierge from './components/Concierge';
+import BottomNav from './components/BottomNav';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -143,6 +144,7 @@ function App() {
                 </Routes>
                 <InlineBranchMap />
                 <Concierge />
+                <BottomNav />
               </Router>
             </CartProvider>
           </BranchProvider>

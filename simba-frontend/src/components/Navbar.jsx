@@ -315,7 +315,7 @@ const Navbar = () => {
       </nav>
 
       {/* Bottom Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-surface/90 backdrop-blur-lg border-t border-outline-variant px-4 py-2 grid grid-cols-4 items-center shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-surface/90 backdrop-blur-lg border-t border-outline-variant px-4 py-2 grid grid-cols-4 items-center shadow-[0_-4px_12px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
         <button
           onClick={() => navigate('/')}
           className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isActive('/') ? 'text-primary' : 'text-outline'}`}
@@ -333,16 +333,11 @@ const Navbar = () => {
         </button>
 
         <button
-          onClick={() => navigate('/cart')}
-          className={`flex flex-col items-center gap-1 min-w-[50px] relative transition-colors min-h-[44px] ${isActive('/cart') ? 'text-primary' : 'text-outline'}`}
+          onClick={() => user ? navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}`) : navigate('/login')}
+          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isActive('/login') || isActive('/register') || location.pathname.startsWith('/dashboard') ? 'text-primary' : 'text-outline'}`}
         >
-          <ShoppingCart size={20} strokeWidth={isActive('/cart') ? 3 : 2} />
-          {getCartCount() > 0 && (
-            <span className="absolute -top-1 right-2 bg-primary text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">
-              {getCartCount()}
-            </span>
-          )}
-          <span className="text-[9px] font-black uppercase tracking-tighter">Cart</span>
+          <User size={20} strokeWidth={isActive('/login') || location.pathname.startsWith('/dashboard') ? 3 : 2} />
+          <span className="text-[9px] font-black uppercase tracking-tighter">Account</span>
         </button>
 
         <button
@@ -391,150 +386,146 @@ const Navbar = () => {
             </button>
           </div>
 
-          <div className="flex-grow overflow-y-auto p-6 flex flex-col gap-8">
-            {/* Quick Links */}
-            <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4">Account</h3>
-              <div className="flex flex-col gap-2">
-                {!user ? (
+          <div className="flex-grow overflow-y-auto p-4 flex flex-col gap-5 pb-[calc(env(safe-area-inset-bottom)+5rem)]">
+
+            {/* Account Section */}
+            {!user ? (
+              <div className="flex flex-col gap-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-outline">Account</p>
+                {clientId && (
                   <>
-                    {clientId && (
-                      <>
-                        <GoogleLoginButton setLoading={setMobileAuthLoading} setError={setMobileAuthError} />
-                        {mobileAuthError && (
-                          <p className="text-xs font-bold text-error px-1">{mobileAuthError}</p>
-                        )}
-                        <div className="flex items-center gap-3 py-1">
-                          <div className="h-px bg-outline-variant flex-grow" />
-                          <span className="text-[10px] font-black text-outline uppercase tracking-widest">OR</span>
-                          <div className="h-px bg-outline-variant flex-grow" />
-                        </div>
-                      </>
+                    <GoogleLoginButton setLoading={setMobileAuthLoading} setError={setMobileAuthError} />
+                    {mobileAuthError && (
+                      <p className="text-xs font-bold text-error px-1">{mobileAuthError}</p>
                     )}
-                    <button
-                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 disabled:opacity-60"
-                      disabled={mobileAuthLoading}
-                      onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
-                    >
-                      <User className="w-5 h-5" /> {t('login')}
-                    </button>
-                    <button
-                      className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-outline-variant font-bold text-sm disabled:opacity-60"
-                      disabled={mobileAuthLoading}
-                      onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
-                    >
-                      <ShoppingBag className="w-5 h-5" /> {t('sign_up')}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex min-w-0 items-center gap-3 p-3 bg-surface-container-low rounded-2xl mb-2">
-                      <div className="w-10 h-10 shrink-0 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
-                        {user.name?.charAt(0)}
-                      </div>
-                      <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm font-bold">{user.name}</span>
-                        <span className="truncate text-[10px] text-outline uppercase tracking-wider">{user.role}</span>
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-px bg-outline-variant flex-grow" />
+                      <span className="text-[10px] font-black text-outline uppercase tracking-widest">OR</span>
+                      <div className="h-px bg-outline-variant flex-grow" />
                     </div>
-                    <button
-                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
-                      onClick={() => {
-                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}?tab=profile`);
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <User className="w-5 h-5 text-outline" /> {t('my_profile')}
-                    </button>
-
-                    {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
-                      <>
-                        <button
-                          className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
-                          onClick={() => {
-                            const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                            navigate(`/dashboard/${rolePath}?tab=orders`);
-                            setMobileMenuOpen(false);
-                          }}
-                        >
-                          <Package className="w-5 h-5 text-outline" /> {t('my_orders')}
-                        </button>
-                        <button
-                          className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
-                          onClick={() => {
-                            const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                            navigate(`/dashboard/${rolePath}?tab=preferences`);
-                            setMobileMenuOpen(false);
-                          }}
-                        >
-                          <SlidersHorizontal className="w-5 h-5 text-outline" /> {t('preferences')}
-                        </button>
-                      </>
-                    )}
-
-                    <button
-                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-container-high rounded-xl transition-colors text-sm font-medium"
-                      onClick={() => {
-                        const rolePath = user.role.toLowerCase().replace(/_/g, '-');
-                        navigate(`/dashboard/${rolePath}?tab=settings`);
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <Lock className="w-5 h-5 text-outline" /> {t('security')}
-                    </button>
                   </>
                 )}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary text-on-primary font-black text-sm active:scale-[0.97] transition-transform disabled:opacity-60"
+                    disabled={mobileAuthLoading}
+                    onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
+                  >
+                    <User className="w-4 h-4" /> {t('login')}
+                  </button>
+                  <button
+                    className="flex items-center justify-center gap-2 py-3 rounded-2xl border border-outline-variant font-black text-sm active:scale-[0.97] transition-transform disabled:opacity-60 hover:border-primary"
+                    disabled={mobileAuthLoading}
+                    onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
+                  >
+                    {t('sign_up')}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {/* User card */}
+                <div className="flex items-center gap-3 p-3.5 bg-surface-container-low rounded-2xl border border-outline-variant">
+                  <div className="w-10 h-10 shrink-0 bg-primary/10 rounded-full flex items-center justify-center text-primary font-black text-base">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm font-black">{user.name}</span>
+                    <span className="truncate text-[10px] text-outline uppercase tracking-wider">{user.role.replace(/_/g, ' ')}</span>
+                  </div>
+                </div>
+
+                {/* Menu items */}
+                <div className="flex flex-col gap-1 mt-1">
+                  <button
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all text-left"
+                    onClick={() => { navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}?tab=profile`); setMobileMenuOpen(false); }}
+                  >
+                    <User className="w-4 h-4 text-outline shrink-0" />
+                    <span className="text-sm font-bold">{t('my_profile')}</span>
+                    <ChevronDown className="w-4 h-4 text-outline ml-auto -rotate-90" />
+                  </button>
+
+                  {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
+                    <>
+                      <button
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all text-left"
+                        onClick={() => { navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}?tab=orders`); setMobileMenuOpen(false); }}
+                      >
+                        <Package className="w-4 h-4 text-outline shrink-0" />
+                        <span className="text-sm font-bold">{t('my_orders')}</span>
+                        <ChevronDown className="w-4 h-4 text-outline ml-auto -rotate-90" />
+                      </button>
+                      <button
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all text-left"
+                        onClick={() => { navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}?tab=preferences`); setMobileMenuOpen(false); }}
+                      >
+                        <SlidersHorizontal className="w-4 h-4 text-outline shrink-0" />
+                        <span className="text-sm font-bold">{t('preferences')}</span>
+                        <ChevronDown className="w-4 h-4 text-outline ml-auto -rotate-90" />
+                      </button>
+                    </>
+                  )}
+
+
+                </div>
+              </div>
+            )}
+
+
+
+            {/* Divider */}
+            <div className="h-px bg-outline-variant" />
 
             {/* Preferences */}
-            <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-outline mb-4">Preferences</h3>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">
-                  <div className="flex items-center gap-3">
-                    <Moon className="w-5 h-5 text-outline" />
-                    <span className="text-sm font-bold">Dark Mode</span>
-                  </div>
-                  <ThemeToggle />
-                </div>
+            <div className="flex flex-col gap-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-outline">Preferences</p>
 
-                <div className="p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Languages className="w-5 h-5 text-outline" />
-                    <span className="text-sm font-bold">Language</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {languages.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => setLanguage(lang.code)}
-                        className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all ${
-                          language === lang.code
-                            ? 'bg-primary/10 border-primary text-primary font-bold'
-                            : 'border-outline-variant text-outline'
-                        }`}
-                      >
-                        <span className="text-lg">{lang.flag}</span>
-                      </button>
-                    ))}
-                  </div>
+              <div className="flex items-center justify-between px-3 py-3 bg-surface-container-low rounded-2xl border border-outline-variant">
+                <div className="flex items-center gap-3">
+                  <Moon className="w-4 h-4 text-outline" />
+                  <span className="text-sm font-bold">Dark Mode</span>
+                </div>
+                <ThemeToggle />
+              </div>
+
+              <div className="p-3 bg-surface-container-low rounded-2xl border border-outline-variant">
+                <div className="flex items-center gap-3 mb-3">
+                  <Languages className="w-4 h-4 text-outline" />
+                  <span className="text-sm font-bold">Language</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => setLanguage(lang.code)}
+                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-black uppercase tracking-wide transition-all active:scale-95 ${
+                        language === lang.code
+                          ? 'bg-primary/10 border-primary text-primary'
+                          : 'border-outline-variant text-outline hover:border-primary'
+                      }`}
+                    >
+                      <span className="text-base">{lang.flag}</span>
+                      <span className="text-[9px]">{lang.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
 
-          {user && (
-            <div className="p-6 border-t border-outline-variant">
-              <button
-                className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl bg-error/10 text-error font-bold text-sm hover:bg-error/20 transition-colors"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-5 h-5" /> {t('logout')}
-              </button>
-            </div>
-          )}
+            {/* Logout */}
+            {user && (
+              <>
+                <div className="h-px bg-outline-variant" />
+                <button
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-error/10 text-error font-black text-sm hover:bg-error/20 active:scale-[0.97] transition-all border border-error/20"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4" /> {t('logout')}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </>

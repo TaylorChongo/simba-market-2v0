@@ -78,59 +78,63 @@ const Cart = () => {
             {/* Cart Items List */}
             <div className="lg:col-span-2 space-y-4">
               {cart.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="bg-surface-container-low border border-outline-variant rounded-3xl p-4 flex flex-col sm:flex-row gap-4 items-center"
+                <div
+                  key={item.id}
+                  className="bg-surface-container-low border border-outline-variant rounded-3xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4"
                 >
                   {/* Item Image */}
-                  <div className="w-full sm:w-24 h-24 bg-surface rounded-2xl overflow-hidden flex-shrink-0">
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-surface rounded-2xl overflow-hidden flex-shrink-0">
+                    <img
+                      src={item.image}
+                      alt={item.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
-                  {/* Item Details */}
-                  <div className="flex-grow text-center sm:text-left">
-                    <h3 className="font-bold text-lg leading-tight mb-1">{item.name}</h3>
-                    <p className="text-primary font-black">RWF {item.price.toLocaleString()}</p>
-                  </div>
+                  {/* Details + Controls */}
+                  <div className="flex-grow min-w-0 flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-base sm:text-lg leading-tight truncate">{item.name}</h3>
+                      <p className="text-primary font-black whitespace-nowrap text-sm sm:text-base">RWF {item.price.toLocaleString()}</p>
+                    </div>
 
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-3 bg-surface-container-lowest border border-outline-variant rounded-full px-2 py-1">
-                    <button 
-                      onClick={() => decreaseQuantity(item.id)}
-                      className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="font-bold w-6 text-center">{item.quantity}</span>
-                    <button 
-                      onClick={() => increaseQuantity(item.id)}
-                      className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
+                    <div className="flex items-center justify-between gap-2">
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2 sm:gap-3 bg-surface-container-lowest border border-outline-variant rounded-full px-2 py-1">
+                        <button
+                          onClick={() => decreaseQuantity(item.id)}
+                          className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="font-bold w-5 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => increaseQuantity(item.id)}
+                          className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
 
-                  {/* Remove Button */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      className="p-2 text-outline hover:bg-surface-container-high rounded-full"
-                      onClick={() => saveForLater(item.id)}
-                      title="Save for later"
-                    >
-                      <Bookmark className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      className="p-2 text-error hover:bg-error/10 rounded-full"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </Button>
+                      {/* Remove / Save */}
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          className="p-2 text-outline hover:bg-surface-container-high rounded-full"
+                          onClick={() => saveForLater(item.id)}
+                          title="Save for later"
+                        >
+                          <Bookmark className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="p-2 text-error hover:bg-error/10 rounded-full"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

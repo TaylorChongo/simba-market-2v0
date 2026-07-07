@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { prisma } = require('../config/db');
 
 const register = async (req, res) => {
-  const { name, email, password, role, branch } = req.body;
+  const { name, email, password, role, branch, address, phone } = req.body;
 
   try {
     // 1. Validate Input
@@ -36,7 +36,9 @@ const register = async (req, res) => {
         email,
         password: hashedPassword,
         role,
-        branch: (role === 'BRANCH_MANAGER' || role === 'BRANCH_STAFF') ? branch : null
+        branch: (role === 'BRANCH_MANAGER' || role === 'BRANCH_STAFF') ? branch : null,
+        address: address || null,
+        phone: phone || null,
       }
     });
 
@@ -198,7 +200,7 @@ const resetPassword = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-  const { name, email } = req.body;
+  const { name, email, address, phone } = req.body;
   const userId = req.user.id;
 
   try {
@@ -216,7 +218,9 @@ const updateProfile = async (req, res) => {
       where: { id: userId },
       data: {
         name: name || undefined,
-        email: email || undefined
+        email: email || undefined,
+        address: address !== undefined ? address : undefined,
+        phone: phone !== undefined ? phone : undefined,
       }
     });
 

@@ -7,7 +7,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { User, Package, Settings, LogOut, Save, Loader2, CheckCircle2, AlertCircle, Clock, History, Lock, Shield, Pencil, X as CloseIcon, SlidersHorizontal, Moon, Languages, Printer } from 'lucide-react';
+import { User, Package, Settings, LogOut, Save, Loader2, CheckCircle2, AlertCircle, Clock, History, Lock, Shield, Pencil, X as CloseIcon, SlidersHorizontal, Moon, Languages, Printer, Eye, EyeOff } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
 import { printInvoice } from '../lib/printInvoice';
@@ -33,6 +33,8 @@ const ClientDashboard = () => {
 
   const [status, setStatus] = useState({ loading: false, success: '', error: '' });
   const [passwordStatus, setPasswordStatus] = useState({ loading: false, success: '', error: '' });
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
+  const [editingField, setEditingField] = useState(null); // 'name' | 'email' | 'password' | null
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
@@ -94,7 +96,7 @@ const ClientDashboard = () => {
   };
 
   const handleUpdateProfile = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     setStatus({ loading: true, success: '', error: '' });
 
     try {
@@ -111,8 +113,9 @@ const ClientDashboard = () => {
 
       if (response.ok) {
         updateUser(data.user);
-        setStatus({ loading: false, success: 'Profile updated successfully!', error: '' });
+        setStatus({ loading: false, success: 'Updated!', error: '' });
         setIsEditing(false);
+        setEditingField(null);
         setTimeout(() => setStatus(prev => ({ ...prev, success: '' })), 3000);
       } else {
         setStatus({ loading: false, success: '', error: data.message || 'Failed to update profile' });
@@ -149,6 +152,7 @@ const ClientDashboard = () => {
       if (response.ok) {
         setPasswordStatus({ loading: false, success: 'Password changed successfully!', error: '' });
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setEditingField(null);
         setTimeout(() => setPasswordStatus(prev => ({ ...prev, success: '' })), 3000);
       } else {
         setPasswordStatus({ loading: false, success: '', error: data.message || 'Failed to change password' });
@@ -162,7 +166,6 @@ const ClientDashboard = () => {
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'orders', label: 'My Orders', icon: Package },
     { id: 'preferences', label: 'Preferences', icon: SlidersHorizontal },
-    { id: 'settings', label: 'Security', icon: Lock },
   ];
 
   const languages = [
@@ -233,150 +236,168 @@ const ClientDashboard = () => {
           </aside>
 
           {/* Mobile tab bar */}
-          <div className="md:hidden -mx-4 px-4 mb-4 overflow-x-auto flex gap-2 no-scrollbar border-b border-outline-variant pb-3">
+          <div className="md:hidden -mx-4 px-4 mb-4 overflow-x-auto flex gap-1.5 no-scrollbar border-b border-outline-variant pb-3">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all flex-shrink-0 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap text-[10px] font-black uppercase tracking-wide transition-all flex-shrink-0 ${
                   activeTab === tab.id
-                    ? 'bg-primary text-on-primary shadow-md shadow-primary/20'
+                    ? 'bg-primary text-on-primary shadow-sm shadow-primary/20'
                     : 'bg-surface-container-low text-outline border border-outline-variant'
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.icon className="w-3 h-3" />
                 {tab.label}
               </button>
             ))}
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest bg-error/10 text-error flex-shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap text-[10px] font-black uppercase tracking-wide bg-error/10 text-error flex-shrink-0 border border-error/20"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3 h-3" />
               Logout
             </button>
           </div>
 
           {/* Main Content Area */}
           <div className="flex-grow">
-            <div className="bg-surface border border-outline-variant rounded-3xl p-6 md:p-8 min-h-[500px] shadow-sm">
+            <div className="bg-surface border border-outline-variant rounded-3xl p-6 md:p-8 shadow-sm">
               {activeTab === 'profile' && (
-                <div className="max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="flex items-center justify-between mb-2">
-                    <h1 className="text-3xl font-black tracking-tight">Profile Information</h1>
-                    {!isEditing && (
-                      <button 
-                        onClick={() => setIsEditing(true)}
-                        className="p-2.5 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-all shadow-sm"
-                        title="Edit Profile"
-                      >
-                        <Pencil className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-outline mb-8 font-medium">View and update your account details.</p>
+                <div className="max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <h1 className="text-xl font-bold tracking-tight mb-1">Profile</h1>
+                  <p className="text-xs text-outline mb-5 font-medium">View and update your account details.</p>
 
-                  {!isEditing ? (
-                    <div className="space-y-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-1.5 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/50">
-                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">Full Name</label>
-                          <p className="text-lg font-bold text-on-surface">{user?.name}</p>
-                        </div>
-                        <div className="space-y-1.5 p-4 bg-surface-container-low rounded-2xl border border-outline-variant/50">
-                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline">Email Address</label>
-                          <p className="text-lg font-bold text-on-surface">{user?.email}</p>
-                        </div>
+                  <div className="space-y-1.5">
+
+                    {/* Full Name */}
+                    <div className="p-2.5 bg-surface-container-low rounded-xl border border-outline-variant/50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-outline">Full Name</p>
+                        {editingField !== 'name' && (
+                          <button onClick={() => { setEditingField('name'); setStatus({ loading: false, success: '', error: '' }); }}
+                            className="p-1 text-primary hover:bg-primary/10 rounded-lg transition-all active:scale-90">
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
-
-                      <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-2 bg-primary/10 rounded-lg">
-                            <Shield className="w-4 h-4 text-primary" />
+                      {editingField === 'name' ? (
+                        <div className="mt-2 space-y-2">
+                          <Input name="name" value={formData.name} onChange={handleInputChange}
+                            placeholder="John Doe" required className="h-9 rounded-lg text-sm" autoFocus />
+                          {status.error && <p className="text-[10px] font-bold text-error">{status.error}</p>}
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => { setEditingField(null); setFormData(f => ({ ...f, name: user?.name || '' })); }}
+                              className="flex-1 h-8 rounded-lg border border-outline-variant text-xs font-black hover:bg-surface-container-high transition-all">
+                              Cancel
+                            </button>
+                            <button type="button" onClick={handleUpdateProfile} disabled={status.loading}
+                              className="flex-1 h-8 rounded-lg bg-primary text-on-primary text-xs font-black flex items-center justify-center gap-1 active:scale-[0.98] transition-all">
+                              {status.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
+                            </button>
                           </div>
-                          <h3 className="text-sm font-black uppercase tracking-widest">Account Security</h3>
                         </div>
-                        <p className="text-xs text-outline mb-4 font-medium leading-relaxed">Your current access level in the Simba Market system. This determines your permissions and features.</p>
-                        <div className="inline-flex items-center px-4 py-2 bg-primary text-on-primary text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary/20">
-                          {user?.role} Access
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleUpdateProfile} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline ml-1">Full Name</label>
-                          <Input
-                            name="name"
-                            value={formData.name}
-                            onChange={handleInputChange}
-                            placeholder="John Doe"
-                            required
-                            className="h-12 rounded-xl"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-outline ml-1">Email Address</label>
-                          <Input
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="john@example.com"
-                            required
-                            className="h-12 rounded-xl"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="p-5 bg-surface-container-low rounded-[24px] border border-outline-variant">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Shield className="w-4 h-4 text-primary" />
-                          <h3 className="text-sm font-black uppercase tracking-widest">Account Security</h3>
-                        </div>
-                        <p className="text-xs text-outline mb-4 font-medium">Your current access level in the Simba Market system.</p>
-                        <div className="inline-flex items-center px-4 py-1.5 bg-primary text-on-primary text-[10px] font-black uppercase tracking-widest rounded-full shadow-md shadow-primary/20">
-                          {user?.role}
-                        </div>
-                      </div>
-
-                      {status.error && (
-                        <div className="flex items-center gap-3 p-4 bg-error/10 text-error rounded-2xl border border-error/20 animate-in shake duration-300">
-                          <AlertCircle className="w-5 h-5 shrink-0" />
-                          <p className="text-sm font-bold">{status.error}</p>
-                        </div>
+                      ) : (
+                        <p className="text-sm font-bold text-on-surface mt-0.5">{user?.name}</p>
                       )}
+                    </div>
 
-                      <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/30">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsEditing(false)}
-                          className="px-6 h-12 rounded-xl font-black border-outline-variant hover:bg-surface-container-high"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          disabled={status.loading}
-                          className="px-10 h-12 flex items-center gap-2 rounded-xl font-black"
-                        >
-                          {status.loading ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <Save className="w-5 h-5" />
-                          )}
-                          <span>Save Changes</span>
-                        </Button>
+                    {/* Email */}
+                    <div className="p-2.5 bg-surface-container-low rounded-xl border border-outline-variant/50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-outline">Email Address</p>
+                        {editingField !== 'email' && (
+                          <button onClick={() => { setEditingField('email'); setStatus({ loading: false, success: '', error: '' }); }}
+                            className="p-1 text-primary hover:bg-primary/10 rounded-lg transition-all active:scale-90">
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
-                    </form>
-                  )}
+                      {editingField === 'email' ? (
+                        <div className="mt-2 space-y-2">
+                          <Input name="email" type="email" value={formData.email} onChange={handleInputChange}
+                            placeholder="name@example.com" required className="h-9 rounded-lg text-sm" autoFocus />
+                          {status.error && <p className="text-[10px] font-bold text-error">{status.error}</p>}
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => { setEditingField(null); setFormData(f => ({ ...f, email: user?.email || '' })); }}
+                              className="flex-1 h-8 rounded-lg border border-outline-variant text-xs font-black hover:bg-surface-container-high transition-all">
+                              Cancel
+                            </button>
+                            <button type="button" onClick={handleUpdateProfile} disabled={status.loading}
+                              className="flex-1 h-8 rounded-lg bg-primary text-on-primary text-xs font-black flex items-center justify-center gap-1 active:scale-[0.98] transition-all">
+                              {status.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm font-bold text-on-surface mt-0.5">{user?.email}</p>
+                      )}
+                    </div>
+
+                    {/* Password */}
+                    <div className="p-2.5 bg-surface-container-low rounded-xl border border-outline-variant/50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-outline">Password</p>
+                        {editingField !== 'password' && (
+                          <button onClick={() => { setEditingField('password'); setPasswordStatus({ loading: false, success: '', error: '' }); setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' }); }}
+                            className="p-1 text-primary hover:bg-primary/10 rounded-lg transition-all active:scale-90">
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      {editingField === 'password' ? (
+                        <div className="mt-2 space-y-2">
+                          <div className="relative">
+                            <Input name="currentPassword" type={showPasswords.current ? 'text' : 'password'}
+                              value={passwordData.currentPassword} onChange={handlePasswordChange}
+                              placeholder="Current password" className="h-9 rounded-lg text-sm pr-9" autoFocus />
+                            <button type="button" onClick={() => setShowPasswords(p => ({ ...p, current: !p.current }))}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-primary active:scale-90 transition-all">
+                              {showPasswords.current ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <Input name="newPassword" type={showPasswords.new ? 'text' : 'password'}
+                              value={passwordData.newPassword} onChange={handlePasswordChange}
+                              placeholder="New password" className="h-9 rounded-lg text-sm pr-9" />
+                            <button type="button" onClick={() => setShowPasswords(p => ({ ...p, new: !p.new }))}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-primary active:scale-90 transition-all">
+                              {showPasswords.new ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <Input name="confirmPassword" type={showPasswords.confirm ? 'text' : 'password'}
+                              value={passwordData.confirmPassword} onChange={handlePasswordChange}
+                              placeholder="Confirm new password" className="h-9 rounded-lg text-sm pr-9" />
+                            <button type="button" onClick={() => setShowPasswords(p => ({ ...p, confirm: !p.confirm }))}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-primary active:scale-90 transition-all">
+                              {showPasswords.confirm ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                          {passwordStatus.error && <p className="text-[10px] font-bold text-error">{passwordStatus.error}</p>}
+                          {passwordStatus.success && <p className="text-[10px] font-bold text-success">{passwordStatus.success}</p>}
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => setEditingField(null)}
+                              className="flex-1 h-8 rounded-lg border border-outline-variant text-xs font-black hover:bg-surface-container-high transition-all">
+                              Cancel
+                            </button>
+                            <button type="button" onClick={handleChangePassword} disabled={passwordStatus.loading}
+                              className="flex-1 h-8 rounded-lg bg-primary text-on-primary text-xs font-black flex items-center justify-center gap-1 active:scale-[0.98] transition-all">
+                              {passwordStatus.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Lock className="w-3 h-3" />} Update
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm font-bold text-on-surface mt-0.5 tracking-widest">••••••••</p>
+                      )}
+                    </div>
+
+                  </div>
 
                   {status.success && (
-                    <div className="mt-6 flex items-center gap-3 p-4 bg-success/10 text-success rounded-2xl border border-success/20 animate-in zoom-in duration-300">
-                      <CheckCircle2 className="w-5 h-5 shrink-0" />
-                      <p className="text-sm font-bold">{status.success}</p>
+                    <div className="mt-3 flex items-center gap-2 p-3 bg-success/10 text-success rounded-xl border border-success/20 text-xs font-bold animate-in zoom-in duration-300">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      {status.success}
                     </div>
                   )}
                 </div>
@@ -384,45 +405,42 @@ const ClientDashboard = () => {
 
               {activeTab === 'orders' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center justify-between mb-5">
                     <div>
-                      <h1 className="text-3xl font-black tracking-tight">My Orders</h1>
-                      <p className="text-outline font-medium">Track your active orders and view past purchases.</p>
+                      <h1 className="text-xl font-bold tracking-tight">My Orders</h1>
+                      <p className="text-xs text-outline font-medium">Track and view your purchases.</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={fetchOrders} disabled={ordersLoading} className="rounded-full px-5">
-                      {ordersLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Loader2 className="w-4 h-4 mr-2" />}
-                      Refresh
-                    </Button>
+                    <button onClick={fetchOrders} disabled={ordersLoading}
+                      className="p-2 rounded-xl border border-outline-variant text-outline hover:border-primary hover:text-primary transition-all active:scale-90">
+                      <Loader2 className={`w-4 h-4 ${ordersLoading ? 'animate-spin text-primary' : ''}`} />
+                    </button>
                   </div>
 
                   {ordersLoading && orders.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                      <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-                      <p className="text-outline font-black uppercase tracking-widest text-xs">Loading your orders...</p>
+                    <div className="flex flex-col items-center justify-center py-16">
+                      <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
+                      <p className="text-outline font-black uppercase tracking-widest text-[10px]">Loading orders...</p>
                     </div>
                   ) : orders.length > 0 ? (
-                    <div className="space-y-12">
-                      {/* Active Orders Section */}
+                    <div className="space-y-6">
                       {activeOrders.length > 0 && (
-                        <div className="space-y-6">
-                          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2 px-2">
-                            <Clock className="w-4 h-4" /> Active Orders
-                          </h2>
-                          <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
+                            <Clock className="w-3 h-3" /> Active Orders
+                          </p>
+                          <div className="space-y-2">
                             {activeOrders.map((order) => (
                               <OrderCard key={order.id} order={order} />
                             ))}
                           </div>
                         </div>
                       )}
-
-                      {/* History Section */}
                       {historyOrders.length > 0 && (
-                        <div className="space-y-6">
-                          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-outline flex items-center gap-2 px-2">
-                            <History className="w-4 h-4" /> Order History
-                          </h2>
-                          <div className="space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-outline flex items-center gap-1.5">
+                            <History className="w-3 h-3" /> Order History
+                          </p>
+                          <div className="space-y-2">
                             {historyOrders.map((order) => (
                               <OrderCard key={order.id} order={order} isHistory />
                             ))}
@@ -431,204 +449,67 @@ const ClientDashboard = () => {
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-20 bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-[32px]">
-                      <div className="w-20 h-20 bg-surface-container-high rounded-full flex items-center justify-center mx-auto mb-6 text-outline">
-                        <Package className="w-10 h-10" />
+                    <div className="text-center py-12 bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-2xl">
+                      <div className="w-14 h-14 bg-surface-container-high rounded-full flex items-center justify-center mx-auto mb-4 text-outline">
+                        <Package className="w-7 h-7" />
                       </div>
-                      <h2 className="text-2xl font-black mb-2">No Orders Found</h2>
-                      <p className="text-outline max-w-sm mx-auto mb-8 font-medium">
-                        You haven't placed any orders yet. Start shopping to see your purchase history here.
-                      </p>
-                      <Button onClick={() => navigate('/')} className="rounded-xl font-black px-8 h-12">Go Shopping</Button>
+                      <h2 className="text-base font-black mb-1">No Orders Yet</h2>
+                      <p className="text-xs text-outline mb-5 font-medium px-6">You haven't placed any orders yet.</p>
+                      <Button onClick={() => navigate('/')} className="rounded-xl font-black px-6 h-10 text-sm">Go Shopping</Button>
                     </div>
                   )}
                 </div>
               )}
 
               {activeTab === 'preferences' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl">
-                  <h1 className="text-3xl font-black tracking-tight mb-2">App Preferences</h1>
-                  <p className="text-outline font-medium mb-10">Customize your shopping experience and notifications.</p>
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-lg">
+                  <h1 className="text-xl font-bold tracking-tight mb-1">Preferences</h1>
+                  <p className="text-xs text-outline font-medium mb-5">Customize your experience.</p>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Visual Preferences */}
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 mb-2 px-1">
-                        <Moon className="w-5 h-5 text-primary" />
-                        <h2 className="text-sm font-black uppercase tracking-widest">Appearance</h2>
-                      </div>
-                      
-                      <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant flex items-center justify-between shadow-sm">
-                        <div>
-                          <h3 className="font-black text-sm">Dark Mode</h3>
-                          <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Switch between light and dark themes</p>
+                  <div className="space-y-4">
+
+                    {/* Appearance */}
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-outline mb-2">Appearance</p>
+                      <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <Moon className="w-4 h-4 text-outline" />
+                          <div>
+                            <p className="text-sm font-bold">Dark Mode</p>
+                            <p className="text-[9px] text-outline uppercase tracking-wide">Switch theme</p>
+                          </div>
                         </div>
                         <ThemeToggle />
                       </div>
+                    </div>
 
-                      <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Languages className="w-5 h-5 text-primary" />
-                          <h3 className="font-black text-sm">Language Settings</h3>
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          {languages.map((lang) => (
-                            <button
-                              key={lang.code}
-                              onClick={() => setLanguage(lang.code)}
-                              className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
-                                language === lang.code 
-                                  ? 'bg-primary/10 border-primary text-primary font-bold' 
-                                  : 'border-outline-variant text-outline hover:bg-surface-container-high'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="text-lg">{lang.flag}</span>
-                                <span className="text-sm font-black uppercase tracking-widest">{lang.label}</span>
-                              </div>
-                              {language === lang.code && <CheckCircle2 className="w-4 h-4" />}
-                            </button>
-                          ))}
-                        </div>
+                    {/* Language */}
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-outline mb-2">Language</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {languages.map((lang) => (
+                          <button
+                            key={lang.code}
+                            onClick={() => setLanguage(lang.code)}
+                            className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border transition-all active:scale-95 ${
+                              language === lang.code
+                                ? 'bg-primary/10 border-primary text-primary'
+                                : 'bg-surface-container-low border-outline-variant text-outline hover:border-primary'
+                            }`}
+                          >
+                            <span className="text-lg">{lang.flag}</span>
+                            <span className="text-[9px] font-black uppercase tracking-wide">{lang.label}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Notification Preferences */}
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 mb-2 px-1">
-                        <Settings className="w-5 h-5 text-primary" />
-                        <h2 className="text-sm font-black uppercase tracking-widest">Notifications</h2>
-                      </div>
 
-                      <div className="space-y-4">
-                        <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant flex items-center justify-between shadow-sm group">
-                          <div>
-                            <h3 className="font-black text-sm group-hover:text-primary transition-colors">Email Notifications</h3>
-                            <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Order Updates & Offers</p>
-                          </div>
-                          <button 
-                            onClick={() => setNotifications(prev => ({...prev, email: !prev.email}))}
-                            className={`w-12 h-6 rounded-full relative transition-all duration-300 ${notifications.email ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-outline-variant/50'}`}
-                          >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300 ${notifications.email ? 'right-1' : 'left-1'}`} />
-                          </button>
-                        </div>
-                        
-                        <div className="p-6 bg-surface-container-low rounded-[32px] border border-outline-variant flex items-center justify-between shadow-sm group">
-                          <div>
-                            <h3 className="font-black text-sm group-hover:text-primary transition-colors">Marketing Emails</h3>
-                            <p className="text-[10px] text-outline font-bold uppercase tracking-widest mt-1">Weekly deals & discounts</p>
-                          </div>
-                          <button 
-                            onClick={() => setNotifications(prev => ({...prev, marketing: !prev.marketing}))}
-                            className={`w-12 h-6 rounded-full relative transition-all duration-300 ${notifications.marketing ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-outline-variant/50'}`}
-                          >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-300 ${notifications.marketing ? 'right-1' : 'left-1'}`} />
-                          </button>
-                        </div>
 
-                        <div className="p-6 border-2 border-dashed border-primary/20 bg-primary/5 rounded-[32px] flex items-center justify-center text-center">
-                          <p className="text-[10px] text-primary font-black uppercase tracking-widest leading-relaxed">
-                            Preference changes are saved <br /> automatically to your account.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
 
-              {activeTab === 'settings' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl">
-                  <h1 className="text-3xl font-black tracking-tight mb-2">Account Security</h1>
-                  <p className="text-outline font-medium mb-10">Manage your password and account status.</p>
-                  
-                  <div className="space-y-8">
-                    {/* Security Section */}
-                    <div className="space-y-6">
-                      <div className="flex items-center gap-3 mb-2 px-1">
-                        <Lock className="w-5 h-5 text-primary" />
-                        <h2 className="text-sm font-black uppercase tracking-widest">Security</h2>
-                      </div>
-                      
-                      <form onSubmit={handleChangePassword} className="bg-surface-container-low p-8 rounded-[40px] border border-outline-variant space-y-6 shadow-sm">
-                        <h3 className="font-black text-lg mb-2">Change Password</h3>
-                        
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Current Password</label>
-                          <Input
-                            type="password"
-                            name="currentPassword"
-                            value={passwordData.currentPassword}
-                            onChange={handlePasswordChange}
-                            required
-                            className="h-12 rounded-xl"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">New Password</label>
-                            <Input
-                              type="password"
-                              name="newPassword"
-                              value={passwordData.newPassword}
-                              onChange={handlePasswordChange}
-                              required
-                              className="h-12 rounded-xl"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-outline ml-1">Confirm New Password</label>
-                            <Input
-                              type="password"
-                              name="confirmPassword"
-                              value={passwordData.confirmPassword}
-                              onChange={handlePasswordChange}
-                              required
-                              className="h-12 rounded-xl"
-                            />
-                          </div>
-                        </div>
-
-                        {passwordStatus.error && (
-                          <div className="p-4 bg-error/10 text-error rounded-2xl text-xs font-bold border border-error/20 flex items-center gap-3">
-                            <AlertCircle className="w-4 h-4" />
-                            {passwordStatus.error}
-                          </div>
-                        )}
-
-                        {passwordStatus.success && (
-                          <div className="p-4 bg-success/10 text-success rounded-2xl text-xs font-bold border border-success/20 flex items-center gap-3">
-                            <CheckCircle2 className="w-4 h-4" />
-                            {passwordStatus.success}
-                          </div>
-                        )}
-
-                        <Button
-                          type="submit"
-                          disabled={passwordStatus.loading}
-                          className="w-full h-14 rounded-2xl font-black mt-4 shadow-lg shadow-primary/20"
-                        >
-                          {passwordStatus.loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
-                        </Button>
-                      </form>
-                    </div>
-
-                    {/* Danger Zone */}
-                    <div className="p-8 border-2 border-dashed border-error/20 bg-error/5 rounded-[40px] flex flex-col md:flex-row items-center justify-between gap-6">
-                      <div>
-                        <h3 className="font-black text-lg text-error mb-1">Delete Account</h3>
-                        <p className="text-xs text-error/60 font-bold uppercase tracking-widest">This action is permanent and cannot be undone.</p>
-                      </div>
-                      <Button variant="outline" className="w-full md:w-auto text-[11px] font-black uppercase tracking-[0.2em] border-error/30 text-error hover:bg-error/10 h-12 px-8 rounded-2xl transition-all">
-                        Deactivate Account
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -642,107 +523,90 @@ const ClientDashboard = () => {
 const OrderCard = ({ order, isHistory = false }) => {
   const isPickup = !order.deliveryAddress;
 
-  return (
-  <div className={`p-6 border rounded-[32px] transition-all group shadow-sm ${isHistory ? 'bg-surface border-outline-variant/30 grayscale-[0.5] opacity-80' : 'bg-surface border-outline-variant hover:border-primary hover:shadow-xl hover:shadow-primary/5'}`}>
-    <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isHistory ? 'bg-surface-container text-outline shadow-inner' : 'bg-primary/10 text-primary shadow-lg shadow-primary/5 group-hover:scale-110'}`}>
-          <Package className="w-6 h-6" />
-        </div>
-        <div>
-          <h3 className="font-black text-sm uppercase tracking-widest">Order #{order.id.slice(0, 8).toUpperCase()}</h3>
-          <p className="text-[10px] text-outline uppercase tracking-[0.2em] font-black mt-0.5">
-            Placed on {new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
-          order.status === 'COMPLETED' ? 'bg-success/10 text-success border-success/20' :
-          order.status === 'CANCELLED' ? 'bg-error/10 text-error border-error/20' :
-          order.status === 'APPROVED' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-          order.status === 'PENDING' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-          'bg-primary/10 text-primary border-primary/20'
-        }`}>
-          {order.status.replace(/_/g, ' ')}
-        </span>
-        <button
-          onClick={() => printInvoice({
-            orderId: order.id,
-            fulfillmentBranch: order.branchName,
-            deliveryAddress: order.deliveryAddress,
-            deliveryInstructions: order.deliveryInstructions,
-            depositAmount: order.depositAmount,
-            depositPaid: order.depositPaid,
-            phone: order.phone,
-            totalPrice: order.totalPrice,
-            items: order.items,
-          })}
-          title="Print Invoice"
-          className="p-2 rounded-full text-outline hover:bg-surface-container-high hover:text-on-surface transition-colors"
-        >
-          <Printer className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+  const statusColor = {
+    COMPLETED: 'bg-success/10 text-success border-success/20',
+    CANCELLED: 'bg-error/10 text-error border-error/20',
+    APPROVED: 'bg-blue-100 text-blue-700 border-blue-200',
+    PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
+  }[order.status] || 'bg-primary/10 text-primary border-primary/20';
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-6 bg-surface-container-lowest/50 rounded-[28px] border border-outline-variant/50">
-      <div className="space-y-3">
-        <p className="text-[9px] font-black text-outline uppercase tracking-[0.2em] mb-1 px-1">Order Items</p>
-        <div className="flex -space-x-3 overflow-hidden p-1">
-          {order.items.map((item, i) => (
-            <img 
+  return (
+    <div className={`rounded-2xl border overflow-hidden transition-all ${
+      isHistory ? 'border-outline-variant/40 opacity-70' : 'border-outline-variant bg-surface'
+    }`}>
+      {/* Header row */}
+      <div className="flex items-center justify-between px-3.5 py-3 border-b border-outline-variant/50">
+        <div className="flex items-center gap-2.5">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isHistory ? 'bg-surface-container text-outline' : 'bg-primary/10 text-primary'}`}>
+            <Package className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-xs font-black tracking-wide">#{order.id.slice(0, 8).toUpperCase()}</p>
+            <p className="text-[9px] text-outline font-bold">
+              {new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wide border ${statusColor}`}>
+            {order.status.replace(/_/g, ' ')}
+          </span>
+          <button
+            onClick={() => printInvoice({
+              orderId: order.id,
+              fulfillmentBranch: order.branchName,
+              deliveryAddress: order.deliveryAddress,
+              deliveryInstructions: order.deliveryInstructions,
+              depositAmount: order.depositAmount,
+              depositPaid: order.depositPaid,
+              phone: order.phone,
+              totalPrice: order.totalPrice,
+              items: order.items,
+            })}
+            className="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-primary/10 transition-all active:scale-90"
+            title="Print Invoice"
+          >
+            <Printer className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Items preview */}
+      <div className="px-3.5 py-3 flex items-center gap-3 border-b border-outline-variant/30">
+        <div className="flex -space-x-2">
+          {order.items.slice(0, 4).map((item, i) => (
+            <img
               key={i}
-              src={item.product.image} 
+              src={item.product.image}
               alt={item.product.name}
-              className="w-10 h-10 rounded-full border-4 border-surface object-cover shadow-md group-hover:translate-x-1 transition-transform"
               title={`${item.quantity}x ${item.product.name}`}
+              className="w-8 h-8 rounded-full border-2 border-surface object-cover"
             />
           ))}
-          {order.items.length > 5 && (
-            <div className="w-10 h-10 rounded-full border-4 border-surface bg-surface-container-high flex items-center justify-center text-[10px] font-black text-outline shadow-md">
-              +{order.items.length - 5}
+          {order.items.length > 4 && (
+            <div className="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-high flex items-center justify-center text-[9px] font-black text-outline">
+              +{order.items.length - 4}
             </div>
           )}
         </div>
-        <p className="text-[11px] font-black uppercase tracking-widest text-on-surface px-1">{order.items.reduce((acc, item) => acc + item.quantity, 0)} total items</p>
+        <p className="text-xs font-bold text-outline">{order.items.reduce((acc, i) => acc + i.quantity, 0)} items</p>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-[9px] font-black text-outline uppercase tracking-[0.2em] mb-1 px-1">{isPickup ? 'Pickup' : 'Fulfillment'}</p>
-        <div className="flex items-center gap-2 px-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-          <p className="text-xs font-black uppercase tracking-widest leading-tight">{shortName(order.branchName) || 'Processing'}</p>
+      {/* Footer: branch + total */}
+      <div className="px-3.5 py-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-widest text-outline">{isPickup ? 'Pickup' : 'Delivery'}</p>
+          <p className="text-xs font-bold truncate">{isPickup ? shortName(order.branchName) : order.deliveryAddress}</p>
         </div>
-        <p className="text-[10px] text-outline font-bold uppercase tracking-widest px-1 ml-3.5 leading-tight">
-          {isPickup ? 'Method' : 'Delivery Address'}: <span className="text-on-surface font-black normal-case">{isPickup ? 'Pickup at branch' : order.deliveryAddress}</span>
-        </p>
-        {order.deliveryInstructions && (
-          <p className="text-[10px] text-outline font-bold uppercase tracking-widest px-1 ml-3.5 mt-1 leading-tight">
-            Notes: <span className="text-on-surface font-black normal-case">{order.deliveryInstructions}</span>
-          </p>
-        )}
-      </div>
-
-      <div className="md:text-right space-y-1">
-        <p className="text-[9px] font-black text-outline uppercase tracking-[0.2em] mb-1 px-1">Order Total</p>
-        <p className="text-2xl font-black text-primary tracking-tight">{order.totalPrice.toLocaleString()} <span className="text-xs font-bold">RWF</span></p>
-        {order.depositAmount > 0 && (
-          <div className="flex flex-col md:items-end gap-1.5 mt-2">
-            {order.depositPaid && (
-              <div className="bg-success/10 text-success px-2 py-0.5 rounded-full flex items-center gap-1">
-                 <CheckCircle2 className="w-2.5 h-2.5" /> 
-                 <span className="text-[8px] font-black uppercase tracking-widest">Deposit Paid: {order.depositAmount.toLocaleString()} RWF</span>
-              </div>
-            )}
-            <p className="text-[10px] font-black text-outline uppercase tracking-widest">
-              Balance at pickup: <span className="text-on-surface">{Math.max(order.totalPrice - order.depositAmount, 0).toLocaleString()} RWF</span>
-            </p>
-          </div>
-        )}
+        <div className="text-right shrink-0">
+          <p className="text-[9px] font-black uppercase tracking-widest text-outline">Total</p>
+          <p className="text-sm font-black text-primary">{order.totalPrice.toLocaleString()} <span className="text-[9px]">RWF</span></p>
+          {order.depositPaid && order.depositAmount > 0 && (
+            <p className="text-[9px] text-success font-bold">Deposit: {order.depositAmount.toLocaleString()} RWF</p>
+          )}
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 

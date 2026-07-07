@@ -34,6 +34,8 @@ model User {
   googleId         String?        @unique
   role             Role           @default(CLIENT)
   branch           String?        // For BRANCH_MANAGER and BRANCH_STAFF
+  address          String?        // Default delivery address
+  phone            String?        // Default contact phone number (Rwanda format)
   resetToken       String?
   resetTokenExpiry DateTime?
   createdAt        DateTime       @default(now())
