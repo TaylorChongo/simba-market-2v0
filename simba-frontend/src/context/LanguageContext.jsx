@@ -190,7 +190,26 @@ const translations = {
     ai_thinking: "AI Thinking",
     recommended_items: "Recommended Items",
     type_message: "Type your message...",
-    chat_with_ai: "Chat with Simba AI"
+    chat_with_ai: "Chat with Simba AI",
+
+    // Concierge (service & account assistant)
+    concierge_welcome: "Muraho! I'm Simba Concierge. Ask me about our branches, your account, deliveries, payments, or anything about Simba Supermarket.",
+    concierge_subtitle: "Help & Info",
+    concierge_placeholder: "Ask about branches, account, delivery...",
+    concierge_thinking: "Concierge Thinking",
+    concierge_tooltip: "Ask Simba Concierge",
+    concierge_open_login: "Go to Login",
+    concierge_open_register: "Create Account",
+    concierge_open_reset_password: "Reset Password",
+    concierge_open_orders: "My Orders",
+    concierge_open_contact: "Contact Us",
+    concierge_open_branches: "Our Branches",
+    concierge_open_cart: "View Cart",
+    concierge_open_about: "About Us",
+    concierge_open_faqs: "FAQs",
+    concierge_open_shipping_policy: "Shipping Policy",
+    concierge_open_returns: "Returns",
+    concierge_open_home: "Go Home"
   },
   fr: {
     // Navbar
@@ -371,7 +390,26 @@ const translations = {
     ai_thinking: "Réflexion de l'IA",
     recommended_items: "Articles recommandés",
     type_message: "Tapez votre message...",
-    chat_with_ai: "Discuter avec Simba AI"
+    chat_with_ai: "Discuter avec Simba AI",
+
+    // Concierge (service & account assistant)
+    concierge_welcome: "Bonjour ! Je suis Simba Concierge. Posez-moi des questions sur nos succursales, votre compte, les livraisons, les paiements ou tout sur Simba Supermarket.",
+    concierge_subtitle: "Aide & Infos",
+    concierge_placeholder: "Succursales, compte, livraison...",
+    concierge_thinking: "Concierge réfléchit",
+    concierge_tooltip: "Demander au Concierge",
+    concierge_open_login: "Aller à la connexion",
+    concierge_open_register: "Créer un compte",
+    concierge_open_reset_password: "Réinitialiser",
+    concierge_open_orders: "Mes commandes",
+    concierge_open_contact: "Nous contacter",
+    concierge_open_branches: "Nos succursales",
+    concierge_open_cart: "Voir le panier",
+    concierge_open_about: "À propos",
+    concierge_open_faqs: "FAQ",
+    concierge_open_shipping_policy: "Livraison",
+    concierge_open_returns: "Retours",
+    concierge_open_home: "Accueil"
   },
   kin: {
     // Navbar
@@ -552,7 +590,26 @@ const translations = {
     ai_thinking: "AI iri gutekereza",
     recommended_items: "Ibyo twaguhitiramo",
     type_message: "Andika ubutumwa...",
-    chat_with_ai: "Ganira na Simba AI"
+    chat_with_ai: "Ganira na Simba AI",
+
+    // Concierge (service & account assistant)
+    concierge_welcome: "Muraho! Ndi Simba Concierge. Mbibaze kuri filiali zacu, konti yawe, ibicuruzwa, kwishyura, cyangwa ikindi kiri kuri Simba Supermarket.",
+    concierge_subtitle: "Ubufasha & Amakuru",
+    concierge_placeholder: "Filiali, konti, ibicuruzwa...",
+    concierge_thinking: "Concierge iri gutekereza",
+    concierge_tooltip: "Baza Simba Concierge",
+    concierge_open_login: "Jya k'winjira",
+    concierge_open_register: "Kora konti",
+    concierge_open_reset_password: "Sanya ijambo ry'ibanga",
+    concierge_open_orders: "Amatora yanjye",
+    concierge_open_contact: "Twandikire",
+    concierge_open_branches: "Amashami yacu",
+    concierge_open_cart: "Reba igitebo",
+    concierge_open_about: "Abyerekeye",
+    concierge_open_faqs: "Ibibazo bisanzwe",
+    concierge_open_shipping_policy: "Politiki y'iperereza",
+    concierge_open_returns: "Isubizo",
+    concierge_open_home: "Subira ahabanza"
   }
 };
 

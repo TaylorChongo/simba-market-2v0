@@ -33,7 +33,7 @@ import Returns from './pages/Returns';
 import Branches from './pages/Branches';
 import About from './pages/About';
 import InlineBranchMap from './components/InlineBranchMap';
-import FloatingAI from './components/FloatingAI';
+import Concierge from './components/Concierge';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -142,7 +142,7 @@ function App() {
                   />
                 </Routes>
                 <InlineBranchMap />
-                <FloatingAI />
+                <Concierge />
               </Router>
             </CartProvider>
           </BranchProvider>

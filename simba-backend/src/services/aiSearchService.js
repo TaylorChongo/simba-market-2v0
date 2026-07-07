@@ -1,12 +1,13 @@
 const Groq = require('groq-sdk');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { detectLanguage, toLanguageName } = require('./languageDetect');
 
 /**
  * Extracts intent and filters from user query
  * Tries Groq first, then Gemini, then falls back to local
  */
 const extractSearchIntent = async (query, catalogSummary, history = [], mode = 'search', language = 'en') => {
-  const langName = language === 'fr' ? 'French' : language === 'kin' ? 'Kinyarwanda' : 'English';
+  const langName = toLanguageName(detectLanguage(query, language));
   const systemPrompt = mode === 'assistant' ? getAssistantPrompt(langName) : getSearchPrompt(langName);
   
   // 1. Try Groq if key exists

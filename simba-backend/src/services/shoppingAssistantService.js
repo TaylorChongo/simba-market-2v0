@@ -1,13 +1,8 @@
 const Groq = require('groq-sdk');
 const Fuse = require('fuse.js');
+const { detectLanguage, toLanguageName, LANGUAGE_NAMES } = require('./languageDetect');
 
 const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-
-const LANGUAGE_NAMES = {
-  en: 'English',
-  fr: 'French',
-  kin: 'Kinyarwanda',
-};
 
 const PAGE_ALIASES = {
   home: '/',
@@ -27,6 +22,17 @@ const askShoppingAssistant = async ({ message, websiteContext, memory }) => {
   const normalizedContext = normalizeWebsiteContext(websiteContext);
   const matchedProducts = findRelevantProducts(message, normalizedContext.products, normalizedContext.categories);
   const modelContext = buildModelContext(normalizedContext, memory, matchedProducts);
+
+  // Reply in the language the customer is actually writing in.
+  const userLanguage = detectLanguage(message, normalizedContext.language || 'en');
+  modelContext.language = userLanguage;
+  modelContext.languageName = toLanguageName(userLanguage);
+
+  // Kinyarwanda is served by a curated generator: the LLM's Kinyarwanda output
+  // is very limited, so we answer from hand-written, natural Kinyarwanda.
+  if (userLanguage === 'kin') {
+    return kinyarwandaShopping(message, matchedProducts, normalizedContext);
+  }
 
   if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY !== 'your_key_here') {
     try {
@@ -59,6 +65,89 @@ const askShoppingAssistant = async ({ message, websiteContext, memory }) => {
   return localAssistantFallback(message, normalizedContext, memory, matchedProducts);
 };
 
+/**
+ * Curated, intent-based Kinyarwanda responder for the shopping assistant.
+ * The LLM produces very limited Kinyarwanda, so we answer from hand-written,
+ * natural Kinyarwanda and still surface matched products for shopping queries.
+ */
+const kinyarwandaShopping = (message, matchedProducts = [], normalizedContext = {}) => {
+  const m = String(message).toLowerCase();
+  const products = matchedProducts.slice(0, 8);
+  const productNames = products.map((p) => p.name);
+
+  if (/(ndi|mwiriwe|muraho|amakuru|salut|bonjour|hey|hello|hi\b)/.test(m) && !/(shaka|product|ibiribwa|ibicuruzwa|konti|kwishyura|itondeko)/.test(m)) {
+    return {
+      message: "Muraho! Ndi Simba, umukozi wawe wa Simba Supermarket. Nshobora kugufasha kubona ibicuruzwa, kugutwara ku bihe by'itondeko, cyangwa kubaza iby'akonti yawe. Ukeneye iki?",
+      actions: [],
+      products,
+      memory: { language: 'kin' },
+    };
+  }
+
+  if (/(konti|register|kwiyandikisha|ukeneye|keneye|password|ijambo ry.?ibanga|login|kwinjira|reset|nibagiwe)/.test(m)) {
+    return {
+      message: "Kubaza iby'akonti yawe (kukora konti, kwinjira, cyangwa ijambo ry'ibanga), twandikire kuri rupapuro rwa Contact cyangwa ujye kuri Login. Tugufasha vuba.",
+      actions: [{ action: 'navigate', page: 'Login' }],
+      products: [],
+      memory: { language: 'kin' },
+    };
+  }
+
+  if (/(filiali|ishami|amasaha|branch|utc|heights|kimironko|gishushu|gikondo|kigali|aho|ugufungura|saa)/.test(m)) {
+    return {
+      message: "Dufite amashami ya Simba mu Kigali: UTC, Kigali Heights, Kimironko, Gishushu na Gikondo. Dufungura buri munsi kuva saa 7 za mu gitondo kugeza saa 4 z'ijoro.",
+      actions: [{ action: 'navigate', page: 'Branches' }],
+      products: [],
+      memory: { language: 'kin' },
+    };
+  }
+
+  if (/(itondeko|order|delivery|iperereza|kwishyura|momo|karita|minimum|rito|track|kurikirana)/.test(m)) {
+    return {
+      message: "Dutanga ibicuruzwa mu Kigali kuva saa 7 za mu gitonto kugeza saa 4 z'ijoro. Itondeko rito ni RWF 2,500, ukishyura na MoMo cyangwa ikarita. Reba itondeko ryawe kuri 'Amatora yanjye'.",
+      actions: [{ action: 'navigate', page: 'Orders' }],
+      products: [],
+      memory: { language: 'kin' },
+    };
+  }
+
+  if (/(isubizo|subiza|refund|return|damaged|missing|cyabuze|kidakora|cancel)/.test(m)) {
+    return {
+      message: "Niba hari ikintu kidakora cyangwa cyabuze, vugana n'itsinda ryacu utange ID y'itondeko ryawe turasubiza cyangwa tugatanga indi.",
+      actions: [{ action: 'navigate', page: 'Returns' }],
+      products: [],
+      memory: { language: 'kin' },
+    };
+  }
+
+  if (/(vugana|contact|support|ubufasha|help|twandikire|abakora)/.test(m)) {
+    return {
+      message: "Itsinda ryacu rishimira kugufasha! Twige ku rupapuro rwa Contact turasubiza vuba.",
+      actions: [{ action: 'navigate', page: 'Contact' }],
+      products: [],
+      memory: { language: 'kin' },
+    };
+  }
+
+  // Shopping / product search: surface matched products with a Kinyarwanda intro.
+  if (products.length > 0) {
+    const names = productNames.slice(0, 3).join(', ');
+    return {
+      message: `Nabonye ${names}${products.length > 3 ? ` n'ibindi ${products.length - 3}.` : '.'} Wifuza brand runaka, ingano, cyangwa igiciro?`,
+      actions: [{ action: 'search', query: message }],
+      products,
+      memory: { language: 'kin', selectedProducts: productNames },
+    };
+  }
+
+  return {
+    message: "Mbibaze ibicuruzwa, ifunguro, budget, cyangwa category ushaka, kugirango nkubone ibyahuye.",
+    actions: [],
+    products: [],
+    memory: { language: 'kin' },
+  };
+};
+
 const getSystemPrompt = (languageName) => `
 You are Simba, a helpful staff member at Simba Supermarket Rwanda.
 Your PRIMARY role is to help customers navigate the website and find what they need.
@@ -66,7 +155,7 @@ Your PRIMARY role is to help customers navigate the website and find what they n
 Core Responsibilities:
 1. NAVIGATION (Explicit): Help users find pages like Home, Cart, Checkout, Order History, Login, and Categories.
 2. SHOPPING ASSISTANCE: Recommend products and help with shopping lists.
-3. CONVERSATION: Be concise, warm, and helpful. Respond in ${languageName}.
+3. CONVERSATION: Be concise, warm, and helpful. The customer is writing in ${languageName}. You MUST respond in ${languageName} — never switch to another language. If the customer writes in Kinyarwanda, reply in Kinyarwanda; if French, reply in French; if English, reply in English.
 
 CRITICAL BEHAVIOR RULES:
 - ONLY include a "navigate" action if the user EXPLICITLY asks to "go to", "open", "show me", "visit", or "find" a specific page or section.
@@ -264,7 +353,7 @@ const normalizeActions = (actions = []) => {
 };
 
 const localAssistantFallback = (message, context, memory = {}, matchedProducts = []) => {
-  const language = context.language || detectLanguage(message);
+  const language = detectLanguage(message, context.language || 'en');
   const lower = message.toLowerCase();
   const actions = [];
   const selectedProducts = matchedProducts.slice(0, 4).map((product) => product.name);
@@ -367,13 +456,6 @@ const inferShoppingIntent = (message, memory = {}) => {
     return message;
   }
   return memory.shoppingIntent || null;
-};
-
-const detectLanguage = (message = '') => {
-  const lower = message.toLowerCase();
-  if (/[àâçéèêëîïôùûüÿœ]|bonjour|merci|besoin|chercher|ajouter/.test(lower)) return 'fr';
-  if (/muraho|amakuru|ndashaka|keneye|ongeramo|amata|umuceri|icyayi|murakoze/.test(lower)) return 'kin';
-  return 'en';
 };
 
 const safeJsonParse = (value) => {

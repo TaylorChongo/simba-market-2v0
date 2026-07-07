@@ -13,6 +13,7 @@ const orderRoutes = require('./src/routes/orderRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
 const branchRoutes = require('./src/routes/branchRoutes');
 const aiSearchRoutes = require('./src/routes/aiSearchRoutes');
+const aiConciergeRoutes = require('./src/routes/aiConciergeRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const contactRoutes = require('./src/routes/contactRoutes');
 
@@ -52,6 +53,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/branch', branchRoutes);
 app.use('/api/ai-search', aiSearchRoutes);
+app.use('/api/ai-concierge', aiConciergeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 
