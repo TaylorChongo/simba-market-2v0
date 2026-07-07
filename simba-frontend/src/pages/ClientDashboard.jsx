@@ -639,7 +639,10 @@ const ClientDashboard = () => {
   );
 };
 
-const OrderCard = ({ order, isHistory = false }) => (
+const OrderCard = ({ order, isHistory = false }) => {
+  const isPickup = !order.deliveryAddress;
+
+  return (
   <div className={`p-6 border rounded-[32px] transition-all group shadow-sm ${isHistory ? 'bg-surface border-outline-variant/30 grayscale-[0.5] opacity-80' : 'bg-surface border-outline-variant hover:border-primary hover:shadow-xl hover:shadow-primary/5'}`}>
     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div className="flex items-center gap-4">
@@ -669,6 +672,8 @@ const OrderCard = ({ order, isHistory = false }) => (
             fulfillmentBranch: order.branchName,
             deliveryAddress: order.deliveryAddress,
             deliveryInstructions: order.deliveryInstructions,
+            depositAmount: order.depositAmount,
+            depositPaid: order.depositPaid,
             phone: order.phone,
             totalPrice: order.totalPrice,
             items: order.items,
@@ -704,13 +709,13 @@ const OrderCard = ({ order, isHistory = false }) => (
       </div>
 
       <div className="space-y-2">
-        <p className="text-[9px] font-black text-outline uppercase tracking-[0.2em] mb-1 px-1">Fulfillment</p>
+        <p className="text-[9px] font-black text-outline uppercase tracking-[0.2em] mb-1 px-1">{isPickup ? 'Pickup' : 'Fulfillment'}</p>
         <div className="flex items-center gap-2 px-1">
           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
           <p className="text-xs font-black uppercase tracking-widest leading-tight">{shortName(order.branchName) || 'Processing'}</p>
         </div>
         <p className="text-[10px] text-outline font-bold uppercase tracking-widest px-1 ml-3.5 leading-tight">
-          Delivery Address: <span className="text-on-surface font-black normal-case">{order.deliveryAddress || 'Standard Delivery'}</span>
+          {isPickup ? 'Method' : 'Delivery Address'}: <span className="text-on-surface font-black normal-case">{isPickup ? 'Pickup at branch' : order.deliveryAddress}</span>
         </p>
         {order.deliveryInstructions && (
           <p className="text-[10px] text-outline font-bold uppercase tracking-widest px-1 ml-3.5 mt-1 leading-tight">
@@ -722,17 +727,23 @@ const OrderCard = ({ order, isHistory = false }) => (
       <div className="md:text-right space-y-1">
         <p className="text-[9px] font-black text-outline uppercase tracking-[0.2em] mb-1 px-1">Order Total</p>
         <p className="text-2xl font-black text-primary tracking-tight">{order.totalPrice.toLocaleString()} <span className="text-xs font-bold">RWF</span></p>
-        {order.depositPaid && (
-          <div className="flex items-center md:justify-end gap-1.5 mt-2">
-            <div className="bg-success/10 text-success px-2 py-0.5 rounded-full flex items-center gap-1">
-               <CheckCircle2 className="w-2.5 h-2.5" /> 
-               <span className="text-[8px] font-black uppercase tracking-widest">Deposit Paid</span>
-            </div>
+        {order.depositAmount > 0 && (
+          <div className="flex flex-col md:items-end gap-1.5 mt-2">
+            {order.depositPaid && (
+              <div className="bg-success/10 text-success px-2 py-0.5 rounded-full flex items-center gap-1">
+                 <CheckCircle2 className="w-2.5 h-2.5" /> 
+                 <span className="text-[8px] font-black uppercase tracking-widest">Deposit Paid: {order.depositAmount.toLocaleString()} RWF</span>
+              </div>
+            )}
+            <p className="text-[10px] font-black text-outline uppercase tracking-widest">
+              Balance at pickup: <span className="text-on-surface">{Math.max(order.totalPrice - order.depositAmount, 0).toLocaleString()} RWF</span>
+            </p>
           </div>
         )}
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default ClientDashboard;

@@ -150,33 +150,7 @@ const Home = () => {
         </div>
       )}
 
-      {/* Control Bar */}
-      <div className="px-4 py-3 md:px-8 border-b border-outline-variant/50 mb-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 border-outline-variant hover:border-primary transition-all h-8 text-[11px] md:h-9 md:text-xs px-3"
-          >
-            <SlidersHorizontal className="w-3 h-3 md:w-3.5 md:h-3.5" />
-            {showFilters ? t('hide_filters') : t('show_filters')}
-          </Button>
-          
-          {isFiltering && (
-            <div className="flex items-center gap-2 text-[10px] md:text-xs">
-              <span className="text-outline hidden sm:inline">{t('active_filters')}</span>
-              <button 
-                onClick={clearAllFilters}
-                className="bg-primary/10 text-primary px-3 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-primary/20 transition-colors"
-              >
-                {t('clear_all')} <X className="w-2.5 h-2.5" />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <main className="flex-grow max-w-7xl mx-auto px-4 py-6 md:px-8 w-full">
+      <main className="flex-grow w-full max-w-[1600px] mx-auto px-3 py-6 sm:px-5 md:px-8 xl:px-10">
         <div className="flex flex-col md:flex-row gap-8 relative">
           
           {/* Sidebar Filters - Desktop Drawer/Sidebar */}
@@ -281,7 +255,7 @@ const Home = () => {
             {/* Hero Section */}
             {!isFiltering && !user && (
               <section 
-                className="w-full rounded-[24px] md:rounded-[40px] p-5 md:p-16 mb-8 md:mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[300px] md:min-h-[500px] justify-center shadow-2xl shadow-primary/10"
+                className="w-full rounded-[24px] md:rounded-[40px] p-6 sm:p-10 md:p-20 xl:p-24 mb-8 md:mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[380px] sm:min-h-[460px] md:min-h-[620px] xl:min-h-[700px] justify-center shadow-2xl shadow-primary/10"
               >
                 {/* Background Layers for smooth transition */}
                 {heroImages.map((img, i) => (
@@ -309,24 +283,48 @@ const Home = () => {
                   ))}
                 </div>
                 
-                <span className="bg-primary text-on-primary font-black tracking-widest uppercase text-[8px] md:text-[10px] px-2.5 py-1 rounded-full mb-3 relative z-10 shadow-lg">
+                <span className="hero-reveal bg-primary text-on-primary font-black tracking-widest uppercase text-[9px] md:text-xs px-3 py-1.5 rounded-full mb-4 md:mb-5 relative z-10 shadow-lg">
                   {t('hero_badge')}
                 </span>
-                <h1 className="text-2xl md:text-6xl lg:text-7xl font-black text-white mb-3 relative z-10 leading-[0.95] tracking-tighter max-w-2xl drop-shadow-2xl">
+                <h1 className="hero-reveal hero-reveal-delay-1 text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-white mb-4 md:mb-6 relative z-10 leading-[0.95] tracking-tighter max-w-5xl drop-shadow-2xl">
                   {t('hero_title_1')} <br className="hidden sm:block" />
                   <span className="text-primary-container">{t('hero_title_2')}</span>
                 </h1>
-                <p className="text-white/90 max-w-xs md:max-w-lg mb-6 md:mb-8 relative z-10 text-[10px] md:text-lg font-bold leading-relaxed drop-shadow-lg">
+                <p className="hero-reveal hero-reveal-delay-2 text-white/90 max-w-sm md:max-w-2xl mb-7 md:mb-10 relative z-10 text-sm md:text-xl font-bold leading-relaxed drop-shadow-lg">
                   {t('hero_description')}
                 </p>
                 <Button 
                   onClick={scrollToProducts}
-                  className="px-6 md:px-12 py-2.5 md:py-4 !bg-primary !text-on-primary hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/40 border-none relative z-10 text-xs md:text-lg font-black shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95 rounded-xl md:rounded-2xl h-auto"
+                  className="hero-reveal hero-reveal-delay-3 px-6 md:px-12 py-2.5 md:py-4 !bg-primary !text-on-primary hover:-translate-y-1 hover:scale-105 hover:shadow-2xl hover:shadow-primary/40 border-none relative z-10 text-xs md:text-lg font-black shadow-xl shadow-primary/20 transition-all duration-300 active:scale-95 rounded-xl md:rounded-2xl h-auto"
                 >
                   {t('shop_now')}
                 </Button>
               </section>
             )}
+
+            {/* Filter Controls */}
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 border-outline-variant hover:border-primary transition-all h-8 text-[11px] md:h-9 md:text-xs px-3"
+              >
+                <SlidersHorizontal className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                {showFilters ? t('hide_filters') : t('show_filters')}
+              </Button>
+              
+              {isFiltering && (
+                <div className="flex items-center gap-2 text-[10px] md:text-xs">
+                  <span className="text-outline hidden sm:inline">{t('active_filters')}</span>
+                  <button 
+                    onClick={clearAllFilters}
+                    className="bg-primary/10 text-primary px-3 py-1 rounded-full font-bold flex items-center gap-1 hover:bg-primary/20 transition-colors"
+                  >
+                    {t('clear_all')} <X className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Branches Strip */}
             <Link

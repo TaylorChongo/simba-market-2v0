@@ -1,5 +1,7 @@
-export function printInvoice({ orderId, fulfillmentBranch, deliveryAddress, deliveryInstructions, phone, totalPrice, items = [] }) {
+export function printInvoice({ orderId, fulfillmentBranch, deliveryAddress, deliveryInstructions, depositAmount = 0, depositPaid = false, phone, totalPrice, items = [] }) {
   const win = window.open('', '_blank');
+  const isPickup = !deliveryAddress;
+  const pickupBalance = Math.max((totalPrice || 0) - depositAmount, 0);
   win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice ${orderId || ''}</title>
 <style>
   body{font-family:sans-serif;color:#000;padding:32px;font-size:13px}
@@ -21,15 +23,18 @@ export function printInvoice({ orderId, fulfillmentBranch, deliveryAddress, deli
 </div>
 <hr>
 <div class="meta">
-  <div><p class="label">Fulfillment Branch</p><strong>${fulfillmentBranch || 'Simba Supermarket'}</strong></div>
-  <div><p class="label">Delivery Address</p><strong>${deliveryAddress || 'Kigali, Rwanda'}</strong>${deliveryInstructions ? `<br><span style="color:#555">${deliveryInstructions}</span>` : ''}</div>
+  <div><p class="label">${isPickup ? 'Pickup Branch' : 'Fulfillment Branch'}</p><strong>${fulfillmentBranch || 'Simba Supermarket'}</strong></div>
+  <div><p class="label">${isPickup ? 'Fulfillment Type' : 'Delivery Address'}</p><strong>${isPickup ? 'Pickup at branch' : deliveryAddress}</strong>${deliveryInstructions ? `<br><span style="color:#555">${deliveryInstructions}</span>` : ''}</div>
   ${phone ? `<div><p class="label">Contact</p><strong>${phone}</strong></div>` : ''}
-  <div><p class="label">Payment</p><strong>Pay on Delivery</strong></div>
+  <div><p class="label">Payment</p><strong>${isPickup ? 'Deposit paid, balance at pickup' : 'Pay on Delivery'}</strong></div>
 </div>
 <table>
   <thead><tr><th>Item</th><th class="center">Qty</th><th class="right">Unit Price</th><th class="right">Total</th></tr></thead>
   <tbody>${items.map(item => `<tr><td>${item.name || item.product?.name}</td><td class="center">${item.quantity}</td><td class="right">RWF ${(item.price ?? item.product?.price)?.toLocaleString()}</td><td class="right"><strong>RWF ${((item.price ?? item.product?.price) * item.quantity)?.toLocaleString()}</strong></td></tr>`).join('')}</tbody>
-  <tfoot><tr><td colspan="3" class="right" style="padding-top:12px;font-weight:700;font-size:14px">Total</td><td class="right" style="padding-top:12px;font-weight:900;font-size:16px">RWF ${totalPrice?.toLocaleString()}</td></tr></tfoot>
+  <tfoot>
+    <tr><td colspan="3" class="right" style="padding-top:12px;font-weight:700;font-size:14px">Total</td><td class="right" style="padding-top:12px;font-weight:900;font-size:16px">RWF ${totalPrice?.toLocaleString()}</td></tr>
+    ${isPickup && depositAmount > 0 ? `<tr><td colspan="3" class="right" style="font-weight:700">Pickup Deposit ${depositPaid ? 'Paid' : 'Due'}</td><td class="right">- RWF ${depositAmount.toLocaleString()}</td></tr><tr><td colspan="3" class="right" style="font-weight:900">Balance Due at Pickup</td><td class="right"><strong>RWF ${pickupBalance.toLocaleString()}</strong></td></tr>` : ''}
+  </tfoot>
 </table>
 <hr>
 <p style="text-align:center;color:#888;font-size:11px;margin-top:12px">Thank you for shopping at Simba Market</p>

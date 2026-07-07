@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useBranch } from '../context/BranchContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { fallbackToOriginalImage, optimizeCloudinaryUrl } from '../lib/utils';
 import { useState } from 'react';
 import QuickViewModal from './QuickViewModal';
@@ -14,7 +14,6 @@ const ProductCard = ({ product }) => {
   const { selectedBranch } = useBranch();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const [showQuickView, setShowQuickView] = useState(false);
   
   // Placeholder data if no product is passed
@@ -96,12 +95,6 @@ const ProductCard = ({ product }) => {
                 e.preventDefault();
                 e.stopPropagation();
                 if (isOutOfStock) return;
-
-                if (!user) {
-                  navigate('/login', { state: { from: window.location.pathname } });
-                  return;
-                }
-                
                 addToCart(product);
               }}
               className="flex-shrink-0"

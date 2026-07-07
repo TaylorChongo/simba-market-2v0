@@ -33,15 +33,15 @@
 }
 
 :root.dark {
-  --color-surface: #020617;
+  --color-surface: #111827;
   --color-on-surface: #F8FAFC;
-  --color-surface-container-low: #0F172A;
-  --color-surface-container-high: #1E293B;
-  --color-surface-container-highest: #334155;
-  --color-surface-container-lowest: #000000;
+  --color-surface-container-low: #1F2937;
+  --color-surface-container-high: #334155;
+  --color-surface-container-highest: #475569;
+  --color-surface-container-lowest: #0B1120;
 
-  --color-outline: #94A3B8;
-  --color-outline-variant: #1E293B;
+  --color-outline: #CBD5E1;
+  --color-outline-variant: #475569;
 
   --color-on-primary: #ffffff;
   --color-primary-container: #cc5600;
@@ -78,6 +78,22 @@
     @apply bg-outline-variant rounded-full hover:bg-primary/50 transition-colors;
   }
 
+  .hero-reveal {
+    animation: hero-reveal 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-reveal-delay-1 {
+    animation-delay: 120ms;
+  }
+
+  .hero-reveal-delay-2 {
+    animation-delay: 240ms;
+  }
+
+  .hero-reveal-delay-3 {
+    animation-delay: 360ms;
+  }
+
   /* Mobile-first specific containers */
   .mobile-safe-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
@@ -86,5 +102,25 @@
   /* Touch-friendly spacing */
   .touch-spacing {
     @apply gap-4 md:gap-6;
+  }
+}
+
+@keyframes hero-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-reveal {
+    animation: none;
   }
 }

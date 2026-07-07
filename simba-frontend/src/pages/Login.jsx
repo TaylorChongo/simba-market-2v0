@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { API_URL } from '../lib/utils';
@@ -13,6 +13,8 @@ const Login = () => {
   const { login } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,7 +55,7 @@ const Login = () => {
       } else if (data.user.role === 'BRANCH_STAFF') {
         navigate('/dashboard/branch-staff');
       } else {
-        navigate('/');
+        navigate(from, { replace: true });
       }
     } catch (err) {
       setError(err.message);
@@ -127,7 +129,7 @@ const Login = () => {
               <div className="h-px bg-outline-variant flex-grow" />
             </div>
 
-            <GoogleLoginButton setLoading={setLoading} setError={setError} />
+            <GoogleLoginButton setLoading={setLoading} setError={setError} from={from} />
           </>
         )}
 

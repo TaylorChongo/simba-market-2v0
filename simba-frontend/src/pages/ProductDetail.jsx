@@ -204,10 +204,6 @@ const ProductDetail = () => {
                 }`}
                 onClick={() => {
                   if (isOutOfStock) return;
-                  if (!user) {
-                    navigate('/login', { state: { from: window.location.pathname } });
-                    return;
-                  }
                   addToCart(product);
                 }}
                 disabled={isOutOfStock}

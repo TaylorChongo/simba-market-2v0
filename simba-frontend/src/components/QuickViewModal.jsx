@@ -6,14 +6,12 @@ import { useBranch } from '../context/BranchContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { fallbackToOriginalImage, optimizeCloudinaryUrl } from '../lib/utils';
-import { useNavigate } from 'react-router-dom';
 
 const QuickViewModal = ({ product, onClose }) => {
   const { cart, addToCart } = useCart();
   const { selectedBranch } = useBranch();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const navigate = useNavigate();
 
   if (!product) return null;
 
@@ -25,11 +23,6 @@ const QuickViewModal = ({ product, onClose }) => {
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
-    if (!user) {
-      onClose();
-      navigate('/login', { state: { from: window.location.pathname } });
-      return;
-    }
     addToCart(product);
   };
 

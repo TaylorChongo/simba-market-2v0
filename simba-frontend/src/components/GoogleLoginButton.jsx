@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { API_URL } from '../lib/utils';
 
-const GoogleLoginButton = ({ setLoading, setError }) => {
+const GoogleLoginButton = ({ setLoading, setError, from }) => {
   const { login } = useAuth();
   const { t } = useLanguage();
 
@@ -40,7 +40,7 @@ const GoogleLoginButton = ({ setLoading, setError }) => {
         if (!res.ok) throw new Error(data.message);
 
         login(data.user, data.token);
-        window.location.href = '/'; // Simple redirect
+        window.location.href = data.user.role === 'CLIENT' ? (from || '/') : '/';
       } catch (err) {
         setError("Google Login failed: " + err.message);
       } finally {

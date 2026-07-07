@@ -8,9 +8,15 @@ import { printInvoice } from '../lib/printInvoice';
 
 const SuccessPage = () => {
   const location = useLocation();
-  const { fulfillmentBranch, deliveryAddress, deliveryInstructions, totalPrice, phone, orderId, items = [] } = location.state || {};
+  const { fulfillmentBranch, fulfillmentMethod, deliveryAddress, deliveryInstructions, depositAmount = 0, pickupBalance, totalPrice, phone, orderId, items = [] } = location.state || {};
+  const isPickup = fulfillmentMethod === 'pickup' || !deliveryAddress;
+  const remainingPickupBalance = pickupBalance ?? Math.max((totalPrice || 0) - depositAmount, 0);
+  const confirmationTitle = isPickup ? 'Pickup Order Confirmed!' : 'Delivery Order Confirmed!';
+  const confirmationMessage = isPickup
+    ? `Your items are being prepared at ${fulfillmentBranch || 'your selected Simba branch'}. We will notify you when they are ready for pickup.`
+    : 'Your items are being prepared for delivery. We will notify you once they are on the way!';
 
-  const handlePrint = () => printInvoice({ orderId, fulfillmentBranch, deliveryAddress, deliveryInstructions, phone, totalPrice, items });
+  const handlePrint = () => printInvoice({ orderId, fulfillmentBranch, deliveryAddress, deliveryInstructions, depositAmount, depositPaid: isPickup, phone, totalPrice, items });
 
   return (
     <div className="min-h-screen bg-surface-container-lowest flex flex-col">
@@ -22,9 +28,9 @@ const SuccessPage = () => {
             <CheckCircle2 className="w-12 h-12 text-success" />
           </div>
 
-          <h1 className="text-4xl font-black text-on-surface mb-3 tracking-tight uppercase">Order Confirmed! 🎉</h1>
+          <h1 className="text-4xl font-black text-on-surface mb-3 tracking-tight uppercase">{confirmationTitle}</h1>
           <p className="text-outline font-medium mb-10 leading-relaxed text-lg">
-            Your items are being prepared for delivery. We will notify you once they are on the way!
+            {confirmationMessage}
           </p>
 
           {/* Confirmation Details Card */}
@@ -47,7 +53,7 @@ const SuccessPage = () => {
                 <Store className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">Fulfillment Branch</p>
+                <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">{isPickup ? 'Pickup Branch' : 'Fulfillment Branch'}</p>
                 <p className="text-lg font-black text-on-surface">{fulfillmentBranch || 'Simba Supermarket'}</p>
               </div>
             </div>
@@ -57,8 +63,8 @@ const SuccessPage = () => {
                 <MapPin className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">Delivery Address</p>
-                <p className="text-lg font-black text-on-surface">{deliveryAddress || 'Kigali, Rwanda'}</p>
+                <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">{isPickup ? 'Fulfillment Type' : 'Delivery Address'}</p>
+                <p className="text-lg font-black text-on-surface">{isPickup ? 'Pickup at branch' : deliveryAddress}</p>
               </div>
             </div>
 
@@ -95,9 +101,22 @@ const SuccessPage = () => {
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-black text-outline uppercase tracking-widest">Payment</p>
-                <p className="text-sm font-black text-on-surface">Pay on Delivery</p>
+                <p className="text-sm font-black text-on-surface">{isPickup ? 'Pay at Pickup' : 'Pay on Delivery'}</p>
               </div>
             </div>
+
+            {isPickup && depositAmount > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-surface border border-outline-variant rounded-2xl p-4">
+                  <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">Deposit Paid</p>
+                  <p className="text-lg font-black text-primary">RWF {depositAmount.toLocaleString()}</p>
+                </div>
+                <div className="bg-surface border border-outline-variant rounded-2xl p-4">
+                  <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">Balance at Pickup</p>
+                  <p className="text-lg font-black text-on-surface">RWF {remainingPickupBalance.toLocaleString()}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

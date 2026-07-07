@@ -209,9 +209,23 @@ const BranchStaffDashboard = () => {
                           </div>
                         </div>
 
+                        <div className="mb-6 bg-surface-container-low p-4 rounded-2xl border border-outline-variant/50">
+                          <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">
+                            {order.deliveryAddress ? 'Delivery Address' : 'Pickup Method'}
+                          </p>
+                          <p className="text-sm font-bold text-on-surface leading-relaxed">
+                            {order.deliveryAddress || 'Customer will pick up at this branch'}
+                          </p>
+                          {!order.deliveryAddress && order.depositAmount > 0 && (
+                            <p className="text-xs font-black text-primary mt-3">
+                              Deposit paid: {order.depositAmount.toLocaleString()} RWF · Balance at pickup: {Math.max(order.totalPrice - order.depositAmount, 0).toLocaleString()} RWF
+                            </p>
+                          )}
+                        </div>
+
                         {order.deliveryInstructions && (
                           <div className="mb-6 bg-surface-container-low p-4 rounded-2xl border border-outline-variant/50">
-                            <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">Delivery Instructions & Landmarks</p>
+                            <p className="text-[10px] font-black text-outline uppercase tracking-widest mb-1">{order.deliveryAddress ? 'Delivery Instructions & Landmarks' : 'Pickup Notes'}</p>
                             <p className="text-sm font-bold text-on-surface leading-relaxed">
                               {order.deliveryInstructions}
                             </p>

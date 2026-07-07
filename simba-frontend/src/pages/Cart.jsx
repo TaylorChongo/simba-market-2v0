@@ -241,9 +241,9 @@ const Cart = () => {
                   </div>
                 </div>
 
-                <Link to="/checkout" className={isCheckoutBlocked ? "pointer-events-none" : ""}>
+                <Link to="/checkout" className={`block w-full ${isCheckoutBlocked ? "pointer-events-none" : ""}`}>
                   <Button 
-                    className={`w-full py-4 h-auto text-lg font-bold rounded-2xl ${isCheckoutBlocked ? 'opacity-50 grayscale' : ''}`}
+                    className={`w-full py-4 h-auto text-center text-lg font-bold rounded-2xl ${isCheckoutBlocked ? 'opacity-50 grayscale' : ''}`}
                     disabled={isCheckoutBlocked}
                   >
                     {t('proceed_to_checkout')}
