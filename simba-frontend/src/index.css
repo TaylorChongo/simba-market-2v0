@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-headline: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-label: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-headline: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
   --color-primary: #FF6B00;
   --color-primary-container: #cc5600;
@@ -50,6 +50,9 @@
 @layer base {
   body {
     @apply bg-surface text-on-surface font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   
   /* Ensure minimum touch target size for interactive elements */
@@ -60,6 +63,17 @@
   /* Reset for inline links that should flow with text */
   p a, li a, .prose a {
     @apply min-h-0 min-w-0 inline;
+  }
+
+  /* ── Mobile-first type scale ──────────────────────────────────────────
+     Tighten letter-spacing on heavy weights — Plus Jakarta Sans is wide
+     at 700+, so a small negative tracking makes it feel native/modern.
+  ─────────────────────────────────────────────────────────────────── */
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+  .font-extrabold, .font-black {
+    letter-spacing: -0.015em;
   }
 }
 
@@ -76,6 +90,51 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-outline-variant rounded-full hover:bg-primary/50 transition-colors;
+  }
+
+  /* ── Type utilities ────────────────────────────────────────────────────
+     Semantic classes that map to a consistent mobile-first type system.
+     Use these instead of raw font-size + font-weight combos.
+  ─────────────────────────────────────────────────────────────────── */
+
+  /* Page titles  — e.g. "Your Cart", "Checkout" */
+  .type-title {
+    @apply text-[22px] leading-tight font-extrabold tracking-tight text-on-surface;
+  }
+
+  /* Section headings — e.g. "Items · 3", "Delivery Details" */
+  .type-section {
+    @apply text-[11px] font-extrabold uppercase tracking-widest text-outline;
+  }
+
+  /* Body text — product names, addresses, labels */
+  .type-body {
+    @apply text-sm font-medium leading-snug text-on-surface;
+  }
+
+  /* Supporting / secondary text — price per unit, hints */
+  .type-caption {
+    @apply text-xs font-medium text-outline leading-relaxed;
+  }
+
+  /* Eyebrow / metadata labels — "Default", "Profile number" */
+  .type-label {
+    @apply text-[10px] font-semibold uppercase tracking-widest text-outline;
+  }
+
+  /* Price display — totals, primary amounts */
+  .type-price {
+    @apply text-base font-extrabold tracking-tight text-primary;
+  }
+
+  /* Large price — grand total */
+  .type-price-lg {
+    @apply text-xl font-extrabold tracking-tight text-primary;
+  }
+
+  /* CTA button text */
+  .type-cta {
+    @apply text-[15px] font-extrabold tracking-wide;
   }
 
   .hero-reveal {
@@ -136,11 +195,8 @@
     font-size: 14px;
   }
 
-  /* Keep page footers clear of the fixed bottom navigation. */
-  body {
-    padding-bottom: 4.5rem;
-  }
-
+  /* Keep page footers clear of the fixed bottom navigation
+     (handled by the footer's own pb-20 on mobile). */
   /* Tame oversized display text (heroes, page titles). */
   .text-6xl { font-size: 1.875rem; line-height: 2.1rem; }
   .text-5xl { font-size: 1.625rem; line-height: 1.9rem; }

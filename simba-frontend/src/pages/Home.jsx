@@ -3,13 +3,15 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
+import ProductCardSkeleton from '../components/ProductCardSkeleton';
+import CategorySectionSkeleton from '../components/CategorySectionSkeleton';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { useAuth } from '../context/AuthContext';
 import { useBranch } from '../context/BranchContext';
 import { useLanguage } from '../context/LanguageContext';
 import { API_URL } from '../lib/utils';
-import { Filter, X, ChevronDown, ChevronUp, SlidersHorizontal, Loader2, MapPin, ArrowRight } from 'lucide-react';
+import { Filter, X, ChevronDown, ChevronUp, SlidersHorizontal, Loader2, MapPin } from 'lucide-react';
 import localProducts from '../data/simba_products.json';
 import AISearch from '../components/AISearch';
 
@@ -18,6 +20,7 @@ const Home = () => {
   const { selectedBranch } = useBranch();
   const { t, language } = useLanguage();
   const [products, setProducts] = useState(localProducts.products);
+  const [refreshing, setRefreshing] = useState(false); // branch-switch skeleton overlay
   const productsRef = useRef(null);
 
   const scrollToProducts = () => {
@@ -60,7 +63,10 @@ const Home = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
+      // On initial load, products are already set to localProducts — skip loading spinner
+      const isInitialLoad = products === localProducts.products;
+      if (!isInitialLoad) setRefreshing(true);
+
       try {
         const url = selectedBranch 
           ? `${API_URL}/api/products?branch=${encodeURIComponent(selectedBranch)}`
@@ -79,11 +85,15 @@ const Home = () => {
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
-        setLoading(false);
+        if (!isInitialLoad) {
+          // Small delay so skeleton is visible (avoids flash)
+          setTimeout(() => setRefreshing(false), 300);
+        }
       }
     };
 
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBranch]);
 
   // Get unique categories
@@ -123,18 +133,6 @@ const Home = () => {
   };
 
   const displayedCategories = showAllCategories ? categories : categories.slice(0, 7);
-
-  if (loading && products.length === 0) {
-    return (
-      <div className="min-h-screen flex flex-col bg-surface">
-        <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        <div className="flex-grow flex items-center justify-center">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        </div>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
@@ -302,8 +300,8 @@ const Home = () => {
               </section>
             )}
 
-            {/* Filter Controls */}
-            <div className="mb-6 flex items-center justify-between gap-4">
+            {/* Filter Controls — desktop only (price filter toggle) */}
+            <div className="hidden md:flex mb-6 items-center justify-between gap-4">
               <Button 
                 variant="outline" 
                 onClick={() => setShowFilters(!showFilters)}
@@ -326,74 +324,106 @@ const Home = () => {
               )}
             </div>
 
-            {/* Branches Strip */}
-            <Link
-              to="/branches"
-              className="flex items-center justify-between gap-3 bg-primary/5 border border-primary/15 rounded-2xl px-5 py-4 hover:bg-primary/10 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-black text-on-surface">9 branches across Kigali</p>
-                  <p className="text-[11px] text-outline font-medium">Open Mon–Fri 7AM–9PM · Sun 8AM–8PM</p>
-                </div>
+            {/* Category Nav Bar — mobile scrollable pill strip, desktop hidden (uses sidebar) */}
+            <div className="md:hidden mb-5">
+              <div className="flex gap-2 overflow-x-auto scrollbar-none -mx-3 px-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {categories.map((category) => {
+                  const label = category === 'All'
+                    ? (language === 'fr' ? 'Tout' : language === 'kin' ? 'Byose' : 'All')
+                    : category;
+                  const isActive = selectedCategory === category;
+                  return (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-black whitespace-nowrap transition-all active:scale-95 ${
+                        isActive
+                          ? 'bg-primary text-on-primary shadow-md shadow-primary/20'
+                          : 'bg-surface-container-low border border-outline-variant text-outline hover:border-primary hover:text-primary'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
-              <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
-            </Link>
-            {loading && (
-              <div className="absolute inset-0 bg-surface/50 z-10 flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
-              </div>
-            )}
-
-            {/* Results Status */}
-            <div ref={productsRef}>
-              {isFiltering && (
-                <div className="mb-6 flex items-baseline gap-2">
-                  <h2 className="text-xl font-black">{filteredProducts.length}</h2>
-                  <span className="text-outline font-medium text-sm">{t('results_for')}</span>
-                </div>
+              {/* Clear filter pill — shown when a non-All category is active */}
+              {selectedCategory !== 'All' && (
+                <button
+                  onClick={clearAllFilters}
+                  className="mt-2 flex items-center gap-1 text-[10px] font-black text-primary"
+                >
+                  <X className="w-2.5 h-2.5" /> Clear filters
+                </button>
               )}
             </div>
-
             {/* Grid Display */}
-            {filteredProducts.length > 0 ? (
-              !isFiltering ? (
-                /* Summary View by Category */
-                Object.entries(groupedProducts).map(([category, categoryProducts]) => {
-                  const hasMore = categoryProducts.length > 4;
-
-                  return (
-                    <section key={category} className="mb-10">
-                      <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-lg font-black tracking-tight uppercase border-l-4 border-primary pl-3">
-                          {category}
-                        </h2>
-                        {hasMore && (
-                          <Link to={`/category/${category}`}>
-                            <Button variant="ghost" className="text-[11px] font-bold text-primary px-3 h-8">
-                              {t('view_all')}
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 transition-all duration-300">
-                        {categoryProducts.slice(0, 4).map((product) => (
-                          <ProductCard key={product.id} product={product} />
-                        ))}
-                      </div>
-                    </section>
-                  );
-                })
-              ) : (
-                /* Search Results View */
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 transition-all duration-300">
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+            {refreshing ? (
+              /* ── Skeleton loaders during branch switch ────────────────────── */
+              <div className="space-y-10">
+                <CategorySectionSkeleton />
+                <CategorySectionSkeleton />
+                <CategorySectionSkeleton />
+              </div>
+            ) : filteredProducts.length > 0 ? (
+              <>
+                {/* Results Status */}
+                <div ref={productsRef}>
+                  {isFiltering && (
+                    <div className="mb-6 flex items-baseline gap-2">
+                      <h2 className="text-xl font-black">{filteredProducts.length}</h2>
+                      <span className="text-outline font-medium text-sm">{t('results_for')}</span>
+                    </div>
+                  )}
                 </div>
-              )
+
+                {!isFiltering ? (
+                  /* Summary View by Category */
+                  Object.entries(groupedProducts).map(([category, categoryProducts]) => {
+                    const hasMore = categoryProducts.length > 4;
+                    return (
+                      <section key={category} className="mb-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <div className="flex items-center justify-between mb-5">
+                          <h2 className="text-lg font-black tracking-tight uppercase border-l-4 border-primary pl-3">
+                            {category}
+                          </h2>
+                          {hasMore && (
+                            <Link to={`/category/${category}`}>
+                              <Button variant="ghost" className="text-[11px] font-bold text-primary px-3 h-8">
+                                {t('view_all')}
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+                          {categoryProducts.slice(0, 4).map((product, i) => (
+                            <div
+                              key={product.id}
+                              className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+                              style={{ animationDelay: `${i * 60}ms` }}
+                            >
+                              <ProductCard product={product} />
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })
+                ) : (
+                  /* Search / Filter Results View */
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+                    {filteredProducts.map((product, i) => (
+                      <div
+                        key={product.id}
+                        className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+                        style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}
+                      >
+                        <ProductCard product={product} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               /* No Results */
               <div className="text-center py-20 bg-surface-container-low rounded-[40px] border border-dashed border-outline-variant">

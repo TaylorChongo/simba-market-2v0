@@ -1,11 +1,13 @@
 import React from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import { useBranch } from '../context/BranchContext';
 import { useLanguage } from '../context/LanguageContext';
 import { API_URL } from '../lib/utils';
 
 const GoogleLoginButton = ({ setLoading, setError, from }) => {
   const { login } = useAuth();
+  const { autoSelectNearestBranch } = useBranch();
   const { t } = useLanguage();
 
   const handleGoogleLogin = useGoogleLogin({
@@ -40,7 +42,10 @@ const GoogleLoginButton = ({ setLoading, setError, from }) => {
         if (!res.ok) throw new Error(data.message);
 
         login(data.user, data.token);
-        window.location.href = data.user.role === 'CLIENT' ? (from || '/') : '/';
+        autoSelectNearestBranch(data.user.address);
+        // Honour /checkout redirect only if user was mid-checkout; otherwise go home
+        const redirectTo = (from === '/checkout') ? '/checkout' : '/';
+        window.location.href = data.user.role === 'CLIENT' ? redirectTo : '/';
       } catch (err) {
         setError("Google Login failed: " + err.message);
       } finally {

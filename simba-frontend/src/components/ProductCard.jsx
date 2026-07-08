@@ -15,6 +15,7 @@ const ProductCard = ({ product }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [showQuickView, setShowQuickView] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   
   // Placeholder data if no product is passed
   const { id, name = "Product Name", price = 0, image = "https://via.placeholder.com/300", category = "Category", stock } = product || {};
@@ -32,12 +33,17 @@ const ProductCard = ({ product }) => {
       <Link to={`/product/${id}`} className="flex flex-col flex-grow">
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-surface-container-low">
-            <img 
-            src={optimizedImage} 
+          {/* Skeleton shimmer shown until image loads */}
+          {!imgLoaded && (
+            <div className="absolute inset-0 bg-surface-container-low animate-pulse" />
+          )}
+          <img
+            src={optimizedImage}
             alt={name}
-            onError={(e) => fallbackToOriginalImage(e, image)}
+            onLoad={() => setImgLoaded(true)}
+            onError={(e) => { fallbackToOriginalImage(e, image); setImgLoaded(true); }}
             loading="lazy"
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'grayscale' : ''}`}
+            className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${isOutOfStock ? 'grayscale' : ''} ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
           
           {/* Stock Badges */}

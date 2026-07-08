@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { findClosestBranch } from '../lib/utils';
+import { resolveSectorCoords, BRANCH_COORDS } from '../lib/deliveryFee';
+import { getDefaultAddress } from '../lib/addresses';
 
 const BranchContext = createContext();
 
@@ -43,6 +45,35 @@ export const BranchProvider = ({ children }) => {
     }
   }, [selectedBranch]);
 
+  /**
+   * Auto-select the branch closest to the user's saved default address.
+   * Called right after login — only runs if no branch has already been selected.
+   *
+   * @param {string} rawAddress - user.address string (JSON array from the DB)
+   */
+  const autoSelectNearestBranch = (rawAddress) => {
+    if (selectedBranch) return; // respect an existing manual choice
+
+    const defaultAddr = getDefaultAddress(rawAddress);
+    if (!defaultAddr) return; // no address saved yet
+
+    const coords = resolveSectorCoords(defaultAddr.sector, defaultAddr.district);
+    if (!coords) return; // sector not in our lookup table
+
+    // Build the same shape as BRANCHES for findClosestBranch
+    const branchList = Object.entries(BRANCH_COORDS).map(([name, c]) => ({
+      name,
+      lat: c.lat,
+      lng: c.lng,
+    }));
+
+    const closest = findClosestBranch(branchList, coords.lat, coords.lng);
+    if (closest) {
+      setClosestBranch(closest);
+      setSelectedBranch(closest.name);
+    }
+  };
+
   // Fetch user location and find closest branch only when the map needs it.
   useEffect(() => {
     if (!isMapVisible || userLocation || isFetchingLocation) return;
@@ -84,7 +115,8 @@ export const BranchProvider = ({ children }) => {
     userLocation,
     closestBranch,
     locationError,
-    isFetchingLocation
+    isFetchingLocation,
+    autoSelectNearestBranch,
   };
 
   return <BranchContext.Provider value={value}>{children}</BranchContext.Provider>;

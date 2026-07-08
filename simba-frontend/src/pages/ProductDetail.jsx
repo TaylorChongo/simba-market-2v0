@@ -10,6 +10,7 @@ import Button from '../components/Button';
 import ProductCard from '../components/ProductCard';
 import { ShoppingCart, Star, ArrowLeft, ShieldCheck, Truck, RotateCcw, Loader2, AlertCircle, CheckCircle2, MapPin, X, Share2 } from 'lucide-react';
 import { optimizeCloudinaryUrl, API_URL, fallbackToOriginalImage, shortName } from '../lib/utils';
+import localProducts from '../data/simba_products.json';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -35,24 +36,51 @@ const ProductDetail = () => {
       try {
         const branchQuery = selectedBranch ? `?branch=${encodeURIComponent(selectedBranch)}` : '';
         const res = await fetch(`${API_URL}/api/products/${id}${branchQuery}`);
+        
+        if (!res.ok) throw new Error('API returned error');
+        
         const data = await res.json();
         
         if (data && selectedBranch && data.stocks) {
            data.stock = data.stocks.find(s => s.branchName === selectedBranch)?.stock || 0;
         }
         
-        setProduct(data);
-
-        const relatedRes = await fetch(`${API_URL}/api/products${branchQuery}`);
-        const relatedData = await relatedRes.json();
-        if (Array.isArray(relatedData)) {
-          setRelatedProducts(relatedData.filter(p => p.category === data.category && p.id !== data.id).slice(0, 4));
+        if (data && data.id) {
+          setProduct(data);
         } else {
-          console.error('Expected array for related products, but got:', relatedData);
+          // Fallback: search local products
+          const localProduct = localProducts.products.find(p => p.id === id);
+          if (localProduct) {
+            setProduct(localProduct);
+          } else {
+            setProduct(null);
+          }
+        }
+
+        // Fetch related products
+        const relatedRes = await fetch(`${API_URL}/api/products${branchQuery}`);
+        if (relatedRes.ok) {
+          const relatedData = await relatedRes.json();
+          if (Array.isArray(relatedData) && data) {
+            setRelatedProducts(relatedData.filter(p => p.category === data.category && p.id !== data.id).slice(0, 4));
+          }
+        } else {
+          // Fallback: use local products for related
+          const localRelated = localProducts.products.filter(p => p.category === (data?.category || product?.category) && p.id !== id).slice(0, 4);
+          setRelatedProducts(localRelated);
         }
 
       } catch (error) {
         console.error('Error fetching product:', error);
+        // On complete API failure, fall back to local products
+        const localProduct = localProducts.products.find(p => p.id === id);
+        if (localProduct) {
+          setProduct(localProduct);
+          const localRelated = localProducts.products.filter(p => p.category === localProduct.category && p.id !== id).slice(0, 4);
+          setRelatedProducts(localRelated);
+        } else {
+          setProduct(null);
+        }
       } finally {
         setLoading(false);
       }

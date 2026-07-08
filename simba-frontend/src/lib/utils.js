@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export const MINIMUM_ORDER_AMOUNT = 2500;
+export const FREE_DELIVERY_THRESHOLD = 60000;
 
 export function formatRwf(amount) {
   return `RWF ${Number(amount || 0).toLocaleString()}`;

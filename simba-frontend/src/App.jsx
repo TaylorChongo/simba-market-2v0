@@ -6,12 +6,16 @@ import { BranchProvider } from './context/BranchContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './context/AuthContext';
+import CompleteProfileModal from './components/CompleteProfileModal';
+import { parseAddresses } from './lib/addresses';
 
 // Pages
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import OrderSummary from './pages/OrderSummary';
 import SuccessPage from './pages/SuccessPage';
 import CategoryPage from './pages/CategoryPage';
 import Login from './pages/Login';
@@ -42,6 +46,22 @@ const ScrollToTop = () => {
   return null;
 };
 
+/**
+ * Shows CompleteProfileModal once per session when a CLIENT user
+ * is missing their address or phone number.
+ */
+const ProfileCompletionPrompt = () => {
+  const { user } = useAuth();
+  const [dismissed, setDismissed] = React.useState(false);
+
+  const needsCompletion =
+    user?.role === 'CLIENT' && (parseAddresses(user?.address).length === 0 || !user?.phone);
+
+  if (!needsCompletion || dismissed) return null;
+
+  return <CompleteProfileModal onClose={() => setDismissed(true)} />;
+};
+
 function App() {
   return (
     <ThemeProvider>
@@ -58,6 +78,7 @@ function App() {
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-summary" element={<OrderSummary />} />
                   <Route path="/success" element={<SuccessPage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -145,6 +166,7 @@ function App() {
                 <InlineBranchMap />
                 <Concierge />
                 <BottomNav />
+                <ProfileCompletionPrompt />
               </Router>
             </CartProvider>
           </BranchProvider>

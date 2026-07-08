@@ -70,11 +70,11 @@ const Register = () => {
         </Link>
 
         <div className="bg-surface px-5 py-6 md:p-8 rounded-3xl shadow-xl border border-outline-variant">
-          <h2 className="text-xl md:text-2xl font-black text-on-surface mb-1 text-center">{t('register_title')}</h2>
-          <p className="text-xs text-outline text-center mb-5">Join Simba Market today</p>
+          <h2 className="type-title text-center mb-1">{t('register_title')}</h2>
+          <p className="type-caption text-center mb-5">Join Simba Market today</p>
 
           {error && (
-            <div className="bg-error/10 text-error p-3 rounded-xl text-xs font-bold mb-4 border border-error/20 flex items-center gap-2">
+            <div className="bg-error/10 text-error p-3 rounded-xl text-xs font-semibold mb-4 border border-error/20 flex items-center gap-2">
               <span className="w-1 h-1 bg-error rounded-full" />
               {error}
             </div>
@@ -82,7 +82,7 @@ const Register = () => {
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-[10px] font-black text-outline uppercase tracking-wider mb-1.5 ml-1">
+              <label className="type-label block mb-1.5 ml-1">
                 {t('full_name_label')}
               </label>
               <Input
@@ -95,7 +95,7 @@ const Register = () => {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-outline uppercase tracking-wider mb-1.5 ml-1">
+              <label className="type-label block mb-1.5 ml-1">
                 {t('email_label')}
               </label>
               <Input
@@ -109,7 +109,7 @@ const Register = () => {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-outline uppercase tracking-wider mb-1.5 ml-1">
+              <label className="type-label block mb-1.5 ml-1">
                 {t('password_label')}
               </label>
               <div className="relative">
@@ -134,7 +134,7 @@ const Register = () => {
 
             <Button 
               type="submit" 
-              className="w-full h-11 rounded-xl mt-1 font-black active:scale-[0.98]" 
+              className="w-full h-11 rounded-xl mt-1 type-cta active:scale-[0.98]" 
               disabled={loading}
             >
               {loading ? t('creating_account') : t('sign_up')}
@@ -145,7 +145,7 @@ const Register = () => {
             <>
               <div className="my-6 flex items-center gap-3">
                 <div className="h-px bg-outline-variant flex-grow" />
-                <span className="text-[10px] font-black text-outline uppercase tracking-widest">OR</span>
+                <span className="type-label">OR</span>
                 <div className="h-px bg-outline-variant flex-grow" />
               </div>
 
@@ -153,9 +153,9 @@ const Register = () => {
             </>
           )}
 
-          <p className="mt-6 text-center text-xs md:text-sm font-medium text-outline">
+          <p className="mt-6 text-center type-caption">
             {t('already_have_account')}{' '}
-            <Link to="/login" className="text-primary hover:underline font-black">
+            <Link to="/login" className="text-primary hover:underline font-bold">
               {t('login_here')}
             </Link>
           </p>

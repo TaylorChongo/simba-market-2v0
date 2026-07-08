@@ -1,4 +1,4 @@
-import { Search, ShoppingCart, Menu, User, LogOut, Settings, Package, ChevronDown, Moon, Languages, MapPin, ShoppingBag, Map as MapIcon, X, Sparkles, SlidersHorizontal, Lock } from 'lucide-react';
+import { Search, ShoppingCart, User, LogOut, Package, ChevronDown, MapPin, MapIcon, Languages, SlidersHorizontal, Lock } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import Button from './Button';
 import ThemeToggle from './ThemeToggle';
@@ -6,29 +6,21 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useBranch } from '../context/BranchContext';
 import { useLanguage } from '../context/LanguageContext';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import AISearch from './AISearch';
 import { shortName } from '../lib/utils';
-import GoogleLoginButton from './GoogleLoginButton';
 
 const Navbar = () => {
   const { getCartCount } = useCart();
   const { user, logout } = useAuth();
-  const { selectedBranch, toggleMap, isMapVisible } = useBranch();
+  const { selectedBranch, toggleMap } = useBranch();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
-  const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [mobileAuthLoading, setMobileAuthLoading] = useState(false);
-  const [mobileAuthError, setMobileAuthError] = useState('');
   const dropdownRef = useRef(null);
   const langDropdownRef = useRef(null);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-  const isActive = (path) => location.pathname === path;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,22 +35,9 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Prevent page scroll only while the mobile drawer is open, then restore it.
-  useEffect(() => {
-    if (!mobileMenuOpen) return undefined;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow || '';
-    };
-  }, [mobileMenuOpen]);
-
   const handleLogout = () => {
     logout();
     setShowDropdown(false);
-    setMobileMenuOpen(false);
     navigate('/login');
   };
 
@@ -309,225 +288,9 @@ const Navbar = () => {
               </div>
             )}
 
-
           </div>
         </div>
       </nav>
-
-      {/* Bottom Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[60] bg-surface/90 backdrop-blur-lg border-t border-outline-variant px-4 py-2 grid grid-cols-4 items-center shadow-[0_-4px_12px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
-        <button
-          onClick={() => navigate('/')}
-          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isActive('/') ? 'text-primary' : 'text-outline'}`}
-        >
-          <ShoppingBag size={20} strokeWidth={isActive('/') ? 3 : 2} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">Shop</span>
-        </button>
-
-        <button
-          onClick={toggleMap}
-          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isMapVisible ? 'text-primary' : 'text-outline'}`}
-        >
-          <MapPin size={20} strokeWidth={isMapVisible ? 3 : 2} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">Branch</span>
-        </button>
-
-        <button
-          onClick={() => user ? navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}`) : navigate('/login')}
-          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${isActive('/login') || isActive('/register') || location.pathname.startsWith('/dashboard') ? 'text-primary' : 'text-outline'}`}
-        >
-          <User size={20} strokeWidth={isActive('/login') || location.pathname.startsWith('/dashboard') ? 3 : 2} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">Account</span>
-        </button>
-
-        <button
-          onClick={() => setMobileMenuOpen(true)}
-          className={`flex flex-col items-center gap-1 min-w-[50px] transition-colors min-h-[44px] ${mobileMenuOpen ? 'text-primary' : 'text-outline'}`}
-        >
-          <Menu size={20} strokeWidth={mobileMenuOpen ? 3 : 2} />
-          <span className="text-[9px] font-black uppercase tracking-tighter">Menu</span>
-        </button>
-      </div>
-
-      {/* Mobile Search Overlay */}
-
-      {/* Mobile Menu Drawer */}
-      <div
-        className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${
-          mobileMenuOpen ? 'visible' : 'invisible'
-        }`}
-      >
-        {/* Backdrop */}
-        <div
-          className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
-          }`}
-          onClick={() => setMobileMenuOpen(false)}
-        />
-
-        {/* Drawer Content */}
-        <div
-          className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-surface shadow-2xl transition-transform duration-300 flex flex-col ${
-            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-        >
-          <div className="p-4 border-b border-outline-variant flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-on-primary font-bold text-base">S</span>
-              </div>
-              <span className="font-black text-lg">Simba</span>
-            </div>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="p-2 hover:bg-surface-container-high rounded-full transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <div className="flex-grow overflow-y-auto p-4 flex flex-col gap-5 pb-[calc(env(safe-area-inset-bottom)+5rem)]">
-
-            {/* Account Section */}
-            {!user ? (
-              <div className="flex flex-col gap-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-outline">Account</p>
-                {clientId && (
-                  <>
-                    <GoogleLoginButton setLoading={setMobileAuthLoading} setError={setMobileAuthError} />
-                    {mobileAuthError && (
-                      <p className="text-xs font-bold text-error px-1">{mobileAuthError}</p>
-                    )}
-                    <div className="flex items-center gap-3">
-                      <div className="h-px bg-outline-variant flex-grow" />
-                      <span className="text-[10px] font-black text-outline uppercase tracking-widest">OR</span>
-                      <div className="h-px bg-outline-variant flex-grow" />
-                    </div>
-                  </>
-                )}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary text-on-primary font-black text-sm active:scale-[0.97] transition-transform disabled:opacity-60"
-                    disabled={mobileAuthLoading}
-                    onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
-                  >
-                    <User className="w-4 h-4" /> {t('login')}
-                  </button>
-                  <button
-                    className="flex items-center justify-center gap-2 py-3 rounded-2xl border border-outline-variant font-black text-sm active:scale-[0.97] transition-transform disabled:opacity-60 hover:border-primary"
-                    disabled={mobileAuthLoading}
-                    onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
-                  >
-                    {t('sign_up')}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {/* User card */}
-                <div className="flex items-center gap-3 p-3.5 bg-surface-container-low rounded-2xl border border-outline-variant">
-                  <div className="w-10 h-10 shrink-0 bg-primary/10 rounded-full flex items-center justify-center text-primary font-black text-base">
-                    {user.name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex min-w-0 flex-col">
-                    <span className="truncate text-sm font-black">{user.name}</span>
-                    <span className="truncate text-[10px] text-outline uppercase tracking-wider">{user.role.replace(/_/g, ' ')}</span>
-                  </div>
-                </div>
-
-                {/* Menu items */}
-                <div className="flex flex-col gap-1 mt-1">
-                  <button
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all text-left"
-                    onClick={() => { navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}?tab=profile`); setMobileMenuOpen(false); }}
-                  >
-                    <User className="w-4 h-4 text-outline shrink-0" />
-                    <span className="text-sm font-bold">{t('my_profile')}</span>
-                    <ChevronDown className="w-4 h-4 text-outline ml-auto -rotate-90" />
-                  </button>
-
-                  {user.role !== 'BRANCH_MANAGER' && user.role !== 'BRANCH_STAFF' && (
-                    <>
-                      <button
-                        className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all text-left"
-                        onClick={() => { navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}?tab=orders`); setMobileMenuOpen(false); }}
-                      >
-                        <Package className="w-4 h-4 text-outline shrink-0" />
-                        <span className="text-sm font-bold">{t('my_orders')}</span>
-                        <ChevronDown className="w-4 h-4 text-outline ml-auto -rotate-90" />
-                      </button>
-                      <button
-                        className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all text-left"
-                        onClick={() => { navigate(`/dashboard/${user.role.toLowerCase().replace(/_/g, '-')}?tab=preferences`); setMobileMenuOpen(false); }}
-                      >
-                        <SlidersHorizontal className="w-4 h-4 text-outline shrink-0" />
-                        <span className="text-sm font-bold">{t('preferences')}</span>
-                        <ChevronDown className="w-4 h-4 text-outline ml-auto -rotate-90" />
-                      </button>
-                    </>
-                  )}
-
-
-                </div>
-              </div>
-            )}
-
-
-
-            {/* Divider */}
-            <div className="h-px bg-outline-variant" />
-
-            {/* Preferences */}
-            <div className="flex flex-col gap-3">
-              <p className="text-[10px] font-black uppercase tracking-widest text-outline">Preferences</p>
-
-              <div className="flex items-center justify-between px-3 py-3 bg-surface-container-low rounded-2xl border border-outline-variant">
-                <div className="flex items-center gap-3">
-                  <Moon className="w-4 h-4 text-outline" />
-                  <span className="text-sm font-bold">Dark Mode</span>
-                </div>
-                <ThemeToggle />
-              </div>
-
-              <div className="p-3 bg-surface-container-low rounded-2xl border border-outline-variant">
-                <div className="flex items-center gap-3 mb-3">
-                  <Languages className="w-4 h-4 text-outline" />
-                  <span className="text-sm font-bold">Language</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => setLanguage(lang.code)}
-                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-black uppercase tracking-wide transition-all active:scale-95 ${
-                        language === lang.code
-                          ? 'bg-primary/10 border-primary text-primary'
-                          : 'border-outline-variant text-outline hover:border-primary'
-                      }`}
-                    >
-                      <span className="text-base">{lang.flag}</span>
-                      <span className="text-[9px]">{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Logout */}
-            {user && (
-              <>
-                <div className="h-px bg-outline-variant" />
-                <button
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-error/10 text-error font-black text-sm hover:bg-error/20 active:scale-[0.97] transition-all border border-error/20"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="w-4 h-4" /> {t('logout')}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
     </>
   );
 };
