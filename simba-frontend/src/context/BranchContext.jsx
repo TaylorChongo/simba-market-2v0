@@ -45,33 +45,39 @@ export const BranchProvider = ({ children }) => {
     }
   }, [selectedBranch]);
 
-  /**
-   * Auto-select the branch closest to the user's saved default address.
-   * Called right after login — only runs if no branch has already been selected.
-   *
-   * @param {string} rawAddress - user.address string (JSON array from the DB)
-   */
-  const autoSelectNearestBranch = (rawAddress) => {
-    if (selectedBranch) return; // respect an existing manual choice
-
+  /** Shared logic: resolve closest branch from a raw address string and set it */
+  const resolveAndSetBranch = (rawAddress) => {
     const defaultAddr = getDefaultAddress(rawAddress);
-    if (!defaultAddr) return; // no address saved yet
-
+    if (!defaultAddr) return;
     const coords = resolveSectorCoords(defaultAddr.sector, defaultAddr.district);
-    if (!coords) return; // sector not in our lookup table
-
-    // Build the same shape as BRANCHES for findClosestBranch
-    const branchList = Object.entries(BRANCH_COORDS).map(([name, c]) => ({
-      name,
-      lat: c.lat,
-      lng: c.lng,
-    }));
-
+    if (!coords) return;
+    const branchList = Object.entries(BRANCH_COORDS).map(([name, c]) => ({ name, lat: c.lat, lng: c.lng }));
     const closest = findClosestBranch(branchList, coords.lat, coords.lng);
     if (closest) {
       setClosestBranch(closest);
       setSelectedBranch(closest.name);
     }
+  };
+
+  // On app mount: if user is already logged in but no branch selected, auto-select
+  useEffect(() => {
+    if (selectedBranch) return;
+    try {
+      const stored = localStorage.getItem('user');
+      if (!stored) return;
+      const user = JSON.parse(stored);
+      if (user?.address) resolveAndSetBranch(user.address);
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Auto-select the branch closest to the user's saved default address.
+   * Called right after login — only runs if no branch has already been selected.
+   */
+  const autoSelectNearestBranch = (rawAddress) => {
+    if (selectedBranch) return;
+    resolveAndSetBranch(rawAddress);
   };
 
   // Fetch user location and find closest branch only when the map needs it.

@@ -251,9 +251,9 @@ const Home = () => {
           {/* Content Area */}
           <div className="flex-grow transition-all duration-300">
             {/* Hero Section */}
-            {!isFiltering && !user && (
+            {!isFiltering && (
               <section 
-                className="w-full rounded-[24px] md:rounded-[40px] p-6 sm:p-10 md:p-20 xl:p-24 mb-8 md:mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[380px] sm:min-h-[460px] md:min-h-[620px] xl:min-h-[700px] justify-center shadow-2xl shadow-primary/10"
+                className="w-full rounded-[24px] md:rounded-[40px] p-6 sm:p-10 md:p-16 xl:p-20 mb-8 md:mb-12 relative overflow-hidden flex flex-col items-start text-left min-h-[260px] sm:min-h-[320px] md:min-h-[420px] xl:min-h-[500px] justify-center shadow-2xl shadow-primary/10"
               >
                 {/* Background Layers for smooth transition */}
                 {heroImages.map((img, i) => (
