@@ -56,8 +56,13 @@
   }
   
   /* Ensure minimum touch target size for interactive elements */
-  button, a, input, select {
+  button, a {
     @apply min-h-[44px] min-w-[44px] transition-all inline-flex items-center justify-center;
+  }
+
+  /* Inputs and selects get min touch height but stay block-level */
+  input, select, textarea {
+    @apply min-h-[44px] transition-all;
   }
   
   /* Reset for inline links that should flow with text */

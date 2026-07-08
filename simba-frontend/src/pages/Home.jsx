@@ -123,7 +123,10 @@ const Home = () => {
     }, {});
   }, [filteredProducts]);
 
-  const isFiltering = searchQuery.length > 0 || selectedCategory !== 'All' || minPrice !== '' || maxPrice !== '';
+  // Hides the hero — only search query or price filters, not category browsing
+  const isFiltering = searchQuery.length > 0 || minPrice !== '' || maxPrice !== '';
+  // Used for results count label and grid mode — includes category
+  const isFiltered  = isFiltering || selectedCategory !== 'All';
 
   const clearAllFilters = () => {
     setSearchQuery('');
@@ -311,7 +314,7 @@ const Home = () => {
                 {showFilters ? t('hide_filters') : t('show_filters')}
               </Button>
               
-              {isFiltering && (
+              {isFiltered && (
                 <div className="flex items-center gap-2 text-[10px] md:text-xs">
                   <span className="text-outline hidden sm:inline">{t('active_filters')}</span>
                   <button 
@@ -369,7 +372,7 @@ const Home = () => {
               <>
                 {/* Results Status */}
                 <div ref={productsRef}>
-                  {isFiltering && (
+                  {isFiltered && (
                     <div className="mb-6 flex items-baseline gap-2">
                       <h2 className="text-xl font-black">{filteredProducts.length}</h2>
                       <span className="text-outline font-medium text-sm">{t('results_for')}</span>
@@ -377,7 +380,7 @@ const Home = () => {
                   )}
                 </div>
 
-                {!isFiltering ? (
+                {!isFiltered ? (
                   /* Summary View by Category */
                   Object.entries(groupedProducts).map(([category, categoryProducts]) => {
                     const hasMore = categoryProducts.length > 4;
